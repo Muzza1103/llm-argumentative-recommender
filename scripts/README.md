@@ -1,0 +1,3 @@
+# Scripts
+
+This folder will contain  runnable utility scripts for the project, like dataset preprocessing, local LLM generation tests...
