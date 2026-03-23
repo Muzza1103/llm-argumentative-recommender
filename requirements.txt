@@ -1,0 +1,7 @@
+pandas
+transformers
+torch
+accelerate
+bitsandbytes
+pyyaml
+tqdm

@@ -7,4 +7,11 @@ venv/
 outputs/
 checkpoints/
 models/
-data/raw/
+
+data/raw/*
+!data/raw/
+!data/raw/.gitkeep
+
+data/processed/*
+!data/processed/
+!data/processed/.gitkeep
