@@ -17,8 +17,10 @@ MIN_USER_REVIEWS = 5
 MAX_USER_REVIEWS = 50
 MIN_REVIEW_LENGTH = 30
 NB_USERS = 100
-HISTORY_SIZE = 3
+HISTORY_SIZE = 5
 SEED = 42
+NB_POSITIVE_HISTORY = 2
+NB_NEGATIVE_HISTORY = 2
 
 
 def load_restaurant_businesses():
@@ -40,6 +42,7 @@ def load_restaurant_businesses():
                 "business_id": obj["business_id"],
                 "name": obj.get("name", ""),
                 "categories": category_list,
+                "attributes": obj.get("attributes", {}) or {},
                 "stars": obj.get("stars"),
                 "review_count": obj.get("review_count"),
             }
@@ -97,7 +100,34 @@ def build_examples(businesses, user_reviews):
             continue
 
         target_review = reviews[-1]
-        history_reviews = reviews[-(HISTORY_SIZE + 1):-1]
+        
+        candidate_history = reviews[:-1]
+
+        positive_reviews = [r for r in candidate_history if r["user_stars"] >= 4]
+        negative_reviews = [r for r in candidate_history if r["user_stars"] <= 2]
+        neutral_reviews = [r for r in candidate_history if r["user_stars"] == 3]
+
+        history_reviews = []
+
+        history_reviews.extend(positive_reviews[-2:])
+        history_reviews.extend(negative_reviews[-2:])
+
+        if len(history_reviews) < HISTORY_SIZE:
+            already_selected_ids = {
+                (r["business_id"], r["date"], r["review_text"]) for r in history_reviews
+            }
+
+            fallback_reviews = list(reversed(candidate_history))
+            for r in fallback_reviews:
+                key = (r["business_id"], r["date"], r["review_text"])
+                if key in already_selected_ids:
+                    continue
+                history_reviews.append(r)
+                already_selected_ids.add(key)
+                if len(history_reviews) >= HISTORY_SIZE:
+                    break
+
+        history_reviews = sorted(history_reviews, key=lambda x: x["date"])
 
         target_business_id = target_review["business_id"]
         if target_business_id not in businesses:
@@ -137,6 +167,7 @@ def build_examples(businesses, user_reviews):
                 "business_id": target_business_id,
                 "name": target_business["name"],
                 "categories": target_business["categories"],
+                "attributes": target_business["attributes"],
                 "global_stars": target_business["stars"],
                 "review_count": target_business["review_count"],
                 "user_target_stars": target_review["user_stars"],
@@ -160,19 +191,19 @@ def save_jsonl(examples, output_file):
 def main():
     random.seed(SEED)
 
-    print("Step 1: loading restaurant businesses...")
+    print("Loading restaurant businesses")
     businesses = load_restaurant_businesses()
     print(f"Loaded {len(businesses)} restaurant businesses.")
 
-    print("Step 2: loading filtered reviews...")
+    print("Loading filtered reviews")
     user_reviews = load_filtered_reviews(set(businesses.keys()))
     print(f"Loaded reviews for {len(user_reviews)} users.")
 
-    print("Step 3: building examples...")
+    print("Building examples")
     examples = build_examples(businesses, user_reviews)
     print(f"Built {len(examples)} examples.")
 
-    print("Step 4: saving subset...")
+    print("Saving subset")
     save_jsonl(examples, OUTPUT_FILE)
     print(f"Saved subset to: {OUTPUT_FILE}")
 
