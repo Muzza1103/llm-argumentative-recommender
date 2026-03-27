@@ -14,22 +14,22 @@ INSTRUCTIONS:
 - Do not include any explanation outside the JSON
 
 OUTPUT FORMAT:
-{
+{{
   "arguments": [
-    {
+    {{
       "id": "A1",
       "type": "support",
       "text": "...",
       "evidence": ["..."]
-    },
-    {
+    }},
+    {{
       "id": "A2",
       "type": "attack",
       "text": "...",
       "evidence": ["..."]
-    }
+    }}
   ]
-}
+}}
 
 USER_HISTORY:
 {history}
