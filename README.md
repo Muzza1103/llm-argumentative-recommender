@@ -22,7 +22,7 @@ LLM-based argument generation
         ↓
 Argument graph construction
         ↓
-Reasoning / aggregation
+Argument scoring and reasoning / aggregation
         ↓
 Explainable and contestable recommendation
 ```
@@ -32,9 +32,13 @@ Explainable and contestable recommendation
 ```text
 .
 ├── src/        # Core project logic
+│   └── prompting/   # Prompt generation module
 ├── scripts/    # Runnable scripts
 ├── configs/    # Configuration files
-├── data/       # Data instructions, samples, and local dataset structure
+├── data/  
+│   ├── raw/         # Original datasets (not versioned)
+│   ├── processed/   # Generated datasets (not versioned)
+│   └── sample/      # Small versioned examples
 ```
 
 ## Data
@@ -45,7 +49,58 @@ This repository does **not** include the full Yelp dataset.
 - Processed subsets are generated locally in `data/processed/`
 - Small synthetic examples are available in `data/sample/`
 
-See `data/README.md` for more details.
+See `data/README.md` for more details on how to generate the dataset.
+
+The dataset is built from the Yelp Open Dataset.
+
+Each example follows this structure:
+
+- `history`: user past interactions
+- `target_item`: item to evaluate
+
+Data is stored in JSONL format.
+
+## Inspecting Data
+
+To inspect dataset samples:
+
+```bash
+python scripts/inspect_jsonl.py --file data/processed/yelp_subset.jsonl --n 3
+```
+
+---
+
+## Prompting
+
+The project includes a prompt generation module located in `src/prompting/`.
+
+This module is responsible for:
+- formatting user history and target items
+- building structured prompts for LLM-based argument generation
+
+### Input Design
+
+The prompt uses:
+- a **compact user history** (categories + ratings)
+- a **filtered subset of item attributes**, including:
+  - price range
+  - takeout / delivery
+  - seating / attire
+  - noise level
+  - group / kids suitability
+
+This ensures:
+- compact inputs (important for local LLMs)
+- reduced noise
+- better interpretability
+
+### Test Prompt Generation
+
+To preview a generated prompt:
+
+```bash
+python scripts/test_prompt.py --file data/processed/yelp_subset.jsonl --index 0
+```
 
 ## Status
 

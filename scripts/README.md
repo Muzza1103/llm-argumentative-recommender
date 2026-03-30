@@ -2,54 +2,81 @@
 
 This folder contains runnable utility scripts used throughout the project.
 
-## Current scripts
+---
 
-### `build_yelp_subset.py`
-Builds a small processed subset from the Yelp Open Dataset.
+## build_yelp_subset.py
 
-Main responsibilities:
-- load raw Yelp files
-- filter restaurant businesses
-- filter informative reviews
-- construct user history / target item examples
-- save the result as a JSONL file in `data/processed/`
+Builds a processed subset from the Yelp Open Dataset.
 
-Example usage:
+### Responsibilities
+- Load raw Yelp files
+- Filter restaurant businesses
+- Filter informative reviews
+- Group reviews by user
+- Construct examples with:
+  - user history
+  - target item (leave-one-out)
+- Save the result as a JSONL file in `data/processed/`
+
+### Usage
 
 ```bash
 python scripts/build_yelp_subset.py
 ```
 
-### `inspect_jsonl.py`
-Inspects a JSONL file and displays a few formatted examples.
+---
 
-Main responsibilities:
-- load a JSONL file
-- display the first `n` examples
-- show lightweight summary information for quick debugging
+## inspect_jsonl.py
 
-Example usage:
+Inspects a JSONL file and displays examples along with summary statistics.
+
+### Features
+- Display first `n` examples
+- Show history size
+- Show target rating and review length
+- Show sentiment distribution (positive / negative / neutral)
+
+### Usage
 
 ```bash
 python scripts/inspect_jsonl.py --file data/processed/yelp_subset.jsonl --n 3
 ```
 
-Example on the synthetic sample:
+Example with sample data:
 
 ```bash
-python scripts/inspect_jsonl.py --file data/sample/sample_input.jsonl --n 2
+python scripts/inspect_jsonl.py --file data/examples/sample_input.jsonl --n 2
 ```
 
-## Purpose
+---
 
-These scripts are meant to support:
-- dataset preprocessing
-- quick inspection of intermediate files
-- debugging
-- reproducible experimentation
+## test_prompt.py
+
+Builds and displays the LLM prompt for a given example.
+
+### Features
+- Load an example from JSONL
+- Format user history
+- Format target item
+- Generate the final prompt used for argument generation
+
+### Usage
+
+```bash
+python scripts/test_prompt.py --file data/processed/yelp_subset.jsonl --index 0
+```
+
+Example with sample data:
+
+```bash
+python scripts/test_prompt.py --file data/examples/sample_input.jsonl --index 0
+```
+
+---
 
 ## Notes
 
-- Raw Yelp data is expected in `data/raw/`
-- Generated outputs are typically stored in `data/processed/`
-- Small synthetic examples can be stored in `data/sample/`
+- Run scripts from the project root
+- Raw data should be placed in `data/raw/`
+- Processed outputs are stored in `data/processed/`
+- Sample files are available in `data/examples/`
