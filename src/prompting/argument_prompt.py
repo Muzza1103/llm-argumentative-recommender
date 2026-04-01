@@ -5,13 +5,16 @@ TASK:
 Given a user history and a target item, generate arguments FOR and AGAINST recommending the target item to the user.
 
 INSTRUCTIONS:
-- Infer preferences from the user history
-- Compare the target item with past liked and disliked items
-- Generate specific arguments only
-- Do not generate generic statements
-- Each argument must be grounded in the provided input
-- Return only valid JSON
-- Do not include any explanation outside the JSON
+- Infer user preferences from the history.
+- Compare the target item with positively and negatively rated history items.
+- Generate exactly 4 arguments: 2 support and 2 attack.
+- Each argument must be specific and grounded in the input.
+- History items only contain name, categories, and rating.
+- Only the target item has attributes.
+- Do not invent missing facts or attributes.
+- Keep each argument text short.
+- Use at most 2 short evidence snippets per argument.
+- Return valid JSON only.
 
 OUTPUT FORMAT:
 {{
@@ -20,13 +23,25 @@ OUTPUT FORMAT:
       "id": "A1",
       "type": "support",
       "text": "...",
-      "evidence": ["..."]
+      "evidence": ["...", "..."]
     }},
     {{
       "id": "A2",
+      "type": "support",
+      "text": "...",
+      "evidence": ["...", "..."]
+    }},
+    {{
+      "id": "A3",
       "type": "attack",
       "text": "...",
-      "evidence": ["..."]
+      "evidence": ["...", "..."]
+    }},
+    {{
+      "id": "A4",
+      "type": "attack",
+      "text": "...",
+      "evidence": ["...", "..."]
     }}
   ]
 }}
@@ -37,7 +52,6 @@ USER_HISTORY:
 TARGET_ITEM:
 {target}
 """.strip()
-
 
 def build_prompt(history_str: str, target_str: str) -> str:
     return PROMPT_TEMPLATE.format(
