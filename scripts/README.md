@@ -21,7 +21,7 @@ Builds a processed subset from the Yelp Open Dataset.
 ### Usage
 
 ```bash
-python scripts/build_yelp_subset.py
+python -m scripts.build_yelp_subset
 ```
 
 ---
@@ -39,13 +39,13 @@ Inspects a JSONL file and displays examples along with summary statistics.
 ### Usage
 
 ```bash
-python scripts/inspect_jsonl.py --file data/processed/yelp_subset.jsonl --n 3
+python -m scripts.inspect_jsonl --file data/processed/yelp_subset.jsonl --n 3
 ```
 
 Example with sample data:
 
 ```bash
-python scripts/inspect_jsonl.py --file data/examples/sample_input.jsonl --n 2
+python -m scripts.inspect_jsonl --file data/examples/sample_input.jsonl --n 2
 ```
 
 ---
@@ -63,19 +63,89 @@ Builds and displays the LLM prompt for a given example.
 ### Usage
 
 ```bash
-python scripts/test_prompt.py --file data/processed/yelp_subset.jsonl --index 0
+python -m scripts.test_prompt --file data/processed/yelp_subset.jsonl --index 0
 ```
 
 Example with sample data:
 
 ```bash
-python scripts/test_prompt.py --file data/examples/sample_input.jsonl --index 0
+python -m scripts.test_prompt --file data/examples/sample_input.jsonl --index 0
 ```
 
 ---
 
-## Notes
+## test_generation.py
 
+Runs local LLM-based argument generation on one JSONL example.
+
+### Features
+- Load one example from a JSONL file
+- Select an example by index or sample one randomly
+- Format user history and target item
+- Build the final generation prompt
+- Load a local Hugging Face instruction model
+- Generate structured recommendation arguments
+- Display:
+  - the selected example index
+  - the final prompt
+  - the raw model output
+  - the parsed JSON output when valid
+
+### Usage
+
+Run on a specific example:
+
+```bash
+python -m scripts.test_generation --input data/processed/yelp_subset.jsonl --index 0
+```
+
+Run on a random example:
+
+```bash
+python -m scripts.test_generation --input data/processed/yelp_subset.jsonl --random
+```
+
+Use a different model:
+
+```bash
+python -m scripts.test_generation \
+  --input data/processed/yelp_subset.jsonl \
+  --index 3 \
+  --model Qwen/Qwen2.5-3B-Instruct
+```
+
+Change generation parameters:
+
+```bash
+python -m scripts.test_generation \
+  --input data/processed/yelp_subset.jsonl \
+  --index 5 \
+  --max-new-tokens 650 \
+```
+
+Enable sampling:
+
+```bash
+python -m scripts.test_generation \
+  --input data/processed/yelp_subset.jsonl \
+  --random \
+  --do-sample
+```
+
+### Main arguments
+
+- `--input`: path to the input JSONL file
+- `--index`: example index to load from the JSONL file
+- `--random`: select a random example instead of using `--index`
+- `--model`: Hugging Face model name
+- `--max-new-tokens`: maximum number of generated tokens
+- `--temperature`: generation temperature
+- `--top-p`: top-p sampling parameter
+- `--do-sample`: enable sampling during generation
+
+### Notes
+- `--random` overrides the fixed example selection logic
+- the script prints the actual example index used
 - Run scripts from the project root
 - Raw data should be placed in `data/raw/`
 - Processed outputs are stored in `data/processed/`
