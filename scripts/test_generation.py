@@ -1,5 +1,6 @@
 import argparse
 import json
+import random
 from pathlib import Path
 
 from src.llm.config import LLMConfig
@@ -11,10 +12,24 @@ from src.prompting.argument_prompt import build_prompt
 from src.prompting.formatters import format_history, format_target_item
 
 
-def load_first_example(jsonl_path: Path):
+def load_example(jsonl_path: Path, index: int):
     with jsonl_path.open("r", encoding="utf-8") as f:
-        line = f.readline()
-    return json.loads(line)
+        for i, line in enumerate(f):
+            if i == index:
+                return json.loads(line), i
+
+    raise IndexError(f"Index {index} out of range.")
+
+
+def load_random_example(jsonl_path: Path):
+    with jsonl_path.open("r", encoding="utf-8") as f:
+        lines = f.readlines()
+
+    if not lines:
+        raise ValueError("Input JSONL file is empty.")
+
+    index = random.randrange(len(lines))
+    return json.loads(lines[index]), index
 
 
 def main():
@@ -56,9 +71,23 @@ def main():
         action="store_true",
         help="Enable sampling during generation.",
     )
+    parser.add_argument(
+        "--index",
+        type=int,
+        default=0,
+        help="Index of the example to load from the JSONL file.",
+    )
+    parser.add_argument(
+        "--random",
+        action="store_true",
+        help="Pick a random example.",
+    )
     args = parser.parse_args()
 
-    example = load_first_example(Path(args.input))
+    if args.random:
+        example, used_index = load_random_example(Path(args.input))
+    else:
+        example, used_index = load_example(Path(args.input), args.index)
 
     history_str = format_history(example["history"])
     target_str = format_target_item(example["target_item"])
@@ -82,6 +111,7 @@ def main():
     output_text = generator.generate(prompt)
     parsed_json = extract_first_json_object(output_text)
 
+    print(f"\nUsing example index: {used_index}")
     print("=" * 80)
     print("PROMPT")
     print("=" * 80)
