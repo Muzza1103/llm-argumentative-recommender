@@ -4,6 +4,15 @@ from collections import Counter
 from typing import Any
 
 
+AGGREGATE_EVIDENCE_MARKERS = [
+    "previous visits",
+    "history",
+    "other restaurants",
+    "other choices",
+    "favorite places",
+]
+
+
 def make_error(code: str, message: str) -> dict[str, str]:
     return {
         "code": code,
@@ -28,6 +37,15 @@ def _extract_known_item_names(example: dict) -> set[str]:
         names.add(target_name)
 
     return names
+
+
+def _evidence_mentions_known_context(evidence: str, known_item_names: set[str]) -> bool:
+    evidence_lower = evidence.lower()
+
+    mentions_known_item = any(name in evidence for name in known_item_names)
+    mentions_aggregate_context = any(marker in evidence_lower for marker in AGGREGATE_EVIDENCE_MARKERS)
+
+    return mentions_known_item or mentions_aggregate_context
 
 
 def validate_generated_arguments(example: dict, parsed_json: Any) -> dict[str, Any]:
@@ -174,22 +192,11 @@ def validate_generated_arguments(example: dict, parsed_json: Any) -> dict[str, A
                 )
                 continue
 
-            if " | " not in ev:
+            if not _evidence_mentions_known_context(ev, known_item_names):
                 errors.append(
                     make_error(
-                        "invalid_evidence_format",
-                        f"{ev_prefix} does not follow the expected 'item_name | fact' format.",
-                    )
-                )
-                continue
-
-            item_name = ev.split(" | ", 1)[0].strip()
-
-            if item_name not in known_item_names:
-                errors.append(
-                    make_error(
-                        "unknown_item_reference",
-                        f"{ev_prefix} references unknown item '{item_name}'.",
+                        "weak_evidence_reference",
+                        f"{ev_prefix} does not mention a known item or aggregate history reference.",
                     )
                 )
 
