@@ -9,8 +9,8 @@ INSTRUCTIONS:
 - Compare the target item with positively and negatively rated history items.
 - Generate exactly 4 arguments: 2 support and 2 attack.
 - Each argument must be specific and grounded in the input.
-- History items only contain name, categories, and rating.
-- Only the target item has attributes.
+- History items contain name, categories, rating, and sometimes filtered attributes.
+- The target item contains categories and filtered attributes.
 - Do not invent missing facts or attributes.
 - Keep each argument text short.
 - Use at most 2 short evidence snippets per argument.

@@ -21,12 +21,17 @@ def format_history(history: list[dict]) -> str:
         name = item.get("name", "Unknown")
         categories = ", ".join(item.get("categories", []))
         rating = item.get("user_stars", "N/A")
+        attributes = format_attributes(item.get("attributes", {}))
 
         line = (
             f"{i}. {name} | "
             f"categories: {categories} | "
             f"rating: {rating}"
         )
+
+        if attributes != "none":
+            line += f" | attributes: {attributes}"
+
         lines.append(line)
 
     return "\n".join(lines)

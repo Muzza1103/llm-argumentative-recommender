@@ -150,6 +150,7 @@ def build_examples(businesses, user_reviews):
                     "business_id": business_id,
                     "name": business_info["name"],
                     "categories": business_info["categories"],
+                    "attributes": business_info["attributes"],
                     "user_stars": review["user_stars"],
                     "review_text": review["review_text"],
                 }
