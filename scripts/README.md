@@ -125,6 +125,62 @@ python -m scripts.test_generation \
 - `--top-p`: top-p sampling parameter
 - `--do-sample`: enable sampling during generation
 
+
+## generate_batch.py
+
+Runs LLM-based argument generation on multiple examples with validation.
+
+## generate_batch.py
+
+Runs LLM-based argument generation on multiple examples with validation.
+
+### Features
+- Load multiple examples from an input JSONL file
+- Select examples sequentially or randomly
+- Build a prompt for each example using the current prompting pipeline
+- Run local argument generation with a Hugging Face model
+- Parse the generated JSON output
+- Validate each generated result
+- Save:
+  - all generated results
+  - valid results only
+  - invalid results only
+  - a summary file with validation statistics and error counts
+
+### Outputs
+
+Given an output path such as:
+
+```bash
+data/processed/generated_arguments_batch.jsonl
+```
+
+### Outputs
+
+Given an output path such as:
+
+```bash
+data/processed/generated_arguments_batch.jsonl
+```
+
+the script also creates:
+
+```
+data/processed/generated_arguments_batch_valid.jsonl
+data/processed/generated_arguments_batch_invalid.jsonl
+data/processed/generated_arguments_batch_summary.json
+```
+
+### Usage
+
+Run generation on the first 10 examples:
+
+```bash
+python -m scripts.generate_batch --input data/processed/yelp_subset.jsonl --output data/processed/generated_arguments_batch.jsonl --num-examples 10 --save-prompt
+```
+
+
+
 ## inspect_generation_results.py
 
 Inspects JSONL files produced by batch generation and validation.

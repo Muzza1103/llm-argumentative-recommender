@@ -1,8 +1,8 @@
 # LLM Argumentative Recommender
 
-This project explores **explainable** and **contestable** recommendation using **local LLMs** and **argumentation-based reasoning**.
+This project explores **explainable** and **contestable recommendation systems** using **local Large Language Models** and **argumentation-based reasoning**.
 
-The main objective is to build a recommendation pipeline in which a language model generates structured arguments from user history and target item information, and these arguments are then used to support explicit reasoning and explanations.
+The main objective is to build a recommendation pipeline in which a language model generates structured arguments from user history and target item information, and these arguments are then used to support **explicit reasoning, scoring, and explanations**.
 
 ## Current objective
 
@@ -20,6 +20,8 @@ User history + target item
         ↓
 LLM-based argument generation
         ↓
+Validation and filtering
+        ↓
 Argument graph construction
         ↓
 Argument scoring and reasoning / aggregation
@@ -31,10 +33,11 @@ Explainable and contestable recommendation
 
 ```text
 .
-├── src/        # Core project logic
-│   └── prompting/   # Prompt generation module
-├── scripts/    # Runnable scripts
-├── configs/    # Configuration files
+├── src/        
+│   ├── llm/         # LLM loading, generation and validation
+│   └── prompting/   # Prompt construction and formatting
+├── scripts/         # Runnable scripts (data, prompt, generation)
+├── configs/         # Configuration files
 ├── data/  
 │   ├── raw/         # Original datasets (not versioned)
 │   ├── processed/   # Generated datasets (not versioned)
@@ -53,7 +56,7 @@ See `data/README.md` for more details on how to generate the dataset.
 
 The dataset is built from the Yelp Open Dataset.
 
-Each example follows this structure:
+Each example contains:
 
 - `history`: user past interactions
 - `target_item`: item to evaluate
@@ -92,21 +95,37 @@ The prompt uses:
 This ensures:
 - compact inputs (important for local LLMs)
 - reduced noise
-- better interpretability
+- better grounding of arguments
+- fewer hallucinations
 
-### Test Prompt Generation
+## Scripts
 
-To preview a generated prompt:
+All runnable scripts are located in the `scripts/` directory.
 
-```bash
-python scripts/test_prompt.py --file data/processed/yelp_subset.jsonl --index 0
-```
+These scripts cover:
+- dataset preprocessing
+- dataset inspection
+- prompt generation
+- local LLM-based argument generation
+- batch generation and validation
+- result inspection
+
+For detailed usage and available commands, see:
+`scripts/README.md`
+
+---
 
 ## Status
 
 Work in progress.  
-This repository is part of a research / internship project on LLM-based explainable recommendation through argumentation.
+This repository is part of a research / internship project on **LLM-based explainable recommendation using argumentation**.
 
 ## Notes
 
-- The repository is designed to work with **local models**
+- The system is designed to work with **local LLMs**
+- Quantization is supported for lightweight inference
+- Future work includes:
+  - argument scoring
+  - integration with QBAF / DF-QuAD
+  - potential LoRA fine-tuning
+
