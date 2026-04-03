@@ -114,24 +114,6 @@ python -m scripts.test_generation \
   --model Qwen/Qwen2.5-3B-Instruct
 ```
 
-Change generation parameters:
-
-```bash
-python -m scripts.test_generation \
-  --input data/processed/yelp_subset.jsonl \
-  --index 5 \
-  --max-new-tokens 650 \
-```
-
-Enable sampling:
-
-```bash
-python -m scripts.test_generation \
-  --input data/processed/yelp_subset.jsonl \
-  --random \
-  --do-sample
-```
-
 ### Main arguments
 
 - `--input`: path to the input JSONL file
@@ -142,6 +124,45 @@ python -m scripts.test_generation \
 - `--temperature`: generation temperature
 - `--top-p`: top-p sampling parameter
 - `--do-sample`: enable sampling during generation
+
+## inspect_generation_results.py
+
+Inspects JSONL files produced by batch generation and validation.
+
+### Features
+- Load generation result files in JSONL format
+- Display the first `n` records
+- Filter displayed records by validation status: (all, valid, invalid)
+- Show, for each record:
+  - dataset index
+  - user id
+  - target item name
+  - validation status
+  - validation errors
+  - parsed JSON output
+- Optionally display:
+  - the full prompt
+  - the raw model output
+
+### Usage
+
+Display the first 3 records from a batch result file:
+
+```bash
+python -m scripts.inspect_generation_results --file data/processed/generated_arguments_batch.jsonl --n 3
+```
+
+Display only invalid records:
+
+```bash
+python -m scripts.inspect_generation_results --file data/processed/generated_arguments_batch.jsonl --only invalid --n 3
+```
+
+Display invalid records with the full prompt:
+
+```bash
+python -m scripts.inspect_generation_results --file data/processed/generated_arguments_batch.jsonl --only invalid --n 2 --show-prompt
+```
 
 ### Notes
 - `--random` overrides the fixed example selection logic
