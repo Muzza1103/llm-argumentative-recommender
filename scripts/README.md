@@ -125,11 +125,6 @@ python -m scripts.test_generation \
 - `--top-p`: top-p sampling parameter
 - `--do-sample`: enable sampling during generation
 
-
-## generate_batch.py
-
-Runs LLM-based argument generation on multiple examples with validation.
-
 ## generate_batch.py
 
 Runs LLM-based argument generation on multiple examples with validation.
