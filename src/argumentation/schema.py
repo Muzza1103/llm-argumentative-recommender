@@ -8,11 +8,6 @@ from typing import Any
 class Argument:
     """
     Internal representation of one generated argument.
-
-    This object is meant to be the bridge between:
-    - generated JSON arguments
-    - scoring modules
-    - graph construction
     """
 
     id: str
@@ -28,6 +23,10 @@ class Argument:
 
     # Scores
     llm_score: float | None = None
+    llm_score_reason: str | None = None
+    llm_scoring_prompt: str | None = None
+    llm_scoring_raw_output: str | None = None
+
     mf_score: float | None = None
     combined_score: float | None = None
 
@@ -49,6 +48,9 @@ class Argument:
             "user_id": self.user_id,
             "target_item_name": self.target_item_name,
             "llm_score": self.llm_score,
+            "llm_score_reason": self.llm_score_reason,
+            "llm_scoring_prompt": self.llm_scoring_prompt,
+            "llm_scoring_raw_output": self.llm_scoring_raw_output,
             "mf_score": self.mf_score,
             "combined_score": self.combined_score,
             "metadata": self.metadata,

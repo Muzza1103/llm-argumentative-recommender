@@ -79,6 +79,16 @@ def main():
         default=0.5,
         help="Weight for the MF empirical score.",
     )
+    parser.add_argument(
+        "--show-prompt",
+        action="store_true",
+        help="Display the full scoring prompt for each argument.",
+    )
+    parser.add_argument(
+        "--show-raw",
+        action="store_true",
+        help="Display the raw LLM scoring output for each argument.",
+    )
     args = parser.parse_args()
 
     example = load_example(Path(args.input), args.index)
@@ -137,8 +147,18 @@ def main():
         print(f"TEXT:           {argument.text}")
         print(f"EVIDENCE:       {argument.evidence}")
         print(f"LLM SCORE:      {argument.llm_score}")
+        print(f"LLM REASON:     {argument.llm_score_reason}")
         print(f"MF SCORE:       {argument.mf_score}")
         print(f"COMBINED SCORE: {argument.combined_score}")
+
+        if args.show_prompt:
+            print("\nSCORING PROMPT:")
+            print(argument.llm_scoring_prompt)
+
+        if args.show_raw:
+            print("\nSCORING RAW OUTPUT:")
+            print(argument.llm_scoring_raw_output)
+
         print()
 
 if __name__ == "__main__":

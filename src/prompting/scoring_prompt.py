@@ -32,6 +32,7 @@ RULES:
 - The score must be a float between 0.0 and 1.0
 - 0.0 means very poor argument
 - 1.0 means very strong argument
+- The reason must be short and explicit
 - Do not return any text outside the JSON
 
 USER_HISTORY:

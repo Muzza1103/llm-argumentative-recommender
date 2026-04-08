@@ -16,6 +16,7 @@ class LLMScorerConfig:
     min_score: float = 0.0
     max_score: float = 1.0
     default_score: float = 0.5
+    default_reason: str = "No valid scoring explanation returned by the LLM."
 
 
 class LocalLLMScorer:
@@ -48,10 +49,21 @@ class LocalLLMScorer:
         output_text = self.generator.generate(prompt)
         parsed_json = extract_first_json_object(output_text)
 
+        argument.llm_scoring_prompt = prompt
+        argument.llm_scoring_raw_output = output_text
+
         if not isinstance(parsed_json, dict):
+            argument.llm_score_reason = self.config.default_reason
             return self.config.default_score
 
         raw_score = parsed_json.get("score")
+        raw_reason = parsed_json.get("reason")
+
+        if not isinstance(raw_reason, str) or raw_reason.strip() == "":
+            raw_reason = self.config.default_reason
+
+        argument.llm_score_reason = raw_reason.strip()
+
         if not isinstance(raw_score, (int, float)):
             return self.config.default_score
 
