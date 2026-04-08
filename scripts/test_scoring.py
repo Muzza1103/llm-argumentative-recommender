@@ -4,11 +4,14 @@ from pathlib import Path
 
 from src.argumentation.schema import build_arguments_from_parsed_json
 from src.argumentation.scoring import (
-    DummyLLMScorer,
     DummyMFScorer,
     ScoreConfig,
     score_arguments,
 )
+from src.argumentation.llm_scorer import LocalLLMScorer, LLMScorerConfig
+from src.llm.config import LLMConfig
+from src.llm.loader import load_model_and_tokenizer
+from src.llm.generator import LocalLLMGenerator
 
 
 def load_example(jsonl_path: Path, index: int) -> dict:
@@ -21,9 +24,6 @@ def load_example(jsonl_path: Path, index: int) -> dict:
 
 
 def load_generated_record(results_jsonl_path: Path, index: int) -> dict:
-    """
-    Load one generated batch record by dataset index.
-    """
     with results_jsonl_path.open("r", encoding="utf-8") as f:
         for line in f:
             record = json.loads(line)
@@ -56,6 +56,18 @@ def main():
         help="Dataset index to inspect.",
     )
     parser.add_argument(
+        "--model",
+        type=str,
+        default="Qwen/Qwen2.5-3B-Instruct",
+        help="Hugging Face model name.",
+    )
+    parser.add_argument(
+        "--max-new-tokens",
+        type=int,
+        default=300,
+        help="Maximum number of generated tokens for scoring.",
+    )
+    parser.add_argument(
         "--llm-weight",
         type=float,
         default=0.5,
@@ -81,9 +93,29 @@ def main():
 
     arguments = build_arguments_from_parsed_json(parsed_json, example)
 
+    llm_config = LLMConfig(
+        model_name=args.model,
+        max_new_tokens=args.max_new_tokens,
+        temperature=0.2,
+        top_p=0.9,
+        do_sample=False,
+    )
+
+    tokenizer, model = load_model_and_tokenizer(llm_config)
+    generator = LocalLLMGenerator(
+        model=model,
+        tokenizer=tokenizer,
+        config=llm_config,
+    )
+
+    llm_scorer = LocalLLMScorer(
+        generator=generator,
+        config=LLMScorerConfig(default_score=0.5),
+    )
+
     scored_arguments = score_arguments(
         arguments=arguments,
-        llm_scorer=DummyLLMScorer(),
+        llm_scorer=llm_scorer,
         mf_scorer=DummyMFScorer(),
         config=ScoreConfig(
             llm_weight=args.llm_weight,
