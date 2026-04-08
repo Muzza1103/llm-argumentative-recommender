@@ -3,12 +3,12 @@ from .scoring import (
     ScoreConfig,
     BaseLLMScorer,
     BaseMFScorer,
-    DummyLLMScorer,
     DummyMFScorer,
     combine_scores,
     score_argument,
     score_arguments,
 )
+from .llm_scorer import LLMScorerConfig, LocalLLMScorer
 
 __all__ = [
     "Argument",
@@ -17,9 +17,10 @@ __all__ = [
     "ScoreConfig",
     "BaseLLMScorer",
     "BaseMFScorer",
-    "DummyLLMScorer",
     "DummyMFScorer",
     "combine_scores",
     "score_argument",
     "score_arguments",
+    "LLMScorerConfig",
+    "LocalLLMScorer",
 ]

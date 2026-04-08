@@ -39,18 +39,6 @@ class BaseMFScorer:
         raise NotImplementedError
 
 
-class DummyLLMScorer(BaseLLMScorer):
-    """
-    Temporary placeholder semantic scorer to test argument structure.
-    """
-
-    def score(self, argument: Argument) -> float:
-        #reward arguments with 2 evidence items
-        if len(argument.evidence) >= 2:
-            return 0.7
-        return 0.5
-
-
 class DummyMFScorer(BaseMFScorer):
     """
     Temporary placeholder collaborative scorer to test argument structure.
