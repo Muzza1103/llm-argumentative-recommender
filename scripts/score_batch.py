@@ -35,13 +35,26 @@ def save_jsonl(records: list[dict], output_path: Path):
             f.write(json.dumps(record, ensure_ascii=False) + "\n")
 
 
+def load_dataset_index(dataset_path: Path) -> dict[int, dict]:
+    dataset_by_index = {}
+
+    with dataset_path.open("r", encoding="utf-8") as f:
+        for i, line in enumerate(f):
+            dataset_by_index[i] = json.loads(line)
+
+    return dataset_by_index
+
+
 def build_summary(
     scored_records: list[dict],
     input_file: str,
     output_file: str,
+    dataset_file: str,
     llm_model: str,
     llm_weight: float,
     mf_weight: float,
+    skipped_records: int,
+    only_valid: bool,
 ) -> dict:
     total_records = len(scored_records)
 
@@ -49,7 +62,6 @@ def build_summary(
     llm_scores = []
     mf_scores = []
     combined_scores = []
-
     support_combined_scores = []
     attack_combined_scores = []
 
@@ -80,12 +92,15 @@ def build_summary(
         return sum(values) / len(values)
 
     return {
+        "dataset_file": dataset_file,
         "input_file": input_file,
         "output_file": output_file,
         "llm_model": llm_model,
         "llm_weight": llm_weight,
         "mf_weight": mf_weight,
+        "only_valid": only_valid,
         "num_records_scored": total_records,
+        "num_records_skipped": skipped_records,
         "num_arguments_scored": total_arguments,
         "mean_llm_score": safe_mean(llm_scores),
         "mean_mf_score": safe_mean(mf_scores),
@@ -98,6 +113,12 @@ def build_summary(
 def main():
     parser = argparse.ArgumentParser(
         description="Score generated arguments in batch using LLM + MF scoring."
+    )
+    parser.add_argument(
+        "--dataset",
+        type=str,
+        required=True,
+        help="Path to the source dataset JSONL file.",
     )
     parser.add_argument(
         "--input",
@@ -152,10 +173,12 @@ def main():
     )
     args = parser.parse_args()
 
+    dataset_path = Path(args.dataset)
     input_path = Path(args.input)
     output_path = Path(args.output)
     summary_path = output_path.with_name(f"{output_path.stem}_summary.json")
 
+    dataset_by_index = load_dataset_index(dataset_path)
     records = load_jsonl(input_path)
 
     llm_config = LLMConfig(
@@ -187,7 +210,7 @@ def main():
     scored_records = []
     skipped_records = 0
 
-    print(f"Loaded {len(records)} records from {input_path}")
+    print(f"Loaded {len(records)} generated records from {input_path}")
 
     for i, record in enumerate(records, start=1):
         validation = record.get("validation", {})
@@ -202,18 +225,12 @@ def main():
             skipped_records += 1
             continue
 
-        example = {
-            "user_id": record.get("user_id"),
-            "history": record.get("history", []),
-            "target_item": record.get("target_item", {}),
-        }
-
-        # Backward compatibility:
-        # if history / target_item are not stored in the record,
-        # scoring cannot reconstruct the full context.
-        if not example["history"] or not example["target_item"]:
+        dataset_index = record.get("index")
+        if dataset_index not in dataset_by_index:
             skipped_records += 1
             continue
+
+        example = dataset_by_index[dataset_index]
 
         arguments = build_arguments_from_parsed_json(parsed_json, example)
 
@@ -259,22 +276,22 @@ def main():
         scored_records=scored_records,
         input_file=str(input_path),
         output_file=str(output_path),
+        dataset_file=str(dataset_path),
         llm_model=args.model,
         llm_weight=args.llm_weight,
         mf_weight=args.mf_weight,
+        skipped_records=skipped_records,
+        only_valid=args.only_valid,
     )
-    summary["num_records_loaded"] = len(records)
-    summary["num_records_skipped"] = skipped_records
-    summary["only_valid"] = args.only_valid
 
     with summary_path.open("w", encoding="utf-8") as f:
         json.dump(summary, f, indent=2, ensure_ascii=False)
 
     print("\nDone.")
-    print(f"Scored output: {output_path}")
-    print(f"Summary:       {summary_path}")
+    print(f"Scored output:  {output_path}")
+    print(f"Summary:        {summary_path}")
     print(f"Scored records: {len(scored_records)}")
-    print(f"Skipped records: {skipped_records}")
+    print(f"Skipped:        {skipped_records}")
 
 
 if __name__ == "__main__":
