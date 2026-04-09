@@ -31,12 +31,52 @@ def filter_records(records: list[dict], only: str) -> list[dict]:
     return filtered
 
 
-def print_record(record: dict, show_prompt: bool, show_raw: bool):
+def print_scored_arguments(record: dict, show_llm_prompt: bool, show_llm_raw: bool):
+    scored_arguments = record.get("scored_arguments")
+
+    print("\nSCORED ARGUMENTS:")
+    if not scored_arguments:
+        print("None")
+        return
+
+    for argument in scored_arguments:
+        print("-" * 100)
+        print(f"ID:             {argument.get('id')}")
+        print(f"TYPE:           {argument.get('arg_type')}")
+        print(f"TEXT:           {argument.get('text')}")
+        print(f"EVIDENCE:       {argument.get('evidence')}")
+        print(f"LLM SCORE:      {argument.get('llm_score')}")
+        print(f"LLM REASON:     {argument.get('llm_score_reason')}")
+        print(f"MF SCORE:       {argument.get('mf_score')}")
+        print(f"COMBINED SCORE: {argument.get('combined_score')}")
+
+        if show_llm_prompt:
+            print("\nLLM SCORING PROMPT:")
+            print(argument.get("llm_scoring_prompt"))
+
+        if show_llm_raw:
+            print("\nLLM SCORING RAW OUTPUT:")
+            print(argument.get("llm_scoring_raw_output"))
+
+        print()
+
+
+def print_record(
+    record: dict,
+    show_prompt: bool,
+    show_raw: bool,
+    show_scores: bool,
+    show_llm_prompt: bool,
+    show_llm_raw: bool,
+):
     print("=" * 100)
     print(f"INDEX:      {record.get('index')}")
     print(f"USER_ID:    {record.get('user_id')}")
     print(f"TARGET:     {record.get('target_name')}")
     print(f"IS_VALID:   {record.get('validation', {}).get('is_valid')}")
+
+    if "scoring" in record:
+        print(f"SCORING:    {record.get('scoring')}")
 
     errors = record.get("validation", {}).get("errors", [])
     print("ERRORS:")
@@ -59,6 +99,13 @@ def print_record(record: dict, show_prompt: bool, show_raw: bool):
         print("None")
     else:
         print(json.dumps(parsed_json, indent=2, ensure_ascii=False))
+
+    if show_scores:
+        print_scored_arguments(
+            record,
+            show_llm_prompt=show_llm_prompt,
+            show_llm_raw=show_llm_raw,
+        )
 
     if show_raw:
         print("\nRAW OUTPUT:")
@@ -92,12 +139,27 @@ def main():
     parser.add_argument(
         "--show-prompt",
         action="store_true",
-        help="Display the full prompt when available.",
+        help="Display the full generation prompt when available.",
     )
     parser.add_argument(
         "--show-raw",
         action="store_true",
-        help="Display the raw model output.",
+        help="Display the raw generation output.",
+    )
+    parser.add_argument(
+        "--show-scores",
+        action="store_true",
+        help="Display scored arguments when available.",
+    )
+    parser.add_argument(
+        "--show-llm-prompt",
+        action="store_true",
+        help="Display the full LLM scoring prompt when available.",
+    )
+    parser.add_argument(
+        "--show-llm-raw",
+        action="store_true",
+        help="Display the raw LLM scoring output when available.",
     )
     args = parser.parse_args()
 
@@ -118,6 +180,9 @@ def main():
             record,
             show_prompt=args.show_prompt,
             show_raw=args.show_raw,
+            show_scores=args.show_scores,
+            show_llm_prompt=args.show_llm_prompt,
+            show_llm_raw=args.show_llm_raw,
         )
 
 
