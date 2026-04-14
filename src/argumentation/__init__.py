@@ -1,4 +1,9 @@
-from .schema import Argument, build_argument_from_json, build_arguments_from_parsed_json
+from .schema import (
+    Argument,
+    build_argument_from_json,
+    build_arguments_from_parsed_json,
+    build_arguments_from_scored_json,
+)
 from .scoring import (
     ScoreConfig,
     BaseLLMScorer,
@@ -27,6 +32,7 @@ __all__ = [
     "Argument",
     "build_argument_from_json",
     "build_arguments_from_parsed_json",
+    "build_arguments_from_scored_json",
     "ScoreConfig",
     "BaseLLMScorer",
     "BaseMFScorer",

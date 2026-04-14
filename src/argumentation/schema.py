@@ -92,3 +92,38 @@ def build_arguments_from_parsed_json(
         build_argument_from_json(argument_json, example)
         for argument_json in arguments_json
     ]
+
+
+def build_arguments_from_scored_json(
+    scored_arguments_json: list[dict[str, Any]],
+    example: dict[str, Any] | None = None,
+) -> list[Argument]:
+    """
+    Rebuild Argument objects from scored arguments stored in JSON.
+    """
+    arguments = []
+
+    for argument_json in scored_arguments_json:
+        argument = Argument(
+            id=argument_json["id"],
+            arg_type=argument_json["arg_type"],
+            text=argument_json["text"],
+            evidence=argument_json["evidence"],
+            user_id=argument_json.get("user_id"),
+            target_item_name=argument_json.get("target_item_name"),
+            llm_score=argument_json.get("llm_score"),
+            llm_score_reason=argument_json.get("llm_score_reason"),
+            llm_scoring_prompt=argument_json.get("llm_scoring_prompt"),
+            llm_scoring_raw_output=argument_json.get("llm_scoring_raw_output"),
+            mf_score=argument_json.get("mf_score"),
+            combined_score=argument_json.get("combined_score"),
+            metadata=argument_json.get("metadata", {}),
+        )
+
+        if example is not None:
+            argument.target_item = example.get("target_item", {})
+            argument.history = example.get("history", [])
+
+        arguments.append(argument)
+
+    return arguments
