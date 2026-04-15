@@ -87,3 +87,22 @@ def format_target_item(target_item: dict) -> str:
         f"attributes: {attributes} | "
         f"global_rating: {global_stars}"
     )
+
+def get_filtered_attributes(attributes: dict) -> dict:
+    if not attributes:
+        return {}
+
+    filtered = {}
+
+    for key in IMPORTANT_ATTRIBUTES:
+        if key not in attributes:
+            continue
+
+        value = clean_attribute_value(attributes[key])
+        if value is None:
+            continue
+
+        label = ATTRIBUTE_LABELS[key]
+        filtered[label] = value
+
+    return filtered
