@@ -4,9 +4,12 @@ from pathlib import Path
 
 from src.argumentation.schema import build_arguments_from_parsed_json
 from src.argumentation.scoring import (
-    DummyMFScorer,
     ScoreConfig,
     score_arguments,
+)
+from src.argumentation.mf_scorer import (
+    GlobalRatingFallbackMFScorer,
+    PrecomputedMFScorer,
 )
 from src.argumentation.llm_scorer import LocalLLMScorer, LLMScorerConfig
 from src.llm.config import LLMConfig
@@ -80,6 +83,12 @@ def main():
         help="Weight for the MF empirical score.",
     )
     parser.add_argument(
+        "--mf-predictions",
+        type=str,
+        default=None,
+        help="Optional path to a JSON file containing precomputed MF predictions.",
+    )
+    parser.add_argument(
         "--show-prompt",
         action="store_true",
         help="Display the full scoring prompt for each argument.",
@@ -123,10 +132,17 @@ def main():
         config=LLMScorerConfig(default_score=0.5),
     )
 
+    if args.mf_predictions is not None:
+        mf_scorer = PrecomputedMFScorer.from_json(args.mf_predictions)
+        mf_source = args.mf_predictions
+    else:
+        mf_scorer = GlobalRatingFallbackMFScorer()
+        mf_source = "global_rating_fallback"
+
     scored_arguments = score_arguments(
         arguments=arguments,
         llm_scorer=llm_scorer,
-        mf_scorer=DummyMFScorer(),
+        mf_scorer=mf_scorer,
         config=ScoreConfig(
             llm_weight=args.llm_weight,
             mf_weight=args.mf_weight,
@@ -137,6 +153,7 @@ def main():
     print(f"DATASET INDEX: {args.index}")
     print(f"USER ID:       {example.get('user_id')}")
     print(f"TARGET ITEM:   {example.get('target_item', {}).get('name')}")
+    print(f"MF SOURCE:     {mf_source}")
     print("=" * 100)
     print()
 
@@ -160,6 +177,7 @@ def main():
             print(argument.llm_scoring_raw_output)
 
         print()
+
 
 if __name__ == "__main__":
     main()

@@ -59,9 +59,7 @@ def dfquad_combine(
     support_strength: float,
 ) -> float:
     """
-    Simple DF-QuAD-style combination
-
-    Formula used :
+    Formula :
         if support_strength >= attack_strength:
             result = base + (1 - base) * (support - attack)
         else:

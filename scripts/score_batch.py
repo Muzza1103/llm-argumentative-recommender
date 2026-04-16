@@ -4,9 +4,12 @@ from pathlib import Path
 
 from src.argumentation.schema import build_arguments_from_parsed_json
 from src.argumentation.scoring import (
-    DummyMFScorer,
     ScoreConfig,
     score_arguments,
+)
+from src.argumentation.mf_scorer import (
+    GlobalRatingFallbackMFScorer,
+    PrecomputedMFScorer,
 )
 from src.argumentation.llm_scorer import LocalLLMScorer, LLMScorerConfig
 from src.llm.config import LLMConfig
@@ -53,6 +56,7 @@ def build_summary(
     llm_model: str,
     llm_weight: float,
     mf_weight: float,
+    mf_source: str,
     skipped_records: int,
     only_valid: bool,
 ) -> dict:
@@ -98,6 +102,7 @@ def build_summary(
         "llm_model": llm_model,
         "llm_weight": llm_weight,
         "mf_weight": mf_weight,
+        "mf_source": mf_source,
         "only_valid": only_valid,
         "num_records_scored": total_records,
         "num_records_skipped": skipped_records,
@@ -157,6 +162,12 @@ def main():
         help="Weight for the MF empirical score.",
     )
     parser.add_argument(
+        "--mf-predictions",
+        type=str,
+        default=None,
+        help="Optional path to a JSON file containing precomputed MF predictions.",
+    )
+    parser.add_argument(
         "--only-valid",
         action="store_true",
         help="Score only records whose validation status is valid.",
@@ -201,7 +212,13 @@ def main():
         config=LLMScorerConfig(default_score=0.5),
     )
 
-    mf_scorer = DummyMFScorer()
+    if args.mf_predictions is not None:
+        mf_scorer = PrecomputedMFScorer.from_json(args.mf_predictions)
+        mf_source = args.mf_predictions
+    else:
+        mf_scorer = GlobalRatingFallbackMFScorer()
+        mf_source = "global_rating_fallback"
+
     score_config = ScoreConfig(
         llm_weight=args.llm_weight,
         mf_weight=args.mf_weight,
@@ -211,6 +228,7 @@ def main():
     skipped_records = 0
 
     print(f"Loaded {len(records)} generated records from {input_path}")
+    print(f"MF source: {mf_source}")
 
     for i, record in enumerate(records, start=1):
         validation = record.get("validation", {})
@@ -258,6 +276,7 @@ def main():
             "llm_model": args.model,
             "llm_weight": args.llm_weight,
             "mf_weight": args.mf_weight,
+            "mf_source": mf_source,
         }
         enriched_record["scored_arguments"] = scored_arguments_dicts
 
@@ -280,6 +299,7 @@ def main():
         llm_model=args.model,
         llm_weight=args.llm_weight,
         mf_weight=args.mf_weight,
+        mf_source=mf_source,
         skipped_records=skipped_records,
         only_valid=args.only_valid,
     )

@@ -27,6 +27,11 @@ from .dfquad import (
     dfquad_combine,
     evaluate_root_dfquad,
 )
+from .mf_scorer import (
+    MFScorerConfig,
+    GlobalRatingFallbackMFScorer,
+    PrecomputedMFScorer,
+)
 
 __all__ = [
     "Argument",
@@ -48,6 +53,9 @@ __all__ = [
     "build_argument_graph",
     "get_argument_base_score",
     "DFQuADResult",
+    "MFScorerConfig",
+    "GlobalRatingFallbackMFScorer",
+    "PrecomputedMFScorer",
     "aggregate_strength",
     "dfquad_combine",
     "evaluate_root_dfquad",
