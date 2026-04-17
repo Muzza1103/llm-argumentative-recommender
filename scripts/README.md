@@ -2,6 +2,16 @@
 
 This folder contains runnable utility scripts used throughout the project.
 
+These scripts cover the full pipeline:
+- dataset construction
+- prompt generation
+- argument generation
+- validation
+- scoring (LLM + MF)
+- argument graph construction
+- DF-QuAD aggregation
+- visualization
+
 ---
 
 ## build_yelp_subset.py
@@ -42,34 +52,17 @@ Inspects a JSONL file and displays examples along with summary statistics.
 python -m scripts.inspect_jsonl --file data/processed/yelp_subset.jsonl --n 3
 ```
 
-Example with sample data:
-
-```bash
-python -m scripts.inspect_jsonl --file data/examples/sample_input.jsonl --n 2
-```
-
 ---
 
 ## test_prompt.py
 
 Builds and displays the LLM prompt for a given example.
 
-### Features
-- Load an example from JSONL
-- Format user history
-- Format target item
-- Generate the final prompt used for argument generation
 
 ### Usage
 
 ```bash
 python -m scripts.test_prompt --file data/processed/yelp_subset.jsonl --index 0
-```
-
-Example with sample data:
-
-```bash
-python -m scripts.test_prompt --file data/examples/sample_input.jsonl --index 0
 ```
 
 ---
@@ -150,14 +143,6 @@ Given an output path such as:
 data/processed/generated_arguments_batch.jsonl
 ```
 
-### Outputs
-
-Given an output path such as:
-
-```bash
-data/processed/generated_arguments_batch.jsonl
-```
-
 the script also creates:
 
 ```
@@ -214,6 +199,123 @@ Display invalid records with the full prompt:
 ```bash
 python -m scripts.inspect_generation_results --file data/processed/generated_arguments_batch.jsonl --only invalid --n 2 --show-prompt
 ```
+
+## test_scoring.py
+
+Tests scoring on a single example.
+
+### Features
+- LLM scoring
+- MF scoring
+- combined score
+- optional prompt + raw
+
+### Usage
+
+```bash
+python -m scripts.test_scoring \
+  --input data/processed/yelp_subset.jsonl \
+  --results data/processed/generated_arguments_batch.jsonl \
+  --index 0
+```
+
+---
+
+## score_batch.py
+
+Runs scoring on multiple generated examples.
+
+### Features
+- LLM + MF scoring
+- save enriched JSONL
+- generate summary stats
+
+### Usage
+
+```bash
+python -m scripts.score_batch \
+  --dataset data/processed/yelp_subset.jsonl \
+  --input data/processed/generated_arguments_batch.jsonl \
+  --output data/processed/scored_arguments_batch.jsonl
+```
+
+---
+
+## build_mf_dataset.py
+
+Builds a dataset for Matrix Factorization.
+
+### Output
+- `mf_dataset.csv`
+
+### Usage
+
+```bash
+python -m scripts.build_mf_dataset \
+  --input data/processed/yelp_subset.jsonl \
+  --output data/processed/mf_dataset.csv
+```
+
+---
+
+## train_mf.py
+
+Trains an MF model (SVD) and generates predictions.
+
+### Output
+- `mf_predictions.json`
+
+### Usage
+
+```bash
+python -m scripts.train_mf \
+  --mf-data data/processed/mf_dataset.csv \
+  --source-dataset data/processed/yelp_subset.jsonl \
+  --output data/processed/mf_predictions.json
+```
+
+---
+
+## test_dfquad.py
+
+Tests DF-QuAD aggregation.
+
+### Features
+- build argument graph
+- compute aggregated scores
+- optional graph display
+
+### Usage
+
+```bash
+python -m scripts.test_dfquad \
+  --input data/processed/yelp_subset.jsonl \
+  --results data/processed/scored_arguments_batch.jsonl \
+  --index 0
+```
+
+---
+
+## test_graph.py
+
+Displays an interactive argument graph.
+
+### Features
+- nodes: arguments + item
+- edges: support / attack
+- zoom + hover
+- display history + attributes
+
+### Usage
+
+```bash
+python -m scripts.test_graph \
+  --input data/processed/yelp_subset.jsonl \
+  --results data/processed/scored_arguments_batch.jsonl \
+  --index 0
+```
+
+---
 
 ### Notes
 - `--random` overrides the fixed example selection logic
