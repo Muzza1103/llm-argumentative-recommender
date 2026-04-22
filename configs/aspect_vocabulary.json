@@ -1,0 +1,76 @@
+{
+  "allowed_aspects": [
+    "food",
+    "service",
+    "ambience",
+    "price",
+    "portions",
+    "drinks",
+    "speed",
+    "takeout",
+    "delivery",
+    "reservations",
+    "good_for_groups",
+    "good_for_kids",
+    "noise",
+    "freshness",
+    "quality",
+    "location",
+    "spice_level",
+    "crowdedness",
+    "selection"
+  ],
+  "normalization_map": {
+    "ambiance": "ambience",
+    "atmosphere": "ambience",
+    "environment": "ambience",
+    "decor": "ambience",
+    "vibe": "ambience",
+
+    "drink": "drinks",
+    "beverage": "drinks",
+    "beverages": "drinks",
+    "cocktails": "drinks",
+    "cocktail_menu": "drinks",
+    "beer_list": "drinks",
+    "wine_list": "drinks",
+    "liquor_drinks": "drinks",
+    "drink.menu": "drinks",
+
+    "family/group suitability": "good_for_groups",
+    "familygroupsuitability": "good_for_groups",
+
+    "staff": "service",
+    "waiterservice": "service",
+    "waiter_service": "service",
+    "waiter communication": "service",
+    "waiter_communication": "service",
+    "information": "service",
+    "order_confusion": "service",
+
+    "wait_time": "speed",
+    "wait time": "speed",
+    "delivery_time": "speed",
+    "hours": "speed",
+    "time": "speed",
+
+    "value": "price",
+    "prices": "price",
+
+    "quantity": "portions",
+
+    "drink_selection": "selection",
+    "menu_selection": "selection",
+    "beer selection": "selection",
+    "selection of drinks": "selection",
+
+    "quality of food": "quality",
+    "food_quality": "quality",
+
+    "pickup": "takeout",
+    "to_go": "takeout",
+
+    "family_friendly": "good_for_kids",
+    "kid_friendly": "good_for_kids"
+  }
+}
