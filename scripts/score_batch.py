@@ -7,10 +7,8 @@ from src.argumentation.scoring import (
     ScoreConfig,
     score_arguments,
 )
-from src.argumentation.mf_scorer import (
-    GlobalRatingFallbackMFScorer,
-    PrecomputedMFScorer,
-)
+from src.argumentation.aspect_mf_scorer import AspectMFScorer
+from src.argumentation.mf_scorer import GlobalRatingFallbackMFScorer
 from src.argumentation.llm_scorer import LocalLLMScorer, LLMScorerConfig
 from src.llm.config import LLMConfig
 from src.llm.loader import load_model_and_tokenizer
@@ -80,8 +78,10 @@ def build_summary(
 
             if isinstance(llm_score, (int, float)):
                 llm_scores.append(float(llm_score))
+
             if isinstance(mf_score, (int, float)):
                 mf_scores.append(float(mf_score))
+
             if isinstance(combined_score, (int, float)):
                 combined_scores.append(float(combined_score))
 
@@ -117,71 +117,25 @@ def build_summary(
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Score generated arguments in batch using LLM + MF scoring."
+        description="Score generated arguments in batch using LLM + aspect-based MF scoring."
     )
-    parser.add_argument(
-        "--dataset",
-        type=str,
-        required=True,
-        help="Path to the source dataset JSONL file.",
-    )
-    parser.add_argument(
-        "--input",
-        type=str,
-        required=True,
-        help="Path to the generated results JSONL file.",
-    )
-    parser.add_argument(
-        "--output",
-        type=str,
-        required=True,
-        help="Path to the scored output JSONL file.",
-    )
-    parser.add_argument(
-        "--model",
-        type=str,
-        default="Qwen/Qwen2.5-3B-Instruct",
-        help="Hugging Face model name for semantic scoring.",
-    )
-    parser.add_argument(
-        "--max-new-tokens",
-        type=int,
-        default=300,
-        help="Maximum number of generated tokens for scoring.",
-    )
-    parser.add_argument(
-        "--llm-weight",
-        type=float,
-        default=0.5,
-        help="Weight for the LLM semantic score.",
-    )
-    parser.add_argument(
-        "--mf-weight",
-        type=float,
-        default=0.5,
-        help="Weight for the MF empirical score.",
-    )
+    parser.add_argument("--dataset", type=str, required=True)
+    parser.add_argument("--input", type=str, required=True)
+    parser.add_argument("--output", type=str, required=True)
+    parser.add_argument("--model", type=str, default="Qwen/Qwen2.5-3B-Instruct")
+    parser.add_argument("--max-new-tokens", type=int, default=300)
+    parser.add_argument("--llm-weight", type=float, default=0.5)
+    parser.add_argument("--mf-weight", type=float, default=0.5)
     parser.add_argument(
         "--mf-predictions",
         type=str,
         default=None,
-        help="Optional path to a JSON file containing precomputed MF predictions.",
+        help="Optional path to aspect-based MF predictions JSON.",
     )
-    parser.add_argument(
-        "--only-valid",
-        action="store_true",
-        help="Score only records whose validation status is valid.",
-    )
-    parser.add_argument(
-        "--save-llm-prompt",
-        action="store_true",
-        help="Keep the full LLM scoring prompt in the scored output.",
-    )
-    parser.add_argument(
-        "--save-llm-raw",
-        action="store_true",
-        help="Keep the raw LLM scoring output in the scored output.",
-    )
+    parser.add_argument("--only-valid", action="store_true")
+    parser.add_argument("--save-llm-prompt", action="store_true")
+    parser.add_argument("--save-llm-raw", action="store_true")
+
     args = parser.parse_args()
 
     dataset_path = Path(args.dataset)
@@ -201,6 +155,7 @@ def main():
     )
 
     tokenizer, model = load_model_and_tokenizer(llm_config)
+
     generator = LocalLLMGenerator(
         model=model,
         tokenizer=tokenizer,
@@ -212,12 +167,11 @@ def main():
         config=LLMScorerConfig(default_score=0.5),
     )
 
-    if args.mf_predictions is not None:
-        mf_scorer = PrecomputedMFScorer.from_json(args.mf_predictions)
-        mf_source = args.mf_predictions
-    else:
-        mf_scorer = GlobalRatingFallbackMFScorer()
-        mf_source = "global_rating_fallback"
+    mf_source = (
+        f"aspect_mf:{args.mf_predictions}"
+        if args.mf_predictions is not None
+        else "global_rating_fallback"
+    )
 
     score_config = ScoreConfig(
         llm_weight=args.llm_weight,
@@ -250,6 +204,15 @@ def main():
 
         example = dataset_by_index[dataset_index]
 
+        if args.mf_predictions is not None:
+            mf_scorer = AspectMFScorer(
+                predictions_path=args.mf_predictions,
+                user_id=example.get("user_id"),
+                default_score=0.5,
+            )
+        else:
+            mf_scorer = GlobalRatingFallbackMFScorer()
+
         arguments = build_arguments_from_parsed_json(parsed_json, example)
 
         scored_arguments = score_arguments(
@@ -260,6 +223,7 @@ def main():
         )
 
         scored_arguments_dicts = []
+
         for argument in scored_arguments:
             argument_dict = argument.to_dict()
 
