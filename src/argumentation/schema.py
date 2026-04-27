@@ -4,6 +4,30 @@ from dataclasses import dataclass, field
 from typing import Any
 
 
+def clean_used_aspects(value: Any) -> list[str]:
+    if not isinstance(value, list):
+        return []
+
+    cleaned = []
+    seen = set()
+
+    for aspect in value:
+        if not isinstance(aspect, str):
+            continue
+
+        aspect = aspect.strip().lower()
+        if not aspect:
+            continue
+
+        if aspect in seen:
+            continue
+
+        seen.add(aspect)
+        cleaned.append(aspect)
+
+    return cleaned
+
+
 @dataclass
 class Argument:
     """
@@ -14,6 +38,7 @@ class Argument:
     arg_type: str  # "support" or "attack"
     text: str
     evidence: list[str]
+    used_aspects: list[str] = field(default_factory=list)
 
     # Context
     user_id: str | None = None
@@ -45,6 +70,7 @@ class Argument:
             "arg_type": self.arg_type,
             "text": self.text,
             "evidence": self.evidence,
+            "used_aspects": self.used_aspects,
             "user_id": self.user_id,
             "target_item_name": self.target_item_name,
             "llm_score": self.llm_score,
@@ -61,10 +87,6 @@ def build_argument_from_json(
     argument_json: dict[str, Any],
     example: dict[str, Any],
 ) -> Argument:
-    """
-    Build one Argument object from one generated JSON argument
-    and the original dataset example.
-    """
     target_item = example.get("target_item", {})
 
     return Argument(
@@ -72,6 +94,7 @@ def build_argument_from_json(
         arg_type=argument_json["type"],
         text=argument_json["text"],
         evidence=argument_json["evidence"],
+        used_aspects=clean_used_aspects(argument_json.get("used_aspects", [])),
         user_id=example.get("user_id"),
         target_item_name=target_item.get("name"),
         target_item=target_item,
@@ -83,9 +106,6 @@ def build_arguments_from_parsed_json(
     parsed_json: dict[str, Any],
     example: dict[str, Any],
 ) -> list[Argument]:
-    """
-    Build a list of Argument objects from a parsed generated JSON output.
-    """
     arguments_json = parsed_json.get("arguments", [])
 
     return [
@@ -98,9 +118,6 @@ def build_arguments_from_scored_json(
     scored_arguments_json: list[dict[str, Any]],
     example: dict[str, Any] | None = None,
 ) -> list[Argument]:
-    """
-    Rebuild Argument objects from scored arguments stored in JSON.
-    """
     arguments = []
 
     for argument_json in scored_arguments_json:
@@ -109,6 +126,7 @@ def build_arguments_from_scored_json(
             arg_type=argument_json["arg_type"],
             text=argument_json["text"],
             evidence=argument_json["evidence"],
+            used_aspects=clean_used_aspects(argument_json.get("used_aspects", [])),
             user_id=argument_json.get("user_id"),
             target_item_name=argument_json.get("target_item_name"),
             llm_score=argument_json.get("llm_score"),
