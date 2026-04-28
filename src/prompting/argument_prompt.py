@@ -36,6 +36,12 @@ INSTRUCTIONS:
 - The target item contains categories, filtered attributes, and sometimes extracted review aspects.
 - Do not invent missing facts or attributes.
 - Do not contradict the evidence.
+- Evidence snippets must be copied faithfully from the input.
+- If an attribute is True in the input, do not claim it is False.
+- If an attribute is False in the input, do not claim it is True.
+- If the target and a history item have the same attribute value, do not use that attribute as an attack.
+- For attack arguments, only use real disadvantages, mismatches, or weak signals grounded in the input.
+- Before writing each argument, verify that the claim is logically consistent with the evidence.
 - Keep each argument text short.
 - Use at most 2 short evidence snippets per argument.
 - Each argument MUST include "used_aspects".

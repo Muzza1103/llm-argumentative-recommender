@@ -16,7 +16,7 @@ class AspectMFScorer(BaseMFScorer):
     def __init__(
         self,
         predictions_path: str | Path,
-        user_id: str,
+        user_id: str | None = None,
         default_score: float = 0.5,
     ):
         self.predictions_path = Path(predictions_path)
@@ -39,19 +39,25 @@ class AspectMFScorer(BaseMFScorer):
                 continue
 
             user_id = str(user_id)
-            aspect = str(aspect)
+            aspect = str(aspect).strip().lower()
 
             predictions.setdefault(user_id, {})[aspect] = float(score)
 
         return predictions
 
+    def set_user(self, user_id: str | None):
+        self.user_id = user_id
+
     def score(self, argument: Argument) -> float:
+        if not self.user_id:
+            return self.default_score
+
         aspects = self._get_argument_aspects(argument)
 
         if not aspects:
             return self.default_score
 
-        user_predictions = self.predictions.get(self.user_id, {})
+        user_predictions = self.predictions.get(str(self.user_id), {})
 
         scores = []
         for aspect in aspects:
@@ -64,10 +70,6 @@ class AspectMFScorer(BaseMFScorer):
         return sum(scores) / len(scores)
 
     def _get_argument_aspects(self, argument: Argument) -> list[str]:
-        """
-        Supports several possible field names to stay compatible
-        with current/future argument schemas.
-        """
         aspects = []
 
         for field_name in [

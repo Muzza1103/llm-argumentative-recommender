@@ -70,3 +70,44 @@ class LocalLLMGenerator:
         text = self.tokenizer.decode(generated_ids, skip_special_tokens=True)
 
         return text.strip()
+    
+    def generate_batch(self, prompts: list[str], batch_size: int = 4) -> list[str]:
+        outputs: list[str] = []
+
+        if not prompts:
+            return outputs
+
+        if self.tokenizer.pad_token is None:
+            self.tokenizer.pad_token = self.tokenizer.eos_token
+
+        for start in range(0, len(prompts), batch_size):
+            batch_prompts = prompts[start:start + batch_size]
+
+            inputs = self.tokenizer(
+                batch_prompts,
+                return_tensors="pt",
+                padding=True,
+                truncation=True,
+            ).to(self.model.device)
+
+            generated_ids = self.model.generate(
+                **inputs,
+                max_new_tokens=self.config.max_new_tokens,
+                do_sample=self.config.do_sample,
+                temperature=self.config.temperature if self.config.do_sample else None,
+                top_p=self.config.top_p if self.config.do_sample else None,
+                pad_token_id=self.tokenizer.eos_token_id,
+            )
+
+            input_lengths = inputs["input_ids"].shape[1]
+
+            generated_only = generated_ids[:, input_lengths:]
+
+            decoded_outputs = self.tokenizer.batch_decode(
+                generated_only,
+                skip_special_tokens=True,
+            )
+
+            outputs.extend(output.strip() for output in decoded_outputs)
+
+        return outputs

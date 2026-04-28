@@ -139,6 +139,12 @@ def main():
         help="Enable sampling during generation.",
     )
     parser.add_argument(
+        "--batch-size",
+        type=int,
+        default=4,
+        help="Number of prompts generated together on GPU.",
+    )
+    parser.add_argument(
         "--save-prompt",
         action="store_true",
         help="Include the full prompt in the output files.",
@@ -184,15 +190,40 @@ def main():
 
     print(f"Loaded {len(examples)} examples.")
     print(f"Processing {len(indices)} examples...")
+    print(f"Batch size: {args.batch_size}")
 
-    for position, idx in enumerate(indices, start=1):
+    prompts = []
+    selected_examples = []
+
+    for idx in indices:
         example = examples[idx]
 
         history_str = format_history(example["history"])
         target_str = format_target_item(example["target_item"])
         prompt = build_prompt(history_str, target_str)
 
-        output_text = generator.generate(prompt)
+        prompts.append(prompt)
+        selected_examples.append(
+            {
+                "index": idx,
+                "example": example,
+                "prompt": prompt,
+            }
+        )
+
+    output_texts = generator.generate_batch(
+        prompts,
+        batch_size=args.batch_size,
+    )
+
+    for position, (job, output_text) in enumerate(
+        zip(selected_examples, output_texts),
+        start=1,
+    ):
+        idx = job["index"]
+        example = job["example"]
+        prompt = job["prompt"]
+
         parsed_json = extract_first_json_object(output_text)
         validation = validate_generated_arguments(example, parsed_json)
 
@@ -238,6 +269,7 @@ def main():
         "output_file_invalid": str(invalid_output_path),
         "num_examples_requested": len(indices),
         "num_examples_processed": len(all_records),
+        "batch_size": args.batch_size,
         "num_valid": len(valid_records),
         "num_invalid": len(invalid_records),
         "error_counts": dict(global_error_counter),

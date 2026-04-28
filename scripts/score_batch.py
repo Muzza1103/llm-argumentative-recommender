@@ -173,6 +173,15 @@ def main():
         else "global_rating_fallback"
     )
 
+    if args.mf_predictions is not None:
+        mf_scorer = AspectMFScorer(
+            predictions_path=args.mf_predictions,
+            user_id="",
+            default_score=0.5,
+        )
+    else:
+        mf_scorer = GlobalRatingFallbackMFScorer()
+
     score_config = ScoreConfig(
         llm_weight=args.llm_weight,
         mf_weight=args.mf_weight,
@@ -205,13 +214,7 @@ def main():
         example = dataset_by_index[dataset_index]
 
         if args.mf_predictions is not None:
-            mf_scorer = AspectMFScorer(
-                predictions_path=args.mf_predictions,
-                user_id=example.get("user_id"),
-                default_score=0.5,
-            )
-        else:
-            mf_scorer = GlobalRatingFallbackMFScorer()
+            mf_scorer.set_user(example.get("user_id"))
 
         arguments = build_arguments_from_parsed_json(parsed_json, example)
 

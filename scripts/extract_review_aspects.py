@@ -106,117 +106,6 @@ def parse_extracted_aspects(
     return normalized_results
 
 
-def extract_review_aspects_for_item(
-    item_name: str,
-    rating: float | int | None,
-    review_text: str,
-    source: str,
-    allowed_aspects: list[str],
-    generator: LocalLLMGenerator,
-    normalization_map: dict[str, str],
-) -> tuple[list[dict], str]:
-    prompt = build_review_aspect_extraction_prompt(
-        item_name=item_name,
-        rating=rating,
-        review_text=review_text,
-        source=source,
-        allowed_aspects=allowed_aspects,
-    )
-
-    raw_output = generator.generate(prompt)
-
-    aspects = parse_extracted_aspects(
-        raw_output=raw_output,
-        allowed_aspects=allowed_aspects,
-        normalization_map=normalization_map,
-    )
-
-    return aspects, raw_output
-
-
-def enrich_history_item(
-    item: dict,
-    user_id: str,
-    allowed_aspects: list[str],
-    normalization_map: dict[str, str],
-    generator: LocalLLMGenerator,
-    save_prompt: bool,
-    save_raw: bool,
-) -> dict:
-    enriched = dict(item)
-
-    review_text = item.get("review_text", "").strip()
-    if not review_text:
-        enriched["review_aspects"] = []
-        return enriched
-
-    prompt = build_review_aspect_extraction_prompt(
-        item_name=item.get("name", ""),
-        rating=item.get("user_stars"),
-        review_text=review_text,
-        source="history",
-        allowed_aspects=allowed_aspects,
-    )
-    raw_output = generator.generate(prompt)
-
-    aspects = parse_extracted_aspects(
-        raw_output=raw_output,
-        allowed_aspects=allowed_aspects,
-        normalization_map=normalization_map,
-    )
-
-    enriched["review_aspects"] = aspects
-
-    if save_prompt:
-        enriched["review_aspect_prompt"] = prompt
-
-    if save_raw:
-        enriched["review_aspect_raw_output"] = raw_output
-
-    return enriched
-
-
-def enrich_target_item(
-    target_item: dict,
-    allowed_aspects: list[str],
-    normalization_map: dict[str, str],
-    generator: LocalLLMGenerator,
-    save_prompt: bool,
-    save_raw: bool,
-) -> dict:
-    enriched = dict(target_item)
-
-    review_text = target_item.get("target_review_text", "").strip()
-    if not review_text:
-        enriched["review_aspects"] = []
-        return enriched
-
-    prompt = build_review_aspect_extraction_prompt(
-        item_name=target_item.get("name", ""),
-        rating=target_item.get("user_target_stars"),
-        review_text=review_text,
-        source="target",
-        allowed_aspects=allowed_aspects,
-    )
-    raw_output = generator.generate(prompt)
-
-    aspects = parse_extracted_aspects(
-        raw_output=raw_output,
-        allowed_aspects=allowed_aspects,
-        normalization_map=normalization_map,
-    )
-
-    enriched["review_aspects"] = aspects
-
-    if save_prompt:
-        enriched["review_aspect_prompt"] = prompt
-
-    if save_raw:
-        enriched["review_aspect_raw_output"] = raw_output
-
-    return enriched
-
-
 def build_summary(
     input_file: str,
     output_file: str,
@@ -227,12 +116,14 @@ def build_summary(
     total_target_items: int,
     total_history_aspects: int,
     total_target_aspects: int,
+    batch_size: int,
 ) -> dict:
     return {
         "input_file": input_file,
         "output_file": output_file,
         "aspect_vocabulary_file": vocab_file,
         "model_name": model_name,
+        "batch_size": batch_size,
         "num_examples": num_examples,
         "total_history_items": total_history_items,
         "total_target_items": total_target_items,
@@ -283,6 +174,12 @@ def main():
         help="Maximum number of generated tokens.",
     )
     parser.add_argument(
+        "--batch-size",
+        type=int,
+        default=4,
+        help="Number of review prompts generated together.",
+    )
+    parser.add_argument(
         "--save-prompts",
         action="store_true",
         help="Save review aspect extraction prompts in the output.",
@@ -329,57 +226,121 @@ def main():
     )
 
     enriched_examples = []
+    jobs = []
+    prompts = []
+
+    print(f"Loaded {len(examples)} examples from {input_path}")
+    print(f"Using aspect vocabulary from {vocab_path}")
+    print(f"Allowed aspects: {len(allowed_aspects)}")
+    print(f"Batch size: {args.batch_size}")
+
+    for example_idx, example in enumerate(examples):
+        enriched_example = dict(example)
+        enriched_example["history"] = [dict(item) for item in example.get("history", [])]
+        enriched_example["target_item"] = dict(example.get("target_item", {}))
+        enriched_examples.append(enriched_example)
+
+        for history_idx, item in enumerate(enriched_example["history"]):
+            review_text = item.get("review_text", "").strip()
+
+            if not review_text:
+                item["review_aspects"] = []
+                continue
+
+            prompt = build_review_aspect_extraction_prompt(
+                item_name=item.get("name", ""),
+                rating=item.get("user_stars"),
+                review_text=review_text,
+                source="history",
+                allowed_aspects=allowed_aspects,
+            )
+
+            jobs.append(
+                {
+                    "example_idx": example_idx,
+                    "kind": "history",
+                    "history_idx": history_idx,
+                    "prompt": prompt,
+                }
+            )
+            prompts.append(prompt)
+
+        target_item = enriched_example["target_item"]
+        target_review_text = target_item.get("target_review_text", "").strip()
+
+        if not target_review_text:
+            target_item["review_aspects"] = []
+        else:
+            prompt = build_review_aspect_extraction_prompt(
+                item_name=target_item.get("name", ""),
+                rating=target_item.get("user_target_stars"),
+                review_text=target_review_text,
+                source="target",
+                allowed_aspects=allowed_aspects,
+            )
+
+            jobs.append(
+                {
+                    "example_idx": example_idx,
+                    "kind": "target",
+                    "prompt": prompt,
+                }
+            )
+            prompts.append(prompt)
+
+    raw_outputs = generator.generate_batch(
+        prompts,
+        batch_size=args.batch_size,
+    )
+
+    for job, raw_output in zip(jobs, raw_outputs):
+        aspects = parse_extracted_aspects(
+            raw_output=raw_output,
+            allowed_aspects=allowed_aspects,
+            normalization_map=normalization_map,
+        )
+
+        example = enriched_examples[job["example_idx"]]
+
+        if job["kind"] == "history":
+            item = example["history"][job["history_idx"]]
+            item["review_aspects"] = aspects
+
+            if args.save_prompts:
+                item["review_aspect_prompt"] = job["prompt"]
+
+            if args.save_raw:
+                item["review_aspect_raw_output"] = raw_output
+
+        else:
+            target_item = example["target_item"]
+            target_item["review_aspects"] = aspects
+
+            if args.save_prompts:
+                target_item["review_aspect_prompt"] = job["prompt"]
+
+            if args.save_raw:
+                target_item["review_aspect_raw_output"] = raw_output
 
     total_history_items = 0
     total_target_items = 0
     total_history_aspects = 0
     total_target_aspects = 0
 
-    print(f"Loaded {len(examples)} examples from {input_path}")
-    print(f"Using aspect vocabulary from {vocab_path}")
-    print(f"Allowed aspects: {len(allowed_aspects)}")
-
-    for example_idx, example in enumerate(examples, start=1):
-        enriched_example = dict(example)
-
-        enriched_history = []
+    for example_idx, example in enumerate(enriched_examples, start=1):
         for item in example.get("history", []):
-            enriched_item = enrich_history_item(
-                item=item,
-                user_id=example.get("user_id", ""),
-                allowed_aspects=allowed_aspects,
-                normalization_map=normalization_map,
-                generator=generator,
-                save_prompt=args.save_prompts,
-                save_raw=args.save_raw,
-            )
-            enriched_history.append(enriched_item)
-
             total_history_items += 1
-            total_history_aspects += len(enriched_item.get("review_aspects", []))
+            total_history_aspects += len(item.get("review_aspects", []))
 
-        enriched_target = enrich_target_item(
-            target_item=example.get("target_item", {}),
-            allowed_aspects=allowed_aspects,
-            normalization_map=normalization_map,
-            generator=generator,
-            save_prompt=args.save_prompts,
-            save_raw=args.save_raw,
-        )
-
+        target_item = example.get("target_item", {})
         total_target_items += 1
-        total_target_aspects += len(enriched_target.get("review_aspects", []))
-
-        enriched_example["history"] = enriched_history
-        enriched_example["target_item"] = enriched_target
-
-        enriched_examples.append(enriched_example)
+        total_target_aspects += len(target_item.get("review_aspects", []))
 
         print(
-            f"[{example_idx}/{len(examples)}] "
+            f"[{example_idx}/{len(enriched_examples)}] "
             f"user_id={example.get('user_id')} "
-            f"history_items={len(enriched_history)} "
-            f"target_aspects={len(enriched_target.get('review_aspects', []))}"
+            f"history_items={len(example.get('history', []))} "
+            f"target_aspects={len(target_item.get('review_aspects', []))}"
         )
 
     save_jsonl(enriched_examples, output_path)
@@ -394,6 +355,7 @@ def main():
         total_target_items=total_target_items,
         total_history_aspects=total_history_aspects,
         total_target_aspects=total_target_aspects,
+        batch_size=args.batch_size,
     )
 
     with summary_path.open("w", encoding="utf-8") as f:
