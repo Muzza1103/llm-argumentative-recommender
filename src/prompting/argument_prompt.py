@@ -22,33 +22,26 @@ ALLOWED_ARGUMENT_ASPECTS = [
 
 
 PROMPT_TEMPLATE = """
-You are an assistant that generates structured arguments for a recommendation task.
+Generate recommendation arguments from the user history and target item.
+
+Return ONLY a valid JSON object.
+Do not add explanations, markdown, or code fences.
 
 TASK:
-Given a user history and a target item, generate arguments FOR and AGAINST recommending the target item to the user.
+Generate exactly 4 arguments:
+- 2 support arguments
+- 2 attack arguments
 
-INSTRUCTIONS:
-- Infer user preferences from the history.
-- Compare the target item with positively and negatively rated history items.
-- Generate exactly 4 arguments: 2 support and 2 attack.
-- Each argument must be specific and grounded in the input.
-- History items contain name, categories, rating, sometimes filtered attributes, and sometimes extracted review aspects.
-- The target item contains categories, filtered attributes, and sometimes extracted review aspects.
-- Do not invent missing facts or attributes.
-- Do not contradict the evidence.
-- Evidence snippets must be copied faithfully from the input.
-- If an attribute is True in the input, do not claim it is False.
-- If an attribute is False in the input, do not claim it is True.
-- If the target and a history item have the same attribute value, do not use that attribute as an attack.
-- For attack arguments, only use real disadvantages, mismatches, or weak signals grounded in the input.
-- Before writing each argument, verify that the claim is logically consistent with the evidence.
-- Keep each argument text short.
-- Use at most 2 short evidence snippets per argument.
-- Each argument MUST include "used_aspects".
-- "used_aspects" must contain 1 to 3 aspects selected only from the allowed aspects list.
-- The selected aspects must be directly related to the argument text and evidence.
-- If no aspect is clearly relevant, use an empty list.
-- Return valid JSON only.
+RULES:
+- Every argument must be grounded in the input.
+- Do not invent or contradict facts.
+- If evidence says an attribute is True, do not claim it is False, and vice versa.
+- Attack arguments must be based on real differences.
+- Do not claim a disadvantage if the target and the compared item share the same attribute value.
+- Evidence must be short, copied from the input, and start with the item name.
+- Each argument must include 1 to 3 "used_aspects" from the allowed list.
+- If no aspect is clearly relevant, use [].
+- Keep argument text short.
 
 ALLOWED ASPECTS:
 [{allowed_aspects}]
@@ -60,29 +53,29 @@ OUTPUT FORMAT:
       "id": "A1",
       "type": "support",
       "text": "...",
-      "used_aspects": ["food", "service"],
-      "evidence": ["...", "..."]
+      "used_aspects": ["food"],
+      "evidence": ["Item name | short copied evidence"]
     }},
     {{
       "id": "A2",
       "type": "support",
       "text": "...",
-      "used_aspects": ["price"],
-      "evidence": ["...", "..."]
+      "used_aspects": ["service"],
+      "evidence": ["Item name | short copied evidence"]
     }},
     {{
       "id": "A3",
       "type": "attack",
       "text": "...",
-      "used_aspects": ["noise"],
-      "evidence": ["...", "..."]
+      "used_aspects": ["price"],
+      "evidence": ["Item name | short copied evidence"]
     }},
     {{
       "id": "A4",
       "type": "attack",
       "text": "...",
-      "used_aspects": ["takeout", "delivery"],
-      "evidence": ["...", "..."]
+      "used_aspects": ["noise"],
+      "evidence": ["Item name | short copied evidence"]
     }}
   ]
 }}

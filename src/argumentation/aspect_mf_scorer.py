@@ -5,12 +5,66 @@ from .scoring import BaseMFScorer
 from .schema import Argument
 
 
+ASPECT_ALIASES = {
+    "drinks": [
+        "drinks",
+        "alcohol_full_bar",
+        "alcohol_beer_and_wine",
+        "alcohol_none",
+    ],
+    "noise": [
+        "noise",
+        "noise_quiet",
+        "noise_average",
+        "noise_loud",
+        "noise_very_loud",
+    ],
+    "price": [
+        "price",
+        "price_1",
+        "price_2",
+        "price_3",
+        "price_4",
+    ],
+    "ambience": [
+        "ambience",
+        "attire_casual",
+        "attire_dressy",
+        "outdoor_seating",
+    ],
+    "takeout": [
+        "takeout",
+    ],
+    "delivery": [
+        "delivery",
+    ],
+    "reservations": [
+        "reservations",
+    ],
+    "good_for_groups": [
+        "good_for_groups",
+    ],
+    "good_for_kids": [
+        "good_for_kids",
+    ],
+    "food": [
+        "food",
+        "quality",
+        "freshness",
+        "portions",
+    ],
+}
+
+
 class AspectMFScorer(BaseMFScorer):
     """
     Empirical scorer based on aspect-level MF predictions.
 
     It scores an argument by averaging the predicted MF scores of the aspects
     mentioned by the argument for the current user.
+
+    The scorer also supports aliases, so general argument aspects such as
+    "drinks" can be mapped to more specific MF aspects such as "alcohol_full_bar".
     """
 
     def __init__(
@@ -60,14 +114,44 @@ class AspectMFScorer(BaseMFScorer):
         user_predictions = self.predictions.get(str(self.user_id), {})
 
         scores = []
+
         for aspect in aspects:
-            if aspect in user_predictions:
-                scores.append(user_predictions[aspect])
+            candidate_aspects = self._expand_aspect_aliases(aspect)
+
+            candidate_scores = [
+                user_predictions[candidate]
+                for candidate in candidate_aspects
+                if candidate in user_predictions
+            ]
+
+            if candidate_scores:
+                scores.append(sum(candidate_scores) / len(candidate_scores))
 
         if not scores:
             return self.default_score
 
         return sum(scores) / len(scores)
+
+    def _expand_aspect_aliases(self, aspect: str) -> list[str]:
+        aspect = aspect.strip().lower()
+
+        aliases = ASPECT_ALIASES.get(aspect, [aspect])
+
+        cleaned = []
+        seen = set()
+
+        for alias in aliases:
+            alias = alias.strip().lower()
+            if not alias:
+                continue
+
+            if alias in seen:
+                continue
+
+            seen.add(alias)
+            cleaned.append(alias)
+
+        return cleaned
 
     def _get_argument_aspects(self, argument: Argument) -> list[str]:
         aspects = []
