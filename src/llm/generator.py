@@ -70,7 +70,7 @@ class LocalLLMGenerator:
         text = self.tokenizer.decode(generated_ids, skip_special_tokens=True)
 
         return text.strip()
-    
+
     def generate_batch(self, prompts: list[str], batch_size: int = 4) -> list[str]:
         outputs: list[str] = []
 
@@ -80,34 +80,83 @@ class LocalLLMGenerator:
         if self.tokenizer.pad_token is None:
             self.tokenizer.pad_token = self.tokenizer.eos_token
 
+        self.tokenizer.padding_side = "left"
+
+        input_device = self._get_input_device()
+        total_batches = (len(prompts) + batch_size - 1) // batch_size
+
         for start in range(0, len(prompts), batch_size):
+            batch_number = start // batch_size + 1
             batch_prompts = prompts[start:start + batch_size]
 
+            print(f"Generating batch {batch_number}/{total_batches}")
+
+            messages_batch = [
+                [
+                    {
+                        "role": "system",
+                        "content": (
+                            "You generate structured recommendation arguments. "
+                            "You must answer with valid JSON only."
+                        ),
+                    },
+                    {
+                        "role": "user",
+                        "content": prompt,
+                    },
+                ]
+                for prompt in batch_prompts
+            ]
+
+            texts = [
+                self.tokenizer.apply_chat_template(
+                    messages,
+                    tokenize=False,
+                    add_generation_prompt=True,
+                )
+                for messages in messages_batch
+            ]
+
             inputs = self.tokenizer(
-                batch_prompts,
+                texts,
                 return_tensors="pt",
                 padding=True,
                 truncation=True,
-            ).to(self.model.device)
+            )
+
+            inputs = {
+                key: value.to(input_device)
+                for key, value in inputs.items()
+            }
+
+            if self.config.do_sample:
+                generation_config = GenerationConfig(
+                    max_new_tokens=self.config.max_new_tokens,
+                    temperature=self.config.temperature,
+                    top_p=self.config.top_p,
+                    do_sample=True,
+                    pad_token_id=self.tokenizer.eos_token_id,
+                )
+            else:
+                generation_config = GenerationConfig(
+                    max_new_tokens=self.config.max_new_tokens,
+                    do_sample=False,
+                    pad_token_id=self.tokenizer.eos_token_id,
+                )
 
             generated_ids = self.model.generate(
                 **inputs,
-                max_new_tokens=self.config.max_new_tokens,
-                do_sample=self.config.do_sample,
-                temperature=self.config.temperature if self.config.do_sample else None,
-                top_p=self.config.top_p if self.config.do_sample else None,
-                pad_token_id=self.tokenizer.eos_token_id,
+                generation_config=generation_config,
             )
 
-            input_lengths = inputs["input_ids"].shape[1]
+            input_lengths = inputs["attention_mask"].sum(dim=1)
 
-            generated_only = generated_ids[:, input_lengths:]
-
-            decoded_outputs = self.tokenizer.batch_decode(
-                generated_only,
-                skip_special_tokens=True,
-            )
-
-            outputs.extend(output.strip() for output in decoded_outputs)
+            for output_ids, input_length in zip(generated_ids, input_lengths):
+                generated_only = output_ids[int(input_length):]
+                text = self.tokenizer.decode(
+                    generated_only,
+                    skip_special_tokens=True,
+                )
+                outputs.append(text.strip())
 
         return outputs

@@ -288,10 +288,19 @@ def main():
             )
             prompts.append(prompt)
 
+
+    raw_outputs = []
+
+    for i, prompt in enumerate(prompts, start=1):
+        print(f"Generating review aspect prompt {i}/{len(prompts)}")
+        raw_outputs.append(generator.generate(prompt))
+    
+    """
     raw_outputs = generator.generate_batch(
         prompts,
         batch_size=args.batch_size,
     )
+    """
 
     for job, raw_output in zip(jobs, raw_outputs):
         aspects = parse_extracted_aspects(
