@@ -48,6 +48,7 @@ def build_context_summary(example: dict) -> dict:
                 "user_stars": item.get("user_stars"),
                 "categories": item.get("categories", []),
                 "attributes": get_filtered_attributes(item.get("attributes", {})),
+                "review_aspects": format_review_aspects(item),
             }
         )
 
@@ -57,6 +58,7 @@ def build_context_summary(example: dict) -> dict:
             "name": target_item.get("name"),
             "categories": target_item.get("categories", []),
             "attributes": get_filtered_attributes(target_item.get("attributes", {})),
+            "review_aspects": format_review_aspects(target_item),
             "global_stars": target_item.get("global_stars"),
             "user_target_stars": user_target_stars,
             "normalized_user_target_score": normalized_target_score,
@@ -64,6 +66,20 @@ def build_context_summary(example: dict) -> dict:
         "history": history_summary,
     }
 
+def format_review_aspects(item: dict) -> list[str]:
+    aspects = []
+
+    for aspect in item.get("review_aspects", []):
+        if not isinstance(aspect, dict):
+            continue
+
+        name = aspect.get("name")
+        polarity = aspect.get("polarity", "neutral")
+
+        if name:
+            aspects.append(f"{name} ({polarity})")
+
+    return aspects
 
 def main():
     parser = argparse.ArgumentParser(
@@ -145,6 +161,7 @@ def main():
             print(f"TYPE:           {argument.arg_type}")
             print(f"TEXT:           {argument.text}")
             print(f"EVIDENCE:       {argument.evidence}")
+            print(f"USED ASPECTS:    {argument.used_aspects}")
             print(f"LLM SCORE:      {argument.llm_score}")
             print(f"LLM REASON:     {argument.llm_score_reason}")
             print(f"MF SCORE:       {argument.mf_score}")

@@ -39,6 +39,11 @@ def format_tooltip_html(node: dict) -> str:
         )
         lines.append(f"<strong>Evidence:</strong><br>{evidence_html}")
 
+    used_aspects = metadata.get("used_aspects", [])
+    if used_aspects:
+        aspects_html = ", ".join(html.escape(str(a)) for a in used_aspects)
+        lines.append(f"<strong>Used aspects:</strong> {aspects_html}")
+
     llm_score = metadata.get("llm_score")
     if llm_score is not None:
         lines.append(f"<strong>LLM score:</strong> {html.escape(str(llm_score))}")
@@ -124,6 +129,7 @@ def build_history_html(context: dict) -> str:
         categories = ", ".join(item.get("categories", []))
         categories = html.escape(categories) if categories else "N/A"
         attributes = format_attributes(item.get("attributes", {}))
+        review_aspects = format_review_aspects(item.get("review_aspects", []))
 
         blocks.append(
             f"""
@@ -132,6 +138,7 @@ def build_history_html(context: dict) -> str:
                 <div><strong>User rating:</strong> {rating}</div>
                 <div><strong>Categories:</strong> {categories}</div>
                 <div><strong>Attributes:</strong> {attributes}</div>
+                <div><strong>Review aspects:</strong> {review_aspects}</div>
             </div>
             """
         )
@@ -158,6 +165,7 @@ def build_context_panel(record: dict) -> str:
     categories = ", ".join(target.get("categories", []))
     categories = html.escape(categories) if categories else "N/A"
     attributes = format_attributes(target.get("attributes", {}))
+    review_aspects = format_review_aspects(target.get("review_aspects", []))
 
     history_html = build_history_html(context)
 
@@ -172,6 +180,7 @@ def build_context_panel(record: dict) -> str:
             <div><strong>Global rating:</strong> {global_stars}</div>
             <div><strong>Categories:</strong> {categories}</div>
             <div><strong>Attributes:</strong> {attributes}</div>
+            <div><strong>Review aspects:</strong> {review_aspects}</div>
         </div>
 
         <h3>User history</h3>
@@ -181,6 +190,20 @@ def build_context_panel(record: dict) -> str:
     </div>
     """
 
+def format_review_aspects(aspects: list) -> str:
+    if not aspects:
+        return "N/A"
+
+    parts = []
+    for aspect in aspects:
+        if isinstance(aspect, dict):
+            name = aspect.get("name", "")
+            polarity = aspect.get("polarity", "neutral")
+            parts.append(f"{html.escape(str(name))} ({html.escape(str(polarity))})")
+        else:
+            parts.append(html.escape(str(aspect)))
+
+    return "; ".join(parts)
 
 def build_html(record: dict) -> str:
     graph = record.get("argument_graph")

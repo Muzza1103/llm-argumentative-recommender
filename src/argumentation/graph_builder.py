@@ -142,6 +142,7 @@ def build_argument_graph(
             metadata={
                 "arg_type": argument.arg_type,
                 "evidence": argument.evidence,
+                "used_aspects": argument.used_aspects,
                 "llm_score": argument.llm_score,
                 "llm_score_reason": argument.llm_score_reason,
                 "mf_score": argument.mf_score,
