@@ -3,6 +3,16 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
+ARGUMENT_ASPECT_NORMALIZATION = {
+    "alcohol": "drinks",
+    "bar": "drinks",
+    "full_bar": "drinks",
+    "beer": "drinks",
+    "wine": "drinks",
+    "atmosphere": "ambience",
+    "ambiance": "ambience",
+    "staff": "service",
+}
 
 def clean_used_aspects(value: Any) -> list[str]:
     if not isinstance(value, list):
@@ -18,6 +28,7 @@ def clean_used_aspects(value: Any) -> list[str]:
         aspect = aspect.strip().lower()
         if not aspect:
             continue
+        aspect = ARGUMENT_ASPECT_NORMALIZATION.get(aspect, aspect)
 
         if aspect in seen:
             continue
