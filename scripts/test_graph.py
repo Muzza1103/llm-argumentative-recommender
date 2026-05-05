@@ -3,6 +3,14 @@ import html
 import json
 from pathlib import Path
 
+def load_record_by_index(jsonl_path: Path, index: int) -> dict:
+    with jsonl_path.open("r", encoding="utf-8") as f:
+        for line in f:
+            record = json.loads(line)
+            if record.get("index") == index:
+                return record
+
+    raise ValueError(f"No record found for dataset index {index}.")
 
 def format_attributes(attributes: dict) -> str:
     if not attributes:
@@ -692,8 +700,20 @@ def main():
     parser.add_argument(
         "--input",
         type=str,
-        required=True,
+        default=None,
         help="Path to a JSON file produced by test_dfquad.",
+    )
+    parser.add_argument(
+        "--input-jsonl",
+        type=str,
+        default=None,
+        help="Path to a JSONL file produced by dfquad_batch.",
+    )
+    parser.add_argument(
+        "--index",
+        type=int,
+        default=None,
+        help="Dataset index to load when using --input-jsonl.",
     )
     parser.add_argument(
         "--output",
@@ -703,14 +723,26 @@ def main():
     )
     args = parser.parse_args()
 
-    input_path = Path(args.input)
     output_path = Path(args.output)
 
-    with input_path.open("r", encoding="utf-8") as f:
-        record = json.load(f)
+    if args.input is not None:
+        with Path(args.input).open("r", encoding="utf-8") as f:
+            record = json.load(f)
+
+    elif args.input_jsonl is not None:
+        if args.index is None:
+            raise ValueError("--index is required when using --input-jsonl")
+
+        record = load_record_by_index(Path(args.input_jsonl), args.index)
+
+    else:
+        raise ValueError("Provide either --input or --input-jsonl.")
 
     if "argument_graph" not in record:
-        raise ValueError("No 'argument_graph' found in the input file.")
+        raise ValueError(
+            "No 'argument_graph' found in the input file. "
+            "If you used dfquad_batch.py, rerun it with --save-graph."
+        )
 
     html_content = build_html(record)
 
