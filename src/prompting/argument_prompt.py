@@ -18,6 +18,9 @@ ALLOWED_ARGUMENT_ASPECTS = [
     "spice_level",
     "crowdedness",
     "selection",
+    "outdoor_seating",
+    "attire",
+    "alcohol",
 ]
 
 

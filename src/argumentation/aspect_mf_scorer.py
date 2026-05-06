@@ -6,6 +6,15 @@ from .schema import Argument
 
 
 ASPECT_ALIASES = {
+    "outdoor_seating": [
+        "outdoor_seating",
+        "ambience",
+    ],
+    "attire": [
+        "attire",
+        "attire_casual",
+        "attire_dressy",
+    ],
     "drinks": [
         "drinks",
         "alcohol_full_bar",
