@@ -124,8 +124,7 @@ def main():
 
     save_json(output, output_path)
 
-    print("Done.")
-    print(f"Arguments:          {argument_counter}")
+    print(f"\nArguments:          {argument_counter}")
     print(f"Fallback arguments: {fallback_argument_counter}")
     print(f"Fallback ratio:     {output['fallback_ratio']:.3f}")
     print(f"Output:             {output_path}")

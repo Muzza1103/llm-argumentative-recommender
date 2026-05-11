@@ -166,8 +166,7 @@ def main():
     with summary_path.open("w", encoding="utf-8") as f:
         json.dump(summary, f, indent=2, ensure_ascii=False)
 
-    print("Done.")
-    print(f"Source dataset: {input_path}")
+    print(f"\nSource dataset: {input_path}")
     print(f"MF dataset CSV: {output_path}")
     print(f"Summary:        {summary_path}")
     print(f"Rows:           {summary['num_rows']}")

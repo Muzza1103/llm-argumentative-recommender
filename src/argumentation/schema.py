@@ -7,17 +7,23 @@ ARGUMENT_ASPECT_NORMALIZATION = {
     "alcohol": "drinks",
     "bar": "drinks",
     "full_bar": "drinks",
+    "full bar": "drinks",
     "beer": "drinks",
     "wine": "drinks",
+    "cocktail": "drinks",
+    "cocktails": "drinks",
+
     "atmosphere": "ambience",
     "ambiance": "ambience",
     "staff": "service",
-    "full_bar": "alcohol",
-    "bar": "alcohol",
+
     "outdoor": "outdoor_seating",
     "outdoor seating": "outdoor_seating",
+    "patio": "outdoor_seating",
+
     "group_friendly": "good_for_groups",
     "group-friendly": "good_for_groups",
+    "group friendly": "good_for_groups",
 }
 
 def clean_used_aspects(value: Any) -> list[str]:

@@ -279,8 +279,7 @@ def main():
     with summary_path.open("w", encoding="utf-8") as f:
         json.dump(summary, f, indent=2, ensure_ascii=False)
 
-    print("\nDone.")
-    print(f"All results:     {all_output_path}")
+    print(f"\nAll results:     {all_output_path}")
     print(f"Valid results:   {valid_output_path}")
     print(f"Invalid results: {invalid_output_path}")
     print(f"Summary:         {summary_path}")

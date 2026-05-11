@@ -15,6 +15,17 @@ from src.llm.loader import load_model_and_tokenizer
 from src.llm.generator import LocalLLMGenerator
 
 
+class DisabledLLMScorer:
+    """
+    LLM scorer used when llm_weight=0.
+
+    It avoids loading/calling any LLM while keeping the same scoring pipeline.
+    """
+
+    def score(self, argument):
+        return 0.0
+
+
 def load_jsonl(jsonl_path: Path) -> list[dict]:
     records = []
 
@@ -146,26 +157,32 @@ def main():
     dataset_by_index = load_dataset_index(dataset_path)
     records = load_jsonl(input_path)
 
-    llm_config = LLMConfig(
-        model_name=args.model,
-        max_new_tokens=args.max_new_tokens,
-        temperature=0.2,
-        top_p=0.9,
-        do_sample=False,
-    )
+    if args.llm_weight > 0.0:
+        llm_config = LLMConfig(
+            model_name=args.model,
+            max_new_tokens=args.max_new_tokens,
+            temperature=0.2,
+            top_p=0.9,
+            do_sample=False,
+        )
 
-    tokenizer, model = load_model_and_tokenizer(llm_config)
+        tokenizer, model = load_model_and_tokenizer(llm_config)
 
-    generator = LocalLLMGenerator(
-        model=model,
-        tokenizer=tokenizer,
-        config=llm_config,
-    )
+        generator = LocalLLMGenerator(
+            model=model,
+            tokenizer=tokenizer,
+            config=llm_config,
+        )
 
-    llm_scorer = LocalLLMScorer(
-        generator=generator,
-        config=LLMScorerConfig(default_score=0.5),
-    )
+        llm_scorer = LocalLLMScorer(
+            generator=generator,
+            config=LLMScorerConfig(default_score=0.5),
+        )
+
+        llm_model_name = args.model
+    else:
+        llm_scorer = DisabledLLMScorer()
+        llm_model_name = "disabled"
 
     mf_source = (
         f"aspect_mf:{args.mf_predictions}"
@@ -192,6 +209,7 @@ def main():
 
     print(f"Loaded {len(records)} generated records from {input_path}")
     print(f"MF source: {mf_source}")
+    print(f"LLM source: {llm_model_name}")
 
     for i, record in enumerate(records, start=1):
         validation = record.get("validation", {})
@@ -230,6 +248,9 @@ def main():
         for argument in scored_arguments:
             argument_dict = argument.to_dict()
 
+            if args.llm_weight == 0.0:
+                argument_dict["llm_score_reason"] = "LLM scoring disabled because llm_weight=0."
+
             if not args.save_llm_prompt:
                 argument_dict.pop("llm_scoring_prompt", None)
 
@@ -240,7 +261,7 @@ def main():
 
         enriched_record = dict(record)
         enriched_record["scoring"] = {
-            "llm_model": args.model,
+            "llm_model": llm_model_name,
             "llm_weight": args.llm_weight,
             "mf_weight": args.mf_weight,
             "mf_source": mf_source,
@@ -263,7 +284,7 @@ def main():
         input_file=str(input_path),
         output_file=str(output_path),
         dataset_file=str(dataset_path),
-        llm_model=args.model,
+        llm_model=llm_model_name,
         llm_weight=args.llm_weight,
         mf_weight=args.mf_weight,
         mf_source=mf_source,
@@ -274,8 +295,7 @@ def main():
     with summary_path.open("w", encoding="utf-8") as f:
         json.dump(summary, f, indent=2, ensure_ascii=False)
 
-    print("\nDone.")
-    print(f"Scored output:  {output_path}")
+    print(f"\nScored output:  {output_path}")
     print(f"Summary:        {summary_path}")
     print(f"Scored records: {len(scored_records)}")
     print(f"Skipped:        {skipped_records}")

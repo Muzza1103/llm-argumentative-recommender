@@ -116,8 +116,7 @@ def main():
     save_csv(rows, Path(args.output_csv))
     save_json(summary, Path(args.output_summary))
 
-    print("Done.")
-    print(f"Examples evaluated: {len(rows)}")
+    print(f"\nExamples evaluated: {len(rows)}")
     print(f"MAE:  {summary['mae']}")
     print(f"MSE:  {summary['mse']}")
     print(f"RMSE: {summary['rmse']}")

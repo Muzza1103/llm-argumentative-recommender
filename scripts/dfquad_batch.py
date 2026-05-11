@@ -146,8 +146,7 @@ def main():
     with summary_path.open("w", encoding="utf-8") as f:
         json.dump(summary, f, indent=2, ensure_ascii=False)
 
-    print("\nDone.")
-    print(f"DF-QuAD output: {output_path}")
+    print(f"\nDF-QuAD output: {output_path}")
     print(f"Summary:        {summary_path}")
     print(f"Processed:      {len(output_records)}")
     print(f"Skipped:        {skipped}")
