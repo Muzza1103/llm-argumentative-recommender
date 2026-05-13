@@ -1,5 +1,6 @@
 import argparse
 import json
+import time
 from pathlib import Path
 
 from src.argumentation.schema import build_arguments_from_parsed_json
@@ -63,6 +64,7 @@ def build_summary(
     output_file: str,
     dataset_file: str,
     llm_model: str,
+    llm_backend: str,
     llm_weight: float,
     mf_weight: float,
     mf_source: str,
@@ -110,7 +112,9 @@ def build_summary(
         "dataset_file": dataset_file,
         "input_file": input_file,
         "output_file": output_file,
+        "llm_backend": llm_backend,
         "llm_model": llm_model,
+        "model_name": llm_model,
         "llm_weight": llm_weight,
         "mf_weight": mf_weight,
         "mf_source": mf_source,
@@ -133,7 +137,13 @@ def main():
     parser.add_argument("--dataset", type=str, required=True)
     parser.add_argument("--input", type=str, required=True)
     parser.add_argument("--output", type=str, required=True)
+
+    parser.add_argument("--backend", choices=["local", "gemini"], default="local")
     parser.add_argument("--model", type=str, default="Qwen/Qwen2.5-3B-Instruct")
+    parser.add_argument("--gemini-model", type=str, default="gemini-2.5-flash")
+    parser.add_argument("--gcp-project", type=str, default=None)
+    parser.add_argument("--gcp-location", type=str, default="global")
+
     parser.add_argument("--max-new-tokens", type=int, default=300)
     parser.add_argument("--llm-weight", type=float, default=0.5)
     parser.add_argument("--mf-weight", type=float, default=0.5)
@@ -158,31 +168,49 @@ def main():
     records = load_jsonl(input_path)
 
     if args.llm_weight > 0.0:
-        llm_config = LLMConfig(
-            model_name=args.model,
-            max_new_tokens=args.max_new_tokens,
-            temperature=0.2,
-            top_p=0.9,
-            do_sample=False,
-        )
+        if args.backend == "local":
+            llm_config = LLMConfig(
+                model_name=args.model,
+                max_new_tokens=args.max_new_tokens,
+                temperature=0.2,
+                top_p=0.9,
+                do_sample=False,
+            )
 
-        tokenizer, model = load_model_and_tokenizer(llm_config)
+            tokenizer, model = load_model_and_tokenizer(llm_config)
 
-        generator = LocalLLMGenerator(
-            model=model,
-            tokenizer=tokenizer,
-            config=llm_config,
-        )
+            generator = LocalLLMGenerator(
+                model=model,
+                tokenizer=tokenizer,
+                config=llm_config,
+            )
+
+            llm_model_name = args.model
+            llm_backend = "local"
+
+        else:
+            from src.llm.gemini_generator import GeminiGenerator
+
+            generator = GeminiGenerator(
+                model_name=args.gemini_model,
+                project=args.gcp_project,
+                location=args.gcp_location,
+                temperature=0.0,
+                max_output_tokens=args.max_new_tokens,
+            )
+
+            llm_model_name = args.gemini_model
+            llm_backend = "gemini"
 
         llm_scorer = LocalLLMScorer(
             generator=generator,
             config=LLMScorerConfig(default_score=0.5),
         )
 
-        llm_model_name = args.model
     else:
         llm_scorer = DisabledLLMScorer()
         llm_model_name = "disabled"
+        llm_backend = "disabled"
 
     mf_source = (
         f"aspect_mf:{args.mf_predictions}"
@@ -209,7 +237,10 @@ def main():
 
     print(f"Loaded {len(records)} generated records from {input_path}")
     print(f"MF source: {mf_source}")
-    print(f"LLM source: {llm_model_name}")
+    print(f"LLM backend: {llm_backend}")
+    print(f"LLM model: {llm_model_name}")
+
+    start_time = time.perf_counter()
 
     for i, record in enumerate(records, start=1):
         validation = record.get("validation", {})
@@ -249,7 +280,9 @@ def main():
             argument_dict = argument.to_dict()
 
             if args.llm_weight == 0.0:
-                argument_dict["llm_score_reason"] = "LLM scoring disabled because llm_weight=0."
+                argument_dict["llm_score_reason"] = (
+                    "LLM scoring disabled because llm_weight=0."
+                )
 
             if not args.save_llm_prompt:
                 argument_dict.pop("llm_scoring_prompt", None)
@@ -261,6 +294,7 @@ def main():
 
         enriched_record = dict(record)
         enriched_record["scoring"] = {
+            "llm_backend": llm_backend,
             "llm_model": llm_model_name,
             "llm_weight": args.llm_weight,
             "mf_weight": args.mf_weight,
@@ -277,6 +311,9 @@ def main():
             f"scored_arguments={len(scored_arguments_dicts)}"
         )
 
+    elapsed_seconds = time.perf_counter() - start_time
+    elapsed_minutes = elapsed_seconds / 60
+
     save_jsonl(scored_records, output_path)
 
     summary = build_summary(
@@ -285,12 +322,16 @@ def main():
         output_file=str(output_path),
         dataset_file=str(dataset_path),
         llm_model=llm_model_name,
+        llm_backend=llm_backend,
         llm_weight=args.llm_weight,
         mf_weight=args.mf_weight,
         mf_source=mf_source,
         skipped_records=skipped_records,
         only_valid=args.only_valid,
     )
+
+    summary["elapsed_seconds"] = elapsed_seconds
+    summary["elapsed_minutes"] = elapsed_minutes
 
     with summary_path.open("w", encoding="utf-8") as f:
         json.dump(summary, f, indent=2, ensure_ascii=False)
@@ -299,6 +340,7 @@ def main():
     print(f"Summary:        {summary_path}")
     print(f"Scored records: {len(scored_records)}")
     print(f"Skipped:        {skipped_records}")
+    print(f"Elapsed time:   {elapsed_seconds:.2f}s ({elapsed_minutes:.2f} min)")
 
 
 if __name__ == "__main__":

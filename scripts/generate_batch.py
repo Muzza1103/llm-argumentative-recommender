@@ -1,6 +1,8 @@
 import argparse
 import json
 import random
+import time
+
 from collections import Counter
 from pathlib import Path
 
@@ -141,9 +143,25 @@ def main():
     parser.add_argument(
         "--batch-size",
         type=int,
-        default=4,
+        default=1,
         help="Number of prompts generated together on GPU.",
     )
+    parser.add_argument(
+        "--backend",
+        choices=["local", "gemini"], 
+        default="local")
+    parser.add_argument(
+        "--gemini-model", 
+        type=str, 
+        default="gemini-2.5-flash")
+    parser.add_argument(
+        "--gcp-project", 
+        type=str, 
+        default=None)
+    parser.add_argument(
+        "--gcp-location", 
+        type=str, 
+        default="global")
     parser.add_argument(
         "--save-prompt",
         action="store_true",
@@ -168,20 +186,32 @@ def main():
         seed=args.seed,
     )
 
-    config = LLMConfig(
-        model_name=args.model,
-        max_new_tokens=args.max_new_tokens,
-        temperature=args.temperature,
-        top_p=args.top_p,
-        do_sample=args.do_sample,
-    )
+    if args.backend == "local":
+        config = LLMConfig(
+            model_name=args.model,
+            max_new_tokens=args.max_new_tokens,
+            temperature=args.temperature,
+            top_p=args.top_p,
+            do_sample=args.do_sample,
+        )
 
-    tokenizer, model = load_model_and_tokenizer(config)
-    generator = LocalLLMGenerator(
-        model=model,
-        tokenizer=tokenizer,
-        config=config,
-    )
+        tokenizer, model = load_model_and_tokenizer(config)
+        generator = LocalLLMGenerator(
+            model=model,
+            tokenizer=tokenizer,
+            config=config,
+        )
+
+    else:
+        from src.llm.gemini_generator import GeminiGenerator
+
+        generator = GeminiGenerator(
+            model_name=args.gemini_model,
+            project=args.gcp_project,
+            location=args.gcp_location,
+            temperature=args.temperature if args.do_sample else 0.0,
+            max_output_tokens=args.max_new_tokens,
+        )
 
     all_records = []
     valid_records = []
@@ -191,9 +221,16 @@ def main():
     print(f"Loaded {len(examples)} examples.")
     print(f"Processing {len(indices)} examples...")
     print(f"Batch size: {args.batch_size}")
+    print(f"Backend: {args.backend}")
+    if args.backend == "local":
+        print(f"Model: {args.model}")
+    else:
+        print(f"Gemini model: {args.gemini_model}")
 
     prompts = []
     selected_examples = []
+
+    start_time = time.perf_counter()
 
     for idx in indices:
         example = examples[idx]
@@ -262,17 +299,31 @@ def main():
     save_jsonl(valid_records, valid_output_path)
     save_jsonl(invalid_records, invalid_output_path)
 
+    elapsed_seconds = time.perf_counter() - start_time
+    elapsed_minutes = elapsed_seconds / 60
+
     summary = {
         "input_file": str(input_path),
         "output_file_all": str(all_output_path),
         "output_file_valid": str(valid_output_path),
         "output_file_invalid": str(invalid_output_path),
+
+        "backend": args.backend,
+
+        "model_name": (
+            args.model
+            if args.backend == "local"
+            else args.gemini_model
+        ),
+
         "num_examples_requested": len(indices),
         "num_examples_processed": len(all_records),
         "batch_size": args.batch_size,
         "num_valid": len(valid_records),
         "num_invalid": len(invalid_records),
         "error_counts": dict(global_error_counter),
+        "elapsed_seconds": elapsed_seconds,
+        "elapsed_minutes": elapsed_minutes,
     }
 
     summary_path.parent.mkdir(parents=True, exist_ok=True)
@@ -282,6 +333,7 @@ def main():
     print(f"\nAll results:     {all_output_path}")
     print(f"Valid results:   {valid_output_path}")
     print(f"Invalid results: {invalid_output_path}")
+    print(f"Elapsed time:    {elapsed_seconds:.2f}s ({elapsed_minutes:.2f} min)")
     print(f"Summary:         {summary_path}")
     print(f"Valid outputs:   {len(valid_records)}")
     print(f"Invalid outputs: {len(invalid_records)}")
