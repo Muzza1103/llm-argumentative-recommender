@@ -16,6 +16,7 @@ CONTENT RULES:
 - Attack arguments must be based on real differences.
 - Do not claim a disadvantage if the target and the compared item share the same attribute value.
 - Evidence must be short, copied from the input, and start with the item name.
+- Each argument must include 1 to 3 evidence strings, never more.
 - Each argument must include 1 to 3 used_aspects selected from the allowed list.
 - used_aspects must describe the main aspect(s) actually used by the argument.
 - Do not select an aspect only because it appears in the input.

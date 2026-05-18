@@ -172,7 +172,7 @@ def validate_generated_arguments(example: dict, parsed_json: Any) -> dict[str, A
                 )
             )
 
-        if len(evidence) > 2:
+        if len(evidence) > 3:
             errors.append(
                 make_error(
                     "too_many_evidence_items",

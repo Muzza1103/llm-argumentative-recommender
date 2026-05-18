@@ -27,6 +27,8 @@ ARGUMENT_RESPONSE_SCHEMA = {
                     },
                     "evidence": {
                         "type": "array",
+                        "minItems": 1,
+                        "maxItems": 3,
                         "items": {"type": "string"},
                     },
                 },
