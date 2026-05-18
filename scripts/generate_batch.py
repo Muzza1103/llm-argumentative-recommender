@@ -9,6 +9,7 @@ from pathlib import Path
 from src.llm.config import LLMConfig
 from src.llm.loader import load_model_and_tokenizer
 from src.llm.generator import LocalLLMGenerator
+from src.llm.gemini_generator import GeminiGenerator, ARGUMENT_RESPONSE_SCHEMA
 from src.llm.utils import extract_first_json_object
 from src.llm.validation import validate_generated_arguments
 
@@ -203,14 +204,14 @@ def main():
         )
 
     else:
-        from src.llm.gemini_generator import GeminiGenerator
-
         generator = GeminiGenerator(
             model_name=args.gemini_model,
             project=args.gcp_project,
             location=args.gcp_location,
             temperature=args.temperature if args.do_sample else 0.0,
             max_output_tokens=args.max_new_tokens,
+            response_schema=ARGUMENT_RESPONSE_SCHEMA,
+            debug=True,
         )
 
     all_records = []

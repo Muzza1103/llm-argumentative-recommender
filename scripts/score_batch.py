@@ -14,6 +14,7 @@ from src.argumentation.llm_scorer import LocalLLMScorer, LLMScorerConfig
 from src.llm.config import LLMConfig
 from src.llm.loader import load_model_and_tokenizer
 from src.llm.generator import LocalLLMGenerator
+from src.llm.gemini_generator import GeminiGenerator, SCORING_RESPONSE_SCHEMA
 
 
 class DisabledLLMScorer:
@@ -189,14 +190,14 @@ def main():
             llm_backend = "local"
 
         else:
-            from src.llm.gemini_generator import GeminiGenerator
-
             generator = GeminiGenerator(
                 model_name=args.gemini_model,
                 project=args.gcp_project,
                 location=args.gcp_location,
                 temperature=0.0,
                 max_output_tokens=args.max_new_tokens,
+                response_schema=SCORING_RESPONSE_SCHEMA,
+                debug=True,
             )
 
             llm_model_name = args.gemini_model
