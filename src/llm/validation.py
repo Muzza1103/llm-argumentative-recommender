@@ -48,7 +48,7 @@ def _evidence_mentions_known_context(evidence: str, known_item_names: set[str]) 
     return mentions_known_item or mentions_aggregate_context
 
 
-def validate_generated_arguments(example: dict, parsed_json: Any) -> dict[str, Any]:
+def validate_generated_arguments(example: dict, parsed_json: Any, argument_mode: str = "balanced") -> dict[str, Any]:
     errors: list[dict[str, str]] = []
 
     if parsed_json is None:
@@ -225,6 +225,43 @@ def validate_generated_arguments(example: dict, parsed_json: Any) -> dict[str, A
                     "Expected exactly 4 arguments "
                     f"(support + attack), got {support_count + attack_count}."
                 ),
+            )
+        )
+
+    if argument_mode == "balanced":
+        if support_count != 2:
+            errors.append(
+                make_error(
+                    "wrong_support_count",
+                    f"Expected 2 support arguments, got {support_count}.",
+                )
+            )
+
+        if attack_count != 2:
+            errors.append(
+                make_error(
+                    "wrong_attack_count",
+                    f"Expected 2 attack arguments, got {attack_count}.",
+                )
+            )
+
+    elif argument_mode == "unbalanced":
+        if support_count + attack_count != 4:
+            errors.append(
+                make_error(
+                    "invalid_total_argument_count",
+                    (
+                        "Expected exactly 4 arguments "
+                        f"(support + attack), got {support_count + attack_count}."
+                    ),
+                )
+            )
+
+    else:
+        errors.append(
+            make_error(
+                "invalid_argument_mode",
+                f"Unknown argument_mode '{argument_mode}'.",
             )
         )
 

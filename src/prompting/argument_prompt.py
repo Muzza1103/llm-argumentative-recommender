@@ -23,14 +23,14 @@ ALLOWED_ARGUMENT_ASPECTS = [
     "alcohol",
 ]
 
+BALANCED_TASK = """
+Generate exactly 4 arguments:
+- 2 support arguments
+- 2 attack arguments
+""".strip()
 
-PROMPT_TEMPLATE = """
-Generate recommendation arguments from the user history and target item.
 
-Return ONLY a valid JSON object.
-Do not add explanations, markdown, or code fences.
-
-TASK:
+UNBALANCED_TASK = """
 Generate exactly 4 arguments in total.
 
 The number of support and attack arguments does not need to be balanced:
@@ -40,6 +40,16 @@ The number of support and attack arguments does not need to be balanced:
 - Do not invent weak supports just to balance the output.
 - The split between support and attack must reflect the available evidence.
 - Only generate arguments that are grounded, relevant, and decision-important.
+""".strip()
+
+PROMPT_TEMPLATE = """
+Generate recommendation arguments from the user history and target item.
+
+Return ONLY a valid JSON object.
+Do not add explanations, markdown, or code fences.
+
+TASK:
+{task}
 
 RULES:
 - Every argument must be grounded in the input.
@@ -111,8 +121,16 @@ TARGET_ITEM:
 """.strip()
 
 
-def build_prompt(history_str: str, target_str: str) -> str:
+def build_prompt(history_str: str, target_str: str, argument_mode: str = "balanced",) -> str:
+    if argument_mode == "balanced":
+        task = BALANCED_TASK
+    elif argument_mode == "unbalanced":
+        task = UNBALANCED_TASK
+    else:
+        raise ValueError(f"Unknown argument mode: {argument_mode}")
+    
     return PROMPT_TEMPLATE.format(
+        task=task,
         history=history_str,
         target=target_str,
         allowed_aspects=", ".join(ALLOWED_ARGUMENT_ASPECTS),

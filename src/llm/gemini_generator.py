@@ -1,4 +1,5 @@
 import os
+import asyncio
 from typing import Any
 
 from google import genai
@@ -121,11 +122,42 @@ class GeminiGenerator:
 
         return response.text.strip() if response.text else ""
 
-    def generate_batch(self, prompts: list[str], batch_size: int = 1) -> list[str]:
+    async def _async_generate(self, prompt: str) -> str:
+        return await asyncio.to_thread(self.generate, prompt)
+
+    async def generate_batch_async(
+        self,
+        prompts: list[str],
+        batch_size: int = 5,
+    ) -> list[str]:
         outputs = []
 
-        for i, prompt in enumerate(prompts, start=1):
-            print(f"Gemini request {i}/{len(prompts)}")
-            outputs.append(self.generate(prompt))
+        for start in range(0, len(prompts), batch_size):
+            batch = prompts[start:start + batch_size]
+
+            print(
+                f"Gemini async batch "
+                f"{start + 1}-{start + len(batch)}/{len(prompts)}"
+            )
+
+            tasks = [
+                self._async_generate(prompt)
+                for prompt in batch
+            ]
+
+            batch_outputs = await asyncio.gather(*tasks)
+            outputs.extend(batch_outputs)
 
         return outputs
+
+    def generate_batch(
+        self,
+        prompts: list[str],
+        batch_size: int = 5,
+    ) -> list[str]:
+        return asyncio.run(
+            self.generate_batch_async(
+                prompts=prompts,
+                batch_size=batch_size,
+            )
+        )

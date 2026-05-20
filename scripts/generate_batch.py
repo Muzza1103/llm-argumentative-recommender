@@ -168,6 +168,12 @@ def main():
         action="store_true",
         help="Include the full prompt in the output files.",
     )
+    parser.add_argument(
+        "--argument-mode",
+        choices=["balanced", "unbalanced"],
+        default="balanced",
+        help="Argument generation mode: balanced = 2 supports/2 attacks, unbalanced = 4 arguments with free support/attack split.",
+    )
     args = parser.parse_args()
 
     input_path = Path(args.input)
@@ -240,9 +246,17 @@ def main():
         target_str = format_target_item(example["target_item"])
 
         if args.backend == "gemini":
-            prompt = build_gemini_prompt(history_str, target_str)
+            prompt = build_gemini_prompt(
+                history_str,
+                target_str,
+                argument_mode=args.argument_mode,
+            )
         else:
-            prompt = build_prompt(history_str, target_str)
+            prompt = build_prompt(
+                history_str,
+                target_str,
+                argument_mode=args.argument_mode,
+            )
 
         prompts.append(prompt)
         selected_examples.append(
@@ -267,7 +281,11 @@ def main():
         prompt = job["prompt"]
 
         parsed_json = extract_first_json_object(output_text)
-        validation = validate_generated_arguments(example, parsed_json)
+        validation = validate_generated_arguments(
+            example,
+            parsed_json,
+            argument_mode=args.argument_mode,
+        )
 
         for error in validation["errors"]:
             global_error_counter[error["code"]] += 1
