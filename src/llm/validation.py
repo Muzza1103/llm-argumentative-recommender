@@ -1,5 +1,5 @@
 from __future__ import annotations
-
+from src.argumentation.schema import ALLOWED_ASPECT_EFFECTS
 from collections import Counter
 from typing import Any
 
@@ -111,7 +111,7 @@ def validate_generated_arguments(example: dict, parsed_json: Any) -> dict[str, A
             )
             continue
 
-        for required_key in ["id", "type", "text", "evidence"]:
+        for required_key in ["id", "type", "text", "evidence", "aspect_effect"]:
             if required_key not in argument:
                 errors.append(
                     make_error(
@@ -124,6 +124,7 @@ def validate_generated_arguments(example: dict, parsed_json: Any) -> dict[str, A
         arg_type = argument.get("type")
         text = argument.get("text")
         evidence = argument.get("evidence")
+        aspect_effect = argument.get("aspect_effect")
 
         if _is_non_empty_string(arg_id):
             ids.append(arg_id)
@@ -146,6 +147,14 @@ def validate_generated_arguments(example: dict, parsed_json: Any) -> dict[str, A
             support_count += 1
         elif arg_type == "attack":
             attack_count += 1
+
+        if aspect_effect not in ALLOWED_ASPECT_EFFECTS:
+            errors.append(
+                make_error(
+                    "invalid_aspect_effect",
+                    f"{prefix} has invalid aspect_effect '{aspect_effect}'.",
+                )
+            )
 
         if not _is_non_empty_string(text):
             errors.append(
@@ -176,7 +185,7 @@ def validate_generated_arguments(example: dict, parsed_json: Any) -> dict[str, A
             errors.append(
                 make_error(
                     "too_many_evidence_items",
-                    f"{prefix} has more than 2 evidence strings.",
+                    f"{prefix} has more than 3 evidence strings.",
                 )
             )
 

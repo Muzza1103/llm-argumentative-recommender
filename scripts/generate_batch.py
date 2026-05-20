@@ -12,7 +12,7 @@ from src.llm.generator import LocalLLMGenerator
 from src.llm.gemini_generator import GeminiGenerator, ARGUMENT_RESPONSE_SCHEMA
 from src.llm.utils import extract_first_json_object
 from src.llm.validation import validate_generated_arguments
-
+from src.prompting.gemini_argument_prompt import build_gemini_prompt
 from src.prompting.argument_prompt import build_prompt
 from src.prompting.formatters import format_history, format_target_item
 
@@ -238,7 +238,11 @@ def main():
 
         history_str = format_history(example["history"])
         target_str = format_target_item(example["target_item"])
-        prompt = build_prompt(history_str, target_str)
+
+        if args.backend == "gemini":
+            prompt = build_gemini_prompt(history_str, target_str)
+        else:
+            prompt = build_prompt(history_str, target_str)
 
         prompts.append(prompt)
         selected_examples.append(

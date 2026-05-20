@@ -25,6 +25,16 @@ ARGUMENT_RESPONSE_SCHEMA = {
                         "type": "array",
                         "items": {"type": "string"},
                     },
+                    "aspect_effect": {
+                        "type": "string",
+                        "enum": [
+                            "present_preferred",
+                            "missing_preferred",
+                            "present_disliked",
+                            "missing_disliked",
+                            "neutral_or_unclear",
+                        ],
+                    },
                     "evidence": {
                         "type": "array",
                         "minItems": 1,
@@ -37,6 +47,7 @@ ARGUMENT_RESPONSE_SCHEMA = {
                     "type",
                     "text",
                     "used_aspects",
+                    "aspect_effect",
                     "evidence",
                 ],
             },

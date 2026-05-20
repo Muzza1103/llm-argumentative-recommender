@@ -47,6 +47,19 @@ RULES:
 - Do not select an aspect only because it appears in the input; select it only if the argument actually relies on it.
 - If no aspect is clearly relevant, use [].
 - Keep argument text short.
+- Each argument must include exactly one "aspect_effect".
+
+ASPECT_EFFECT VALUES:
+- "present_preferred": the target has an aspect that seems positive or preferred by the user.
+- "missing_preferred": the target lacks an aspect that seems positive or preferred by the user.
+- "present_disliked": the target has an aspect that seems negative or disliked by the user.
+- "missing_disliked": the target lacks an aspect that seems negative or disliked by the user.
+- "neutral_or_unclear": the aspect relation is unclear.
+
+ASPECT_EFFECT RULES:
+- For support arguments, use "present_preferred" or "missing_disliked" when possible.
+- For attack arguments, use "missing_preferred" or "present_disliked" when possible.
+- Use "neutral_or_unclear" only if the relation cannot be determined from the input.
 
 ALLOWED ASPECTS:
 [{allowed_aspects}]
@@ -59,6 +72,7 @@ OUTPUT FORMAT:
       "type": "support",
       "text": "...",
       "used_aspects": ["food"],
+      "aspect_effect": "present_preferred",
       "evidence": ["Item name | short copied evidence"]
     }},
     {{
@@ -66,6 +80,7 @@ OUTPUT FORMAT:
       "type": "support",
       "text": "...",
       "used_aspects": ["service"],
+      "aspect_effect": "missing_disliked",
       "evidence": ["Item name | short copied evidence"]
     }},
     {{
@@ -73,6 +88,7 @@ OUTPUT FORMAT:
       "type": "attack",
       "text": "...",
       "used_aspects": ["price"],
+      "aspect_effect": "missing_preferred",
       "evidence": ["Item name | short copied evidence"]
     }},
     {{
@@ -80,6 +96,7 @@ OUTPUT FORMAT:
       "type": "attack",
       "text": "...",
       "used_aspects": ["noise"],
+      "aspect_effect": "present_disliked",
       "evidence": ["Item name | short copied evidence"]
     }}
   ]

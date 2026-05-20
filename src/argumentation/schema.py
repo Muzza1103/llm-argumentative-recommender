@@ -26,6 +26,14 @@ ARGUMENT_ASPECT_NORMALIZATION = {
     "group friendly": "good_for_groups",
 }
 
+ALLOWED_ASPECT_EFFECTS = {
+    "present_preferred",
+    "missing_preferred",
+    "present_disliked",
+    "missing_disliked",
+    "neutral_or_unclear",
+}
+
 def clean_used_aspects(value: Any) -> list[str]:
     if not isinstance(value, list):
         return []
@@ -61,6 +69,7 @@ class Argument:
     arg_type: str  # "support" or "attack"
     text: str
     evidence: list[str]
+    aspect_effect: str = "neutral_or_unclear"
     used_aspects: list[str] = field(default_factory=list)
 
     # Context
@@ -93,6 +102,7 @@ class Argument:
             "arg_type": self.arg_type,
             "text": self.text,
             "evidence": self.evidence,
+            "aspect_effect": self.aspect_effect,
             "used_aspects": self.used_aspects,
             "user_id": self.user_id,
             "target_item_name": self.target_item_name,
@@ -117,6 +127,7 @@ def build_argument_from_json(
         arg_type=argument_json["type"],
         text=argument_json["text"],
         evidence=argument_json["evidence"],
+        aspect_effect=argument_json.get("aspect_effect", "neutral_or_unclear"),
         used_aspects=clean_used_aspects(argument_json.get("used_aspects", [])),
         user_id=example.get("user_id"),
         target_item_name=target_item.get("name"),
@@ -149,6 +160,7 @@ def build_arguments_from_scored_json(
             arg_type=argument_json["arg_type"],
             text=argument_json["text"],
             evidence=argument_json["evidence"],
+            aspect_effect=argument_json.get("aspect_effect", "neutral_or_unclear"),
             used_aspects=clean_used_aspects(argument_json.get("used_aspects", [])),
             user_id=argument_json.get("user_id"),
             target_item_name=argument_json.get("target_item_name"),

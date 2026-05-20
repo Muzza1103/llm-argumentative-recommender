@@ -52,6 +52,12 @@ def format_tooltip_html(node: dict) -> str:
         aspects_html = ", ".join(html.escape(str(a)) for a in used_aspects)
         lines.append(f"<strong>Used aspects:</strong> {aspects_html}")
 
+    aspect_effect = metadata.get("aspect_effect")
+    if aspect_effect:
+        lines.append(
+            f"<strong>Aspect effect:</strong> {html.escape(str(aspect_effect))}"
+        )
+
     llm_score = metadata.get("llm_score")
     if llm_score is not None:
         lines.append(f"<strong>LLM score:</strong> {html.escape(str(llm_score))}")

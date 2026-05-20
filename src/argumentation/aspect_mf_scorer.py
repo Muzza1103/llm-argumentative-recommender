@@ -134,12 +134,41 @@ class AspectMFScorer(BaseMFScorer):
             ]
 
             if candidate_scores:
-                scores.append(sum(candidate_scores) / len(candidate_scores))
+                preference_score = sum(candidate_scores) / len(candidate_scores)
+                argument_strength = self._apply_aspect_effect(
+                    preference_score=preference_score,
+                    aspect_effect=argument.aspect_effect,
+                )
+                scores.append(argument_strength)
 
         if not scores:
             return self.default_score
 
         return sum(scores) / len(scores)
+
+    def _apply_aspect_effect(
+        self,
+        preference_score: float,
+        aspect_effect: str | None,
+    ) -> float:
+        """
+        MF predicts how much the user likes an aspect.
+        This method converts that preference into a support/attack strength
+        depending on how the argument says the target relates to the aspect.
+        """
+        if aspect_effect in {
+            "present_preferred",
+            "missing_preferred",
+        }:
+            return preference_score
+
+        if aspect_effect in {
+            "present_disliked",
+            "missing_disliked",
+        }:
+            return 1.0 - preference_score
+
+        return self.default_score
 
     def _expand_aspect_aliases(self, aspect: str) -> list[str]:
         aspect = aspect.strip().lower()
