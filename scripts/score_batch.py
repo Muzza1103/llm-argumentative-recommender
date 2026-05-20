@@ -206,6 +206,7 @@ def main():
         llm_scorer = LocalLLMScorer(
             generator=generator,
             config=LLMScorerConfig(default_score=0.5),
+            use_gemini_prompt=(llm_backend == "gemini"),
         )
 
     else:

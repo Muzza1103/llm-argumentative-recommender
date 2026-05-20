@@ -60,10 +60,20 @@ ARGUMENT_RESPONSE_SCHEMA = {
 SCORING_RESPONSE_SCHEMA = {
     "type": "object",
     "properties": {
-        "score": {"type": "number"},
-        "reason": {"type": "string"},
+        "argument_scores": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "id": {"type": "string"},
+                    "score": {"type": "number"},
+                    "reason": {"type": "string"},
+                },
+                "required": ["id", "score", "reason"],
+            },
+        },
     },
-    "required": ["score", "reason"],
+    "required": ["argument_scores"],
 }
 
 

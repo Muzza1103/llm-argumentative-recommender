@@ -97,8 +97,28 @@ def score_arguments(
 ) -> list[Argument]:
     """
     Score a list of arguments.
+    If the LLM scorer supports joint scoring through score_many(),
+    all arguments are sent together so the LLM can calibrate their
+    relative importance. Otherwise, arguments are scored one by one.
     """
-    return [
-        score_argument(argument, llm_scorer, mf_scorer, config)
-        for argument in arguments
-    ]
+    if hasattr(llm_scorer, "score_many"):
+        llm_scores = llm_scorer.score_many(arguments)
+    else:
+        llm_scores = [
+            llm_scorer.score(argument)
+            for argument in arguments
+        ]
+
+    scored_arguments = []
+
+    for argument, llm_score in zip(arguments, llm_scores):
+        mf_score = mf_scorer.score(argument)
+        combined_score = combine_scores(llm_score, mf_score, config)
+
+        argument.llm_score = llm_score
+        argument.mf_score = mf_score
+        argument.combined_score = combined_score
+
+        scored_arguments.append(argument)
+
+    return scored_arguments
