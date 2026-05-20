@@ -7,6 +7,7 @@ from src.argumentation.schema import build_arguments_from_parsed_json
 from src.argumentation.scoring import (
     ScoreConfig,
     score_arguments,
+    combine_scores,
 )
 from src.argumentation.aspect_mf_scorer import AspectMFScorer
 from src.argumentation.mf_scorer import GlobalRatingFallbackMFScorer
@@ -157,6 +158,12 @@ def main():
     parser.add_argument("--only-valid", action="store_true")
     parser.add_argument("--save-llm-prompt", action="store_true")
     parser.add_argument("--save-llm-raw", action="store_true")
+    parser.add_argument(
+        "--batch-size",
+        type=int,
+        default=1,
+        help="Number of Gemini scoring prompts sent in parallel.",
+    )
 
     args = parser.parse_args()
 
@@ -244,74 +251,173 @@ def main():
 
     start_time = time.perf_counter()
 
-    for i, record in enumerate(records, start=1):
-        validation = record.get("validation", {})
-        is_valid = validation.get("is_valid", False)
+    if (
+        args.llm_weight > 0.0
+        and llm_backend == "gemini"
+        and hasattr(llm_scorer, "score_batches")
+    ):
+        jobs = []
 
-        if args.only_valid and not is_valid:
-            skipped_records += 1
-            continue
+        for i, record in enumerate(records, start=1):
+            validation = record.get("validation", {})
+            is_valid = validation.get("is_valid", False)
 
-        parsed_json = record.get("parsed_json")
-        if parsed_json is None:
-            skipped_records += 1
-            continue
+            if args.only_valid and not is_valid:
+                skipped_records += 1
+                continue
 
-        dataset_index = record.get("index")
-        if dataset_index not in dataset_by_index:
-            skipped_records += 1
-            continue
+            parsed_json = record.get("parsed_json")
+            if parsed_json is None:
+                skipped_records += 1
+                continue
 
-        example = dataset_by_index[dataset_index]
+            dataset_index = record.get("index")
+            if dataset_index not in dataset_by_index:
+                skipped_records += 1
+                continue
 
-        if args.mf_predictions is not None:
-            mf_scorer.set_user(example.get("user_id"))
+            example = dataset_by_index[dataset_index]
+            arguments = build_arguments_from_parsed_json(parsed_json, example)
 
-        arguments = build_arguments_from_parsed_json(parsed_json, example)
+            jobs.append(
+                {
+                    "position": i,
+                    "record": record,
+                    "example": example,
+                    "arguments": arguments,
+                }
+            )
 
-        scored_arguments = score_arguments(
-            arguments=arguments,
-            llm_scorer=llm_scorer,
-            mf_scorer=mf_scorer,
-            config=score_config,
+        argument_batches = [
+            job["arguments"]
+            for job in jobs
+        ]
+
+        llm_score_batches = llm_scorer.score_batches(
+            argument_batches,
+            batch_size=args.batch_size,
         )
 
-        scored_arguments_dicts = []
+        for job, llm_scores in zip(jobs, llm_score_batches):
+            record = job["record"]
+            example = job["example"]
+            arguments = job["arguments"]
 
-        for argument in scored_arguments:
-            argument_dict = argument.to_dict()
+            if args.mf_predictions is not None:
+                mf_scorer.set_user(example.get("user_id"))
 
-            if args.llm_weight == 0.0:
-                argument_dict["llm_score_reason"] = (
-                    "LLM scoring disabled because llm_weight=0."
+            scored_arguments_dicts = []
+
+            for argument, llm_score in zip(arguments, llm_scores):
+                mf_score = mf_scorer.score(argument)
+                combined_score = combine_scores(
+                    llm_score=llm_score,
+                    mf_score=mf_score,
+                    config=score_config,
                 )
 
-            if not args.save_llm_prompt:
-                argument_dict.pop("llm_scoring_prompt", None)
+                argument.llm_score = llm_score
+                argument.mf_score = mf_score
+                argument.combined_score = combined_score
 
-            if not args.save_llm_raw:
-                argument_dict.pop("llm_scoring_raw_output", None)
+                argument_dict = argument.to_dict()
 
-            scored_arguments_dicts.append(argument_dict)
+                if not args.save_llm_prompt:
+                    argument_dict.pop("llm_scoring_prompt", None)
 
-        enriched_record = dict(record)
-        enriched_record["scoring"] = {
-            "llm_backend": llm_backend,
-            "llm_model": llm_model_name,
-            "llm_weight": args.llm_weight,
-            "mf_weight": args.mf_weight,
-            "mf_source": mf_source,
-        }
-        enriched_record["scored_arguments"] = scored_arguments_dicts
+                if not args.save_llm_raw:
+                    argument_dict.pop("llm_scoring_raw_output", None)
 
-        scored_records.append(enriched_record)
+                scored_arguments_dicts.append(argument_dict)
 
-        print(
-            f"[{i}/{len(records)}] "
-            f"index={record.get('index')} "
-            f"target={record.get('target_name')} "
-            f"scored_arguments={len(scored_arguments_dicts)}"
-        )
+            enriched_record = dict(record)
+            enriched_record["scoring"] = {
+                "llm_backend": llm_backend,
+                "llm_model": llm_model_name,
+                "llm_weight": args.llm_weight,
+                "mf_weight": args.mf_weight,
+                "mf_source": mf_source,
+            }
+            enriched_record["scored_arguments"] = scored_arguments_dicts
+
+            scored_records.append(enriched_record)
+
+            print(
+                f"[{job['position']}/{len(records)}] "
+                f"index={record.get('index')} "
+                f"target={record.get('target_name')} "
+                f"scored_arguments={len(scored_arguments_dicts)}"
+            )
+
+    else:
+        for i, record in enumerate(records, start=1):
+            validation = record.get("validation", {})
+            is_valid = validation.get("is_valid", False)
+
+            if args.only_valid and not is_valid:
+                skipped_records += 1
+                continue
+
+            parsed_json = record.get("parsed_json")
+            if parsed_json is None:
+                skipped_records += 1
+                continue
+
+            dataset_index = record.get("index")
+            if dataset_index not in dataset_by_index:
+                skipped_records += 1
+                continue
+
+            example = dataset_by_index[dataset_index]
+
+            if args.mf_predictions is not None:
+                mf_scorer.set_user(example.get("user_id"))
+
+            arguments = build_arguments_from_parsed_json(parsed_json, example)
+
+            scored_arguments = score_arguments(
+                arguments=arguments,
+                llm_scorer=llm_scorer,
+                mf_scorer=mf_scorer,
+                config=score_config,
+            )
+
+            scored_arguments_dicts = []
+
+            for argument in scored_arguments:
+                argument_dict = argument.to_dict()
+
+                if args.llm_weight == 0.0:
+                    argument_dict["llm_score_reason"] = (
+                        "LLM scoring disabled because llm_weight=0."
+                    )
+
+                if not args.save_llm_prompt:
+                    argument_dict.pop("llm_scoring_prompt", None)
+
+                if not args.save_llm_raw:
+                    argument_dict.pop("llm_scoring_raw_output", None)
+
+                scored_arguments_dicts.append(argument_dict)
+
+            enriched_record = dict(record)
+            enriched_record["scoring"] = {
+                "llm_backend": llm_backend,
+                "llm_model": llm_model_name,
+                "llm_weight": args.llm_weight,
+                "mf_weight": args.mf_weight,
+                "mf_source": mf_source,
+            }
+            enriched_record["scored_arguments"] = scored_arguments_dicts
+
+            scored_records.append(enriched_record)
+
+            print(
+                f"[{i}/{len(records)}] "
+                f"index={record.get('index')} "
+                f"target={record.get('target_name')} "
+                f"scored_arguments={len(scored_arguments_dicts)}"
+            )
 
     elapsed_seconds = time.perf_counter() - start_time
     elapsed_minutes = elapsed_seconds / 60
@@ -334,6 +440,7 @@ def main():
 
     summary["elapsed_seconds"] = elapsed_seconds
     summary["elapsed_minutes"] = elapsed_minutes
+    summary["batch_size"] = args.batch_size
 
     with summary_path.open("w", encoding="utf-8") as f:
         json.dump(summary, f, indent=2, ensure_ascii=False)

@@ -11,9 +11,6 @@ from src.prompting.gemini_scoring_prompt import build_gemini_joint_scoring_promp
 
 @dataclass
 class LLMScorerConfig:
-    """
-    Configuration for semantic argument scoring with an LLM.
-    """
     min_score: float = 0.0
     max_score: float = 1.0
     default_score: float = 0.5
@@ -21,13 +18,6 @@ class LLMScorerConfig:
 
 
 class LocalLLMScorer:
-    """
-    Semantic scorer based on a generator.
-
-    It can score arguments jointly so the model can calibrate
-    their relative importance within the same recommendation context.
-    """
-
     def __init__(
         self,
         generator: LocalLLMGenerator,
@@ -48,21 +38,11 @@ class LocalLLMScorer:
     def _build_prompt(self, arguments: list[Argument]) -> str:
         if self.use_gemini_prompt:
             return build_gemini_joint_scoring_prompt(arguments)
-
         return build_joint_scoring_prompt(arguments)
 
     def score(self, argument: Argument) -> float:
-        """
-        Backward-compatible single-argument scoring.
-
-        Internally, it uses the joint scoring format with one argument.
-        """
         scores = self.score_many([argument])
-
-        if not scores:
-            return self.config.default_score
-
-        return scores[0]
+        return scores[0] if scores else self.config.default_score
 
     def score_many(self, arguments: list[Argument]) -> list[float]:
         if not arguments:
@@ -70,6 +50,50 @@ class LocalLLMScorer:
 
         prompt = self._build_prompt(arguments)
         output_text = self.generator.generate(prompt)
+
+        return self._parse_scores(
+            arguments=arguments,
+            prompt=prompt,
+            output_text=output_text,
+        )
+
+    def score_batches(
+        self,
+        argument_batches: list[list[Argument]],
+        batch_size: int = 5,
+    ) -> list[list[float]]:
+        if not argument_batches:
+            return []
+
+        prompts = [
+            self._build_prompt(arguments)
+            for arguments in argument_batches
+        ]
+
+        output_texts = self.generator.generate_batch(
+            prompts,
+            batch_size=batch_size,
+        )
+
+        return [
+            self._parse_scores(
+                arguments=arguments,
+                prompt=prompt,
+                output_text=output_text,
+            )
+            for arguments, prompt, output_text in zip(
+                argument_batches,
+                prompts,
+                output_texts,
+            )
+        ]
+
+    def _parse_scores(
+        self,
+        arguments: list[Argument],
+        prompt: str,
+        output_text: str,
+    ) -> list[float]:
         parsed_json = extract_first_json_object(output_text)
 
         scores_by_id: dict[str, float] = {}
@@ -98,13 +122,13 @@ class LocalLLMScorer:
         for argument in arguments:
             argument.llm_scoring_prompt = prompt
             argument.llm_scoring_raw_output = output_text
-
             argument.llm_score_reason = reasons_by_id.get(
                 argument.id,
                 self.config.default_reason,
             )
 
-            score = scores_by_id.get(argument.id, self.config.default_score)
-            output_scores.append(score)
+            output_scores.append(
+                scores_by_id.get(argument.id, self.config.default_score)
+            )
 
         return output_scores
