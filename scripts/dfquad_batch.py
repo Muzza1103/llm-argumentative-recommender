@@ -5,6 +5,7 @@ from pathlib import Path
 from src.argumentation.schema import build_arguments_from_scored_json
 from src.argumentation.graph_builder import build_argument_graph
 from src.argumentation.dfquad import evaluate_root_dfquad
+from scripts.test_dfquad import build_context_summary
 
 
 def load_jsonl(path: Path) -> list[dict]:
@@ -92,6 +93,12 @@ def main():
         action="store_true",
         help="Save the full argument graph in each output record.",
     )
+    parser.add_argument(
+        "--dataset",
+        type=str,
+        default=None,
+        help="Optional path to the source dataset JSONL used to add context to each record.",
+    )
     args = parser.parse_args()
 
     input_path = Path(args.input)
@@ -99,6 +106,15 @@ def main():
     summary_path = output_path.with_name(f"{output_path.stem}_summary.json")
 
     records = load_jsonl(input_path)
+
+    dataset_by_index = None
+
+    if args.dataset is not None:
+        dataset_records = load_jsonl(Path(args.dataset))
+        dataset_by_index = {
+            index: example
+            for index, example in enumerate(dataset_records)
+        }
 
     output_records = []
     skipped = 0
@@ -123,6 +139,13 @@ def main():
 
         output_record = dict(record)
         output_record["dfquad"] = dfquad_result.to_dict()
+
+        if dataset_by_index is not None:
+            dataset_index = record.get("index")
+            example = dataset_by_index.get(dataset_index)
+
+            if example is not None:
+                output_record["context"] = build_context_summary(example)
 
         if args.save_graph:
             output_record["argument_graph"] = graph.to_dict()
