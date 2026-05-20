@@ -92,6 +92,8 @@ def main():
                 "aggregated_attack": dfquad.get("aggregated_attack"),
                 "root_base_score": dfquad.get("root_base_score"),
                 "aggregation_method": dfquad.get("aggregation_method"),
+                "combination_method": dfquad.get("combination_method"),
+                "contrastive_gamma": dfquad.get("contrastive_gamma"),
                 "calibration_method": dfquad.get("calibration_method"),
                 "calibration_beta": dfquad.get("calibration_beta"),
                 "num_arguments": len(record.get("scored_arguments", [])),
@@ -121,6 +123,18 @@ def main():
         if row.get("calibration_beta") is not None
     })
 
+    combination_methods = sorted({
+        row["combination_method"]
+        for row in rows
+        if row.get("combination_method") is not None
+    })
+
+    contrastive_gammas = sorted({
+        row["contrastive_gamma"]
+        for row in rows
+        if row.get("contrastive_gamma") is not None
+    })
+
     summary = {
         "input_file": args.input,
         "dataset_file": args.dataset,
@@ -132,6 +146,8 @@ def main():
         "max_absolute_error": max(absolute_errors) if absolute_errors else None,
         "mean_dfquad_final_score": mean(predicted_scores) if predicted_scores else None,
         "mean_normalized_target_rating": mean(gold_scores) if gold_scores else None,
+        "combination_methods": combination_methods,
+        "contrastive_gammas": contrastive_gammas,
         "aggregation_methods": aggregation_methods,
         "calibration_methods": calibration_methods,
         "calibration_betas": calibration_betas,
@@ -144,6 +160,8 @@ def main():
     print(f"MAE:  {summary['mae']}")
     print(f"MSE:  {summary['mse']}")
     print(f"RMSE: {summary['rmse']}")
+    print(f"Combination: {combination_methods}")
+    print(f"Contrastive gamma: {contrastive_gammas}")
     print(f"Aggregation: {aggregation_methods}")
     print(f"Calibration: {calibration_methods}")
     print(f"Beta: {calibration_betas}")

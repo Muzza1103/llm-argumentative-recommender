@@ -9,9 +9,6 @@ from .graph_builder import ArgumentGraph
 
 @dataclass
 class DFQuADResult:
-    """
-    Result of DF-QuAD evaluation on the root node.
-    """
     root_id: str
     root_text: str
     root_base_score: float
@@ -21,6 +18,8 @@ class DFQuADResult:
     aggregated_attack: float
     final_score: float
     aggregation_method: str
+    combination_method: str
+    contrastive_gamma: float
     calibration_method: str
     calibration_beta: float
 
@@ -35,6 +34,8 @@ class DFQuADResult:
             "aggregated_attack": self.aggregated_attack,
             "final_score": self.final_score,
             "aggregation_method": self.aggregation_method,
+            "combination_method": self.combination_method,
+            "contrastive_gamma": self.contrastive_gamma,
             "calibration_method": self.calibration_method,
             "calibration_beta": self.calibration_beta,
         }
@@ -85,6 +86,47 @@ def dfquad_combine(
     return _clamp(base_score - base_score * delta)
 
 
+def contrastive_power_combine(
+    support_strength: float,
+    attack_strength: float,
+    gamma: float = 5.0,
+) -> float:
+    support_strength = _clamp(support_strength)
+    attack_strength = _clamp(attack_strength)
+
+    s = support_strength ** gamma
+    a = attack_strength ** gamma
+
+    if s + a == 0.0:
+        return 0.5
+
+    return _clamp(s / (s + a))
+
+
+def combine_argumentative_strengths(
+    base_score: float,
+    attack_strength: float,
+    support_strength: float,
+    method: str = "dfquad",
+    contrastive_gamma: float = 5.0,
+) -> float:
+    if method == "dfquad":
+        return dfquad_combine(
+            base_score=base_score,
+            attack_strength=attack_strength,
+            support_strength=support_strength,
+        )
+
+    if method == "contrastive_power":
+        return contrastive_power_combine(
+            support_strength=support_strength,
+            attack_strength=attack_strength,
+            gamma=contrastive_gamma,
+        )
+
+    raise ValueError(f"Unknown combination method: {method}")
+
+
 def calibrate_score(
     score: float,
     method: str = "none",
@@ -104,6 +146,8 @@ def calibrate_score(
 def evaluate_root_dfquad(
     graph: ArgumentGraph,
     aggregation_method: str = "dfquad",
+    combination_method: str = "dfquad",
+    contrastive_gamma: float = 5.0,
     calibration_method: str = "none",
     calibration_beta: float = 12.0,
 ) -> DFQuADResult:
@@ -124,10 +168,12 @@ def evaluate_root_dfquad(
         method=aggregation_method,
     )
 
-    final_score = dfquad_combine(
+    final_score = combine_argumentative_strengths(
         base_score=root.base_score,
         attack_strength=aggregated_attack,
         support_strength=aggregated_support,
+        method=combination_method,
+        contrastive_gamma=contrastive_gamma,
     )
 
     final_score = calibrate_score(
@@ -146,6 +192,8 @@ def evaluate_root_dfquad(
         aggregated_attack=aggregated_attack,
         final_score=final_score,
         aggregation_method=aggregation_method,
+        combination_method=combination_method,
+        contrastive_gamma=contrastive_gamma,
         calibration_method=calibration_method,
         calibration_beta=calibration_beta,
     )

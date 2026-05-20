@@ -299,6 +299,8 @@ def build_html(record: dict) -> str:
     aggregation_method = html.escape(str(dfquad.get("aggregation_method", "N/A")))
     calibration_method = html.escape(str(dfquad.get("calibration_method", "N/A")))
     calibration_beta = html.escape(str(dfquad.get("calibration_beta", "N/A")))
+    combination_method = html.escape(str(dfquad.get("combination_method", "N/A")))
+    contrastive_gamma = html.escape(str(dfquad.get("contrastive_gamma", "N/A")))
 
     context_panel = build_context_panel(record)
 
@@ -570,6 +572,8 @@ def build_html(record: dict) -> str:
                 <div><strong>Aggregation method:</strong> {aggregation_method}</div>
                 <div><strong>Calibration method:</strong> {calibration_method}</div>
                 <div><strong>Calibration beta:</strong> {calibration_beta}</div>
+                <div><strong>Combination method:</strong> {combination_method}</div>
+                <div><strong>Contrastive gamma:</strong> {contrastive_gamma}</div>
             </div>
 
             <div class="legend">

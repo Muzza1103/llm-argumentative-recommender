@@ -68,7 +68,7 @@ def build_summary(records: list[dict], skipped: int) -> dict:
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Apply DF-QuAD aggregation to all scored argument records."
+        description="Apply argumentative aggregation to all scored argument records."
     )
     parser.add_argument(
         "--input",
@@ -106,6 +106,18 @@ def main():
         help="Method used to aggregate support and attack strengths.",
     )
     parser.add_argument(
+        "--combination-method",
+        choices=["dfquad", "contrastive_power"],
+        default="dfquad",
+        help="Method used to combine aggregated support and attack strengths.",
+    )
+    parser.add_argument(
+        "--contrastive-gamma",
+        type=float,
+        default=5.0,
+        help="Gamma value for contrastive_power combination.",
+    )
+    parser.add_argument(
         "--calibration-method",
         choices=["none", "centered_sigmoid"],
         default="none",
@@ -138,6 +150,11 @@ def main():
     skipped = 0
 
     print(f"Loaded {len(records)} scored records from {input_path}")
+    print(f"Aggregation method: {args.aggregation_method}")
+    print(f"Combination method: {args.combination_method}")
+    print(f"Contrastive gamma:  {args.contrastive_gamma}")
+    print(f"Calibration method: {args.calibration_method}")
+    print(f"Calibration beta:   {args.calibration_beta}")
 
     for i, record in enumerate(records, start=1):
         scored_arguments_json = record.get("scored_arguments")
@@ -156,6 +173,8 @@ def main():
         dfquad_result = evaluate_root_dfquad(
             graph,
             aggregation_method=args.aggregation_method,
+            combination_method=args.combination_method,
+            contrastive_gamma=args.contrastive_gamma,
             calibration_method=args.calibration_method,
             calibration_beta=args.calibration_beta,
         )
@@ -189,6 +208,8 @@ def main():
     summary["output_file"] = str(output_path)
     summary["root_base_score"] = args.root_base_score
     summary["aggregation_method"] = args.aggregation_method
+    summary["combination_method"] = args.combination_method
+    summary["contrastive_gamma"] = args.contrastive_gamma
     summary["calibration_method"] = args.calibration_method
     summary["calibration_beta"] = args.calibration_beta
 
