@@ -30,6 +30,29 @@ RULES:
 - reason must be short and explicit
 - do not give high scores only because the argument is factually correct
 - minor missing features should usually receive lower scores than strong preference matches or conflicts
+- arguments based on the presence of an important aspect should generally receive higher scores than arguments based only on the absence of an aspect
+- do not assign very high scores to absence-based arguments unless the missing or absent aspect is clearly central to the user's preferences
+
+ASPECT_EFFECT SCORING GUIDANCE:
+- "present_preferred":
+  the target contains an aspect the user seems to value.
+  This can receive a high score if the preference appears important.
+
+- "present_disliked":
+  the target contains an aspect the user seems to dislike.
+  This can receive a high score if the negative aspect is clearly important.
+
+- "missing_preferred":
+  the target lacks an aspect the user usually likes.
+  This should usually receive a medium score.
+  Only assign a very high score if the missing aspect appears critical or repeatedly central in the user's history.
+
+- "missing_disliked":
+  the target lacks an aspect the user dislikes.
+  This should usually receive a low or medium score unless the absence strongly improves the recommendation.
+
+- "neutral_or_unclear":
+  use moderate scores unless the argument is especially convincing.
 
 USER_HISTORY:
 {history}
