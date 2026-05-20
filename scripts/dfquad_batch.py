@@ -99,6 +99,24 @@ def main():
         default=None,
         help="Optional path to the source dataset JSONL used to add context to each record.",
     )
+    parser.add_argument(
+        "--aggregation-method",
+        choices=["dfquad", "mean", "max"],
+        default="dfquad",
+        help="Method used to aggregate support and attack strengths.",
+    )
+    parser.add_argument(
+        "--calibration-method",
+        choices=["none", "centered_sigmoid"],
+        default="none",
+        help="Optional post-aggregation calibration method.",
+    )
+    parser.add_argument(
+        "--calibration-beta",
+        type=float,
+        default=12.0,
+        help="Beta value for centered sigmoid calibration.",
+    )
     args = parser.parse_args()
 
     input_path = Path(args.input)
@@ -135,7 +153,12 @@ def main():
             root_base_score=args.root_base_score,
         )
 
-        dfquad_result = evaluate_root_dfquad(graph)
+        dfquad_result = evaluate_root_dfquad(
+            graph,
+            aggregation_method=args.aggregation_method,
+            calibration_method=args.calibration_method,
+            calibration_beta=args.calibration_beta,
+        )
 
         output_record = dict(record)
         output_record["dfquad"] = dfquad_result.to_dict()
@@ -165,6 +188,9 @@ def main():
     summary["input_file"] = str(input_path)
     summary["output_file"] = str(output_path)
     summary["root_base_score"] = args.root_base_score
+    summary["aggregation_method"] = args.aggregation_method
+    summary["calibration_method"] = args.calibration_method
+    summary["calibration_beta"] = args.calibration_beta
 
     with summary_path.open("w", encoding="utf-8") as f:
         json.dump(summary, f, indent=2, ensure_ascii=False)

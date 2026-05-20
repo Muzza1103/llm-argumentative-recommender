@@ -91,6 +91,9 @@ def main():
                 "aggregated_support": dfquad.get("aggregated_support"),
                 "aggregated_attack": dfquad.get("aggregated_attack"),
                 "root_base_score": dfquad.get("root_base_score"),
+                "aggregation_method": dfquad.get("aggregation_method"),
+                "calibration_method": dfquad.get("calibration_method"),
+                "calibration_beta": dfquad.get("calibration_beta"),
                 "num_arguments": len(record.get("scored_arguments", [])),
             }
         )
@@ -99,6 +102,24 @@ def main():
     squared_errors = [row["squared_error"] for row in rows]
     predicted_scores = [row["dfquad_final_score"] for row in rows]
     gold_scores = [row["normalized_target_rating"] for row in rows]
+
+    aggregation_methods = sorted({
+        row["aggregation_method"]
+        for row in rows
+        if row.get("aggregation_method") is not None
+    })
+
+    calibration_methods = sorted({
+        row["calibration_method"]
+        for row in rows
+        if row.get("calibration_method") is not None
+    })
+
+    calibration_betas = sorted({
+        row["calibration_beta"]
+        for row in rows
+        if row.get("calibration_beta") is not None
+    })
 
     summary = {
         "input_file": args.input,
@@ -111,6 +132,9 @@ def main():
         "max_absolute_error": max(absolute_errors) if absolute_errors else None,
         "mean_dfquad_final_score": mean(predicted_scores) if predicted_scores else None,
         "mean_normalized_target_rating": mean(gold_scores) if gold_scores else None,
+        "aggregation_methods": aggregation_methods,
+        "calibration_methods": calibration_methods,
+        "calibration_betas": calibration_betas,
     }
 
     save_csv(rows, Path(args.output_csv))
@@ -120,6 +144,9 @@ def main():
     print(f"MAE:  {summary['mae']}")
     print(f"MSE:  {summary['mse']}")
     print(f"RMSE: {summary['rmse']}")
+    print(f"Aggregation: {aggregation_methods}")
+    print(f"Calibration: {calibration_methods}")
+    print(f"Beta: {calibration_betas}")
     print(f"CSV:  {args.output_csv}")
     print(f"JSON: {args.output_summary}")
 

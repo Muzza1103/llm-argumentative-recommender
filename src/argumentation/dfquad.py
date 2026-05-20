@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 from typing import Any
 
-from .graph_builder import ArgumentGraph, ArgumentNode
+from .graph_builder import ArgumentGraph
 
 
 @dataclass
@@ -19,6 +20,9 @@ class DFQuADResult:
     aggregated_support: float
     aggregated_attack: float
     final_score: float
+    aggregation_method: str
+    calibration_method: str
+    calibration_beta: float
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -30,6 +34,9 @@ class DFQuADResult:
             "aggregated_support": self.aggregated_support,
             "aggregated_attack": self.aggregated_attack,
             "final_score": self.final_score,
+            "aggregation_method": self.aggregation_method,
+            "calibration_method": self.calibration_method,
+            "calibration_beta": self.calibration_beta,
         }
 
 
@@ -37,20 +44,28 @@ def _clamp(value: float) -> float:
     return max(0.0, min(1.0, value))
 
 
-def aggregate_strength(strengths: list[float]) -> float:
-    """
-    Aggregate multiple strengths into one value in [0, 1].
-    Use the probabilistic sum:
-        1 - Π(1 - s_i)
-    """
+def aggregate_strength(
+    strengths: list[float],
+    method: str = "dfquad",
+) -> float:
     if not strengths:
         return 0.0
 
-    product = 1.0
-    for s in strengths:
-        product *= (1.0 - _clamp(s))
+    strengths = [_clamp(s) for s in strengths]
 
-    return 1.0 - product
+    if method == "dfquad":
+        product = 1.0
+        for s in strengths:
+            product *= 1.0 - s
+        return 1.0 - product
+
+    if method == "mean":
+        return sum(strengths) / len(strengths)
+
+    if method == "max":
+        return max(strengths)
+
+    raise ValueError(f"Unknown aggregation method: {method}")
 
 
 def dfquad_combine(
@@ -58,16 +73,6 @@ def dfquad_combine(
     attack_strength: float,
     support_strength: float,
 ) -> float:
-    """
-    Formula :
-        if support_strength >= attack_strength:
-            result = base + (1 - base) * (support - attack)
-        else:
-            result = base - base * (attack - support)
-
-    stronger supports -> move upward toward 1
-    stronger attacks -> move downward toward 0
-    """
     base_score = _clamp(base_score)
     attack_strength = _clamp(attack_strength)
     support_strength = _clamp(support_strength)
@@ -80,10 +85,28 @@ def dfquad_combine(
     return _clamp(base_score - base_score * delta)
 
 
-def evaluate_root_dfquad(graph: ArgumentGraph) -> DFQuADResult:
-    """
-    Evaluate only the root claim in the graph for the first version.
-    """
+def calibrate_score(
+    score: float,
+    method: str = "none",
+    beta: float = 12.0,
+) -> float:
+    score = _clamp(score)
+
+    if method == "none":
+        return score
+
+    if method == "centered_sigmoid":
+        return _clamp(1.0 / (1.0 + math.exp(-beta * (score - 0.5))))
+
+    raise ValueError(f"Unknown calibration method: {method}")
+
+
+def evaluate_root_dfquad(
+    graph: ArgumentGraph,
+    aggregation_method: str = "dfquad",
+    calibration_method: str = "none",
+    calibration_beta: float = 12.0,
+) -> DFQuADResult:
     root = graph.get_root()
 
     supporters = graph.get_supporters_of(root.node_id)
@@ -92,13 +115,25 @@ def evaluate_root_dfquad(graph: ArgumentGraph) -> DFQuADResult:
     support_scores = [node.base_score for node in supporters]
     attack_scores = [node.base_score for node in attackers]
 
-    aggregated_support = aggregate_strength(support_scores)
-    aggregated_attack = aggregate_strength(attack_scores)
+    aggregated_support = aggregate_strength(
+        support_scores,
+        method=aggregation_method,
+    )
+    aggregated_attack = aggregate_strength(
+        attack_scores,
+        method=aggregation_method,
+    )
 
     final_score = dfquad_combine(
         base_score=root.base_score,
         attack_strength=aggregated_attack,
         support_strength=aggregated_support,
+    )
+
+    final_score = calibrate_score(
+        final_score,
+        method=calibration_method,
+        beta=calibration_beta,
     )
 
     return DFQuADResult(
@@ -110,4 +145,7 @@ def evaluate_root_dfquad(graph: ArgumentGraph) -> DFQuADResult:
         aggregated_support=aggregated_support,
         aggregated_attack=aggregated_attack,
         final_score=final_score,
+        aggregation_method=aggregation_method,
+        calibration_method=calibration_method,
+        calibration_beta=calibration_beta,
     )

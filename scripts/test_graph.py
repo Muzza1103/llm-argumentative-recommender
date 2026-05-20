@@ -296,6 +296,9 @@ def build_html(record: dict) -> str:
     final_score = html.escape(str(dfquad.get("final_score", "N/A")))
     aggregated_support = html.escape(str(dfquad.get("aggregated_support", "N/A")))
     aggregated_attack = html.escape(str(dfquad.get("aggregated_attack", "N/A")))
+    aggregation_method = html.escape(str(dfquad.get("aggregation_method", "N/A")))
+    calibration_method = html.escape(str(dfquad.get("calibration_method", "N/A")))
+    calibration_beta = html.escape(str(dfquad.get("calibration_beta", "N/A")))
 
     context_panel = build_context_panel(record)
 
@@ -564,6 +567,9 @@ def build_html(record: dict) -> str:
                 <div><strong>Final DF-QuAD score:</strong> {final_score}</div>
                 <div><strong>Aggregated support:</strong> {aggregated_support}</div>
                 <div><strong>Aggregated attack:</strong> {aggregated_attack}</div>
+                <div><strong>Aggregation method:</strong> {aggregation_method}</div>
+                <div><strong>Calibration method:</strong> {calibration_method}</div>
+                <div><strong>Calibration beta:</strong> {calibration_beta}</div>
             </div>
 
             <div class="legend">
