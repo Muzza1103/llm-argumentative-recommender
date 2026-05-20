@@ -217,19 +217,22 @@ def validate_generated_arguments(example: dict, parsed_json: Any) -> dict[str, A
             )
         )
 
-    if support_count != 2:
+    if support_count + attack_count != 4:
         errors.append(
             make_error(
-                "wrong_support_count",
-                f"Expected 2 support arguments, got {support_count}.",
+                "invalid_total_argument_count",
+                (
+                    "Expected exactly 4 arguments "
+                    f"(support + attack), got {support_count + attack_count}."
+                ),
             )
         )
 
-    if attack_count != 2:
+    if support_count == 0 and attack_count == 0:
         errors.append(
             make_error(
-                "wrong_attack_count",
-                f"Expected 2 attack arguments, got {attack_count}.",
+                "missing_argument_types",
+                "No valid support or attack arguments were found.",
             )
         )
 

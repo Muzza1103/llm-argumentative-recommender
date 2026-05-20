@@ -31,15 +31,21 @@ Return ONLY a valid JSON object.
 Do not add explanations, markdown, or code fences.
 
 TASK:
-Generate exactly 4 arguments:
-- 2 support arguments
-- 2 attack arguments
+Generate exactly 4 arguments in total.
+
+The number of support and attack arguments does not need to be balanced:
+- Generate more support arguments if the target item strongly matches the user preferences.
+- Generate more attack arguments if the target item clearly conflicts with the user preferences.
+- Do not invent weak attacks just to balance the output.
+- Do not invent weak supports just to balance the output.
+- The split between support and attack must reflect the available evidence.
+- Only generate arguments that are grounded, relevant, and decision-important.
 
 RULES:
 - Every argument must be grounded in the input.
 - Do not invent or contradict facts.
 - If evidence says an attribute is True, do not claim it is False, and vice versa.
-- Attack arguments must be based on real differences.
+- Attack arguments must be based on real differences or clear preference conflicts.
 - Do not claim a disadvantage if the target and the compared item share the same attribute value.
 - Evidence must be short, copied from the input, and start with the item name.
 - Each argument must include 1 to 3 "used_aspects" selected from the allowed list.
@@ -48,6 +54,7 @@ RULES:
 - If no aspect is clearly relevant, use [].
 - Keep argument text short.
 - Each argument must include exactly one "aspect_effect".
+- Argument ids must be sequential: A1, A2, A3, ...
 
 ASPECT_EFFECT VALUES:
 - "present_preferred": the target has an aspect that seems positive or preferred by the user.
@@ -60,6 +67,8 @@ ASPECT_EFFECT RULES:
 - For support arguments, use "present_preferred" or "missing_disliked" when possible.
 - For attack arguments, use "missing_preferred" or "present_disliked" when possible.
 - Use "neutral_or_unclear" only if the relation cannot be determined from the input.
+- Prefer presence-based arguments over absence-based arguments when both are available.
+- Do not generate absence-based attacks unless the missing aspect is clearly relevant to the user's preferences.
 
 ALLOWED ASPECTS:
 [{allowed_aspects}]
@@ -80,19 +89,11 @@ OUTPUT FORMAT:
       "type": "support",
       "text": "...",
       "used_aspects": ["service"],
-      "aspect_effect": "missing_disliked",
+      "aspect_effect": "present_preferred",
       "evidence": ["Item name | short copied evidence"]
     }},
     {{
       "id": "A3",
-      "type": "attack",
-      "text": "...",
-      "used_aspects": ["price"],
-      "aspect_effect": "missing_preferred",
-      "evidence": ["Item name | short copied evidence"]
-    }},
-    {{
-      "id": "A4",
       "type": "attack",
       "text": "...",
       "used_aspects": ["noise"],
