@@ -189,6 +189,13 @@ def main():
         help="Number of negative candidates per user.",
     )
 
+    parser.add_argument(
+        "--num-examples",
+        type=int,
+        default=None,
+        help="Optional number of users/examples to keep from the input dataset.",
+    )
+
     args = parser.parse_args()
 
     random.seed(SEED)
@@ -201,6 +208,9 @@ def main():
     )
 
     dataset = load_jsonl(input_path)
+
+    if args.num_examples is not None:
+        dataset = dataset[:args.num_examples]
 
     ranking_examples = build_ranking_examples(
         dataset=dataset,
