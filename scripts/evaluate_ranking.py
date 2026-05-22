@@ -4,8 +4,17 @@ import math
 from pathlib import Path
 
 
-def load_jsonl(path: Path) -> list[dict]:
+def load_records(path: Path) -> list[dict]:
     records = []
+
+    if path.suffix == ".json":
+        with path.open("r", encoding="utf-8") as f:
+            data = json.load(f)
+
+        if not isinstance(data, list):
+            raise ValueError("JSON input must contain a list of records.")
+
+        return data
 
     with path.open("r", encoding="utf-8") as f:
         for line in f:
@@ -23,9 +32,20 @@ def save_json(data: dict, path: Path):
         json.dump(data, f, indent=2, ensure_ascii=False)
 
 
-def get_score(record: dict) -> float | None:
-    dfquad = record.get("dfquad", {})
-    score = dfquad.get("final_score")
+def get_score(
+    record: dict,
+    score_source: str,
+    score_key: str,
+) -> float | None:
+    if score_source == "direct":
+        score = record.get(score_key)
+
+    elif score_source == "dfquad":
+        dfquad = record.get("dfquad", {})
+        score = dfquad.get(score_key)
+
+    else:
+        raise ValueError(f"Unknown score_source: {score_source}")
 
     if isinstance(score, (int, float)):
         return float(score)
@@ -66,6 +86,16 @@ def attach_ranking_metadata(
         for index, example in enumerate(dataset_records)
     }
 
+    dataset_by_pair = {}
+
+    for example in dataset_records:
+        user_id = example.get("user_id")
+        target_item = example.get("target_item", {})
+        business_id = target_item.get("business_id")
+
+        if isinstance(user_id, str) and isinstance(business_id, str):
+            dataset_by_pair[(user_id, business_id)] = example
+
     enriched_records = []
 
     for record in records:
@@ -75,23 +105,45 @@ def attach_ranking_metadata(
         candidate_label = enriched.get("candidate_label")
 
         if ranking_group_id is None or candidate_label is None:
+            example = None
+
             dataset_index = enriched.get("index")
-            example = dataset_by_index.get(dataset_index)
+            if isinstance(dataset_index, int):
+                example = dataset_by_index.get(dataset_index)
+
+            if example is None:
+                user_id = enriched.get("user_id")
+                business_id = enriched.get("business_id")
+
+                if isinstance(user_id, str) and isinstance(business_id, str):
+                    example = dataset_by_pair.get((user_id, business_id))
 
             if example is not None:
                 enriched["ranking_group_id"] = example.get("ranking_group_id")
                 enriched["candidate_label"] = example.get("candidate_label")
+
+                target_item = example.get("target_item", {})
+                enriched.setdefault("target_name", target_item.get("name"))
 
         enriched_records.append(enriched)
 
     return enriched_records
 
 
-def evaluate_group(records: list[dict], ks: list[int]) -> dict:
+def evaluate_group(
+    records: list[dict],
+    ks: list[int],
+    score_source: str,
+    score_key: str,
+) -> dict:
     scored = []
 
     for record in records:
-        score = get_score(record)
+        score = get_score(
+            record=record,
+            score_source=score_source,
+            score_key=score_key,
+        )
 
         if score is None:
             continue
@@ -144,12 +196,13 @@ def evaluate_group(records: list[dict], ks: list[int]) -> dict:
 def mean(values: list[float]) -> float | None:
     if not values:
         return None
+
     return sum(values) / len(values)
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Evaluate ranking metrics from DF-QuAD scored candidate records."
+        description="Evaluate ranking metrics from scored candidate records."
     )
     parser.add_argument("--input", type=str, required=True)
     parser.add_argument(
@@ -171,6 +224,18 @@ def main():
         action="store_true",
         help="Evaluate only groups with the maximum observed number of candidates.",
     )
+    parser.add_argument(
+        "--score-source",
+        choices=["dfquad", "direct"],
+        default="dfquad",
+        help="Where to read the ranking score from.",
+    )
+    parser.add_argument(
+        "--score-key",
+        type=str,
+        default="final_score",
+        help="Score field to use. For DF-QuAD use final_score; for MF-only use score.",
+    )
 
     args = parser.parse_args()
 
@@ -178,8 +243,8 @@ def main():
     dataset_path = Path(args.dataset)
     output_summary_path = Path(args.output_summary)
 
-    records = load_jsonl(input_path)
-    dataset_records = load_jsonl(dataset_path)
+    records = load_records(input_path)
+    dataset_records = load_records(dataset_path)
 
     records = attach_ranking_metadata(
         records=records,
@@ -187,7 +252,6 @@ def main():
     )
 
     groups: dict[str, list[dict]] = {}
-
     skipped_without_group = 0
 
     for record in records:
@@ -209,7 +273,12 @@ def main():
             skipped_incomplete_groups += 1
             continue
 
-        result = evaluate_group(group_records, args.k)
+        result = evaluate_group(
+            records=group_records,
+            ks=args.k,
+            score_source=args.score_source,
+            score_key=args.score_key,
+        )
 
         if not result:
             continue
@@ -220,6 +289,8 @@ def main():
     summary = {
         "input_file": str(input_path),
         "dataset_file": str(dataset_path),
+        "score_source": args.score_source,
+        "score_key": args.score_key,
         "num_records": len(records),
         "num_dataset_records": len(dataset_records),
         "num_groups": len(groups),
