@@ -1,22 +1,28 @@
 # LLM Argumentative Recommender
 
-This project explores **explainable** and **contestable recommendation systems** using **local Large Language Models** and **argumentation-based reasoning**.
+This project explores **explainable** and **contestable recommendation systems** using **Large Language Models (LLMs)**, **collaborative filtering** and **argumentation-based reasoning**.
 
 The main objective is to build a recommendation pipeline in which a language model generates structured arguments from user history and target item information, and these arguments are then used to support **explicit reasoning, scoring, and explanations**.
 
-## Current objective
 
-The current focus is on building a first prototype for:
+## Current pipeline
 
-- preprocessing a small Yelp-based subset
-- generating structured recommendation arguments with a local LLM
-- validating and filtering generated arguments
-- assigning a semantic score to each argument with an LLM-based scorer
-- assigning a first empirical score based on collaborative recommendation signals
-- structuring arguments into a support / attack graph
-- aggregating argument strengths with a first **DF-QuAD-based reasoning step**
+The current system includes:
+- Yelp subset construction
+- aspect extraction from reviews
+- aspect-based MF dataset construction
+- aspect-based MF training
+- LLM-based argument generation
+- balanced (same number of support and attack arguments) and unbalanced argument generation settings
+- argument validation
+- hybrid semantic + collaborative scoring
+- argument graph construction
+- DF-QuAD and contrastive aggregation variants
+- rating prediction evaluation
+- ranking evaluation
+- MF-only and LLM-only baselines
 
-## Planned pipeline
+## Recommendation pipeline
 
 ```text
 User history + target item
@@ -27,11 +33,13 @@ Validation and filtering
         ↓
 Argument scoring
    - semantic score (LLM)
-   - empirical score (MF / fallback)
+   - empirical score (collaborative filtering / aspect-MF)
         ↓
 Argument graph construction
         ↓
-DF-QuAD aggregation
+Argument aggregation
+   - DF-QuAD
+   - contrastive variants
         ↓
 Explainable and contestable recommendation
 ```
@@ -41,7 +49,7 @@ Explainable and contestable recommendation
 ```text
 .
 ├── src/
-│   ├── llm/             # LLM loading, generation and local scoring
+│   ├── llm/             # LLM loading, generation and scoring
 │   ├── prompting/       # Prompt construction and formatting
 │   └── argumentation/   # Argument schema, scoring, graph construction and DF-QuAD aggregation
 ├── scripts/             # Runnable scripts for data, generation, scoring and inspection
@@ -71,116 +79,198 @@ Each example contains:
 
 Data is stored in JSONL format.
 
-## Inspecting Data
+---
+## Aspect Extraction and Collaborative Signals
 
-To inspect dataset samples:
+Restaurant ratings alone often provide only coarse preference information.
+Two users may assign the same global rating to a restaurant for very different reasons:
+one may value food quality while another may care more about service, atmosphere or price.
 
-```bash
-python scripts/inspect_jsonl.py --file data/processed/yelp_subset.jsonl --n 3
-```
+To obtain finer-grained collaborative signals, the project extracts review aspects from user reviews.
+
+### NLI-based aspect extraction
+
+Aspect extraction is performed using Natural Language Inference (NLI) models.
+
+Each review is compared against a predefined aspect vocabulary containing dimensions such as:
+- food
+- service
+- price
+- ambiance
+- cleanliness
+- location
+
+For each review-aspect pair, the NLI model estimates whether the review semantically entails the presence of the aspect.
+
+The extracted aspects are then used to build structured user-aspect interaction signals.
+
+### Aspect-based collaborative filtering
+
+The extracted aspects are transformed into collaborative learning signals.
+
+Instead of learning only:
+- user-item interactions
+
+the system also learns:
+- user-aspect affinities
+
+using Matrix Factorization (MF).
+
+This allows the system to estimate:
+- which aspects are important for a given user
+- how strongly a target item matches these aspects
+
+These aspect-level collaborative signals are then reused during argumentative scoring as empirical evidence complementary to semantic LLM reasoning.
 
 ---
 
-## Prompting
-
-The project includes a prompt generation module located in `src/prompting/`.
-
-This module is responsible for:
-- formatting user history and target items
-- filtering item attributes to keep only the most useful fields
-- building structured prompts for LLM-based argument generation
-
-### Input Design
-
-The prompt uses:
-- a **compact user history** (categories + ratings)
-- a **filtered subset of item attributes**, including:
-  - price range
-  - takeout / delivery
-  - seating / attire
-  - noise level
-  - group / kids suitability
-
-This ensures:
-- compact inputs (important for local LLMs)
-- reduced noise
-- better grounding of arguments
-- fewer hallucinations
-
 ## Argument Scoring and Reasoning
 
-The project currently includes a first hybrid scoring pipeline for generated arguments.
+The project includes a hybrid argumentative scoring pipeline combining:
+- semantic LLM-based reasoning
+- collaborative recommendation signals
+- formal argumentative aggregation
 
 ### Semantic scoring
 
-Each generated argument can receive a **semantic score** from a local LLM-based scorer.
+Each generated argument receives a semantic score from a local or API-based LLM scorer.
 
 This score is intended to reflect:
 - coherence with the user history
 - compatibility with the target item
 - quality and usefulness of the argument
 - consistency of the provided evidence
-
+- grounding in the provided context
 
 ### Empirical scoring
 
-The project also includes a first **empirical scoring** component.
+The project also includes an empirical scoring component.
 
-At the current stage, this score is computed at the **user-item level** and can be obtained from:
-- a fallback heuristic
-- or precomputed Matrix Factorization predictions
+This empirical signal can be obtained from:
+- user-item collaborative filtering
+- aspect-based Matrix Factorization
+- fallback heuristics
 
-This empirical signal is then combined with the semantic score.
+The empirical score is combined with the semantic score in order to integrate collaborative recommendation signals into the argumentative framework.
 
-### Argument graph and aggregation
+### Argument graph construction
 
-Generated and scored arguments are structured into a graph in which:
-- **support** arguments strengthen the recommendation claim
-- **attack** arguments weaken the recommendation claim
+Generated arguments are structured into a graph in which:
+- support arguments strengthen the recommendation claim
+- attack arguments weaken the recommendation claim
 
-A first **DF-QuAD-based aggregation** step is then applied in order to obtain a structured final score instead of relying on simple averaging.
+This graph-based structure enables explicit reasoning over conflicting recommendation evidence.
 
+### DF-QuAD aggregation
 
-## Scripts
+DF-QuAD is a gradual argumentation semantics used to propagate support and attack relations through the argument graph.
 
-All runnable scripts are located in the `scripts/` directory.
+The objective is to compute a final recommendation score while explicitly accounting for:
+- supporting evidence
+- attacking evidence
+- interaction between arguments
 
-These scripts cover:
-- dataset preprocessing
-- dataset inspection
-- prompt generation
-- local LLM-based argument generation
-- batch generation and validation
-- scoring
-- MF dataset preparation and prediction
-- graph construction and DF-QuAD testing
-- interactive graph visualization
+This allows the recommendation process to remain interpretable and contestable.
 
-For detailed usage and available commands, see:
-`scripts/README.md`
+### Contrastive aggregation variants
+
+The project also explores contrastive aggregation variants.
+
+These variants aim to amplify the separation between support and attack signals during aggregation in order to produce sharper recommendation decisions.
+
+The contrastive parameter $\gamma$ controls how strongly support and attack differences are amplified.
+
+### Balanced vs unbalanced generation
+
+The project explores both balanced and unbalanced argument generation settings.
+
+Balanced generation enforces equal numbers of support and attack arguments.
+
+Unbalanced generation allows the LLM to generate arguments more freely depending on the recommendation context.
+
+This setting is studied in order to analyze how attack/support distributions affect recommendation quality and argumentative behavior.
 
 ---
 
-## Status
+## Evaluation
 
-Work in progress.  
-This repository is part of a research / internship project on **LLM-based explainable recommendation using argumentation**.
+The project currently evaluates two recommendation tasks:
+- rating prediction
+- ranking recommendation
 
-A first end-to-end prototype is now available, including:
-- dataset construction
-- argument generation
-- validation
-- semantic scoring
-- first empirical scoring
-- argument graph construction
+### Rating prediction
+
+Rating prediction evaluates how accurately the system predicts the target user preference score.
+
+Predictions are normalized to the range:
+- [0, 1]
+
+The following metrics are used:
+- MAE (Mean Absolute Error)
+- RMSE (Root Mean Squared Error)
+
+### Ranking recommendation
+
+The ranking task evaluates whether the system can correctly identify the positive target item among several negative candidates.
+
+The current ranking setup uses:
+- 1 positive target item
+- multiple negative candidate items
+
+The following ranking metrics are used:
+- HitRate@K
+- NDCG@K
+- MRR
+
+### Experimental observations
+
+Current experiments indicate that:
+- MF-only baselines achieve the strongest predictive performance
+- argumentative variants outperform direct LLM-only scoring in several rating prediction settings
+- unbalanced argument generation improves DF-QuAD performance over balanced generation
+- preserving collaborative recommendation signals during argumentative aggregation remains a key challenge
+
+These results highlight the presence of a trade-off between:
+- predictive performance
+- explainability
+- contestability
+
+---
+
+## Baselines
+
+The project currently includes several baseline systems used for comparison.
+
+### MF-only baseline
+
+A standard collaborative filtering baseline based on Matrix Factorization (SVD) is used for:
+- rating prediction
+- ranking recommendation
+
+This baseline directly predicts user-item compatibility scores without argumentative reasoning.
+
+### LLM-only baseline
+
+A direct LLM-based scoring baseline is also evaluated.
+
+In this setting, the LLM directly predicts a recommendation score from:
+- the user history
+- the target item
+
+without generating argumentative structures.
+
+### Argumentative variants
+
+The main proposed system evaluates multiple argumentative variants, including:
 - DF-QuAD aggregation
-- interactive graph inspection
+- contrastive aggregation variants
+- balanced argument generation
+- unbalanced argument generation
 
 ## Notes
 
-- The system is designed to work with **local LLMs**
+- The system is designed to work with local or API-based LLMs
 - Quantization is supported for lightweight inference
-- The current empirical scorer is a **first prototype**, and finer argument-level empirical scoring remains future work
 - Future work includes:
   - improving argument generation
   - grounding arguments more explicitly in attributes and categories
