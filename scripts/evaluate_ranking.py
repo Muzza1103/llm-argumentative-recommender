@@ -1,6 +1,7 @@
 import argparse
 import json
 import math
+import hashlib
 from pathlib import Path
 
 
@@ -156,6 +157,7 @@ def evaluate_group(
                 "label": label,
                 "target_name": record.get("target_name"),
                 "index": record.get("index"),
+                "tie_breaker": stable_tie_breaker(record),
             }
         )
 
@@ -164,7 +166,7 @@ def evaluate_group(
 
     ranked = sorted(
         scored,
-        key=lambda x: x["score"],
+        key=lambda x: (x["score"], x["tie_breaker"]),
         reverse=True,
     )
 
@@ -180,6 +182,10 @@ def evaluate_group(
         "num_candidates": len(ranked),
         "positive_rank": positive_rank,
         "mrr": 1.0 / positive_rank if positive_rank is not None else 0.0,
+        "ranked_labels": labels,
+        "ranked_scores": [item["score"] for item in ranked],
+        "ranked_indices": [item["index"] for item in ranked],
+        "ranked_target_names": [item["target_name"] for item in ranked],
     }
 
     for k in ks:
@@ -199,6 +205,13 @@ def mean(values: list[float]) -> float | None:
 
     return sum(values) / len(values)
 
+def stable_tie_breaker(record: dict) -> float:
+    raw = "|".join(
+        str(record.get(key, ""))
+        for key in ["ranking_group_id", "user_id", "business_id", "index", "target_name"]
+    )
+    digest = hashlib.md5(raw.encode("utf-8")).hexdigest()
+    return int(digest[:8], 16) / 0xFFFFFFFF
 
 def main():
     parser = argparse.ArgumentParser(
@@ -286,6 +299,13 @@ def main():
         result["ranking_group_id"] = group_id
         group_results.append(result)
 
+    rank_distribution = {}
+
+    for result in group_results:
+        rank = result.get("positive_rank")
+        key = str(rank) if rank is not None else "missing"
+        rank_distribution[key] = rank_distribution.get(key, 0) + 1
+
     summary = {
         "input_file": str(input_path),
         "dataset_file": str(dataset_path),
@@ -300,6 +320,8 @@ def main():
         "max_group_size": max_group_size,
         "require_full_groups": args.require_full_groups,
         "k_values": args.k,
+        "positive_rank_distribution": rank_distribution,
+        "all_group_results": group_results,
         "mrr": mean([r["mrr"] for r in group_results]),
     }
 
@@ -322,6 +344,13 @@ def main():
     for k in args.k:
         print(f"HitRate@{k}: {summary[f'hitrate@{k}']}")
         print(f"NDCG@{k}:    {summary[f'ndcg@{k}']}")
+
+    print("\nPositive rank distribution:")
+    for rank, count in sorted(
+        rank_distribution.items(),
+        key=lambda x: int(x[0]) if x[0].isdigit() else 999
+    ):
+        print(f"Rank {rank}: {count}")
 
     print(f"Summary: {output_summary_path}")
 
