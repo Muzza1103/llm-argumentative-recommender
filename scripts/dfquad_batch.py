@@ -96,6 +96,11 @@ def get_mf_item_score(example, mf_lookup):
 def clamp_score(value: float) -> float:
     return max(0.0, min(1.0, value))
 
+def maybe_clamp_score(value: float, no_clamp: bool) -> float:
+    if no_clamp:
+        return value
+    return clamp_score(value)
+
 def main():
     parser = argparse.ArgumentParser(
         description="Apply argumentative aggregation to all scored argument records."
@@ -193,6 +198,11 @@ def main():
         choices=["combined", "llm", "mf"],
         default="combined",
         help="Score used as argument strength during graph construction.",
+    )
+    parser.add_argument(
+        "--no-clamp-final-score",
+        action="store_true",
+        help="Do not clamp the final MF-aware score to [0, 1]. Useful for ranking.",
     )
     args = parser.parse_args()
 
@@ -298,7 +308,10 @@ def main():
                     args.mf_lambda * mf_item_score
                     + (1.0 - args.mf_lambda) * float(dfquad_score_before_mf_mix)
                 )
-                dfquad_dict["final_score"] = clamp_score(mixed_score)
+                dfquad_dict["final_score"] = maybe_clamp_score(
+                    mixed_score,
+                    args.no_clamp_final_score,
+                )
 
             elif args.mf_combination_mode == "mf_correction":
                 aggregated_support = dfquad_dict.get("aggregated_support")
@@ -311,7 +324,10 @@ def main():
                     correction = float(aggregated_support) - float(aggregated_attack)
                     corrected_score = mf_item_score + args.mf_lambda * correction
                     dfquad_dict["argumentative_correction"] = correction
-                    dfquad_dict["final_score"] = clamp_score(corrected_score)
+                    dfquad_dict["final_score"] = maybe_clamp_score(
+                        corrected_score,
+                        args.no_clamp_final_score,
+                    )
                 else:
                     print(
                         f"Warning: support/attack aggregation missing for "
@@ -321,6 +337,7 @@ def main():
         dfquad_dict["mf_item_score"] = mf_item_score
         dfquad_dict["mf_lambda"] = args.mf_lambda
         dfquad_dict["mf_combination_mode"] = args.mf_combination_mode
+        dfquad_dict["no_clamp_final_score"] = args.no_clamp_final_score
         dfquad_dict["root_base_source"] = args.root_base_source
         dfquad_dict["effective_root_base_score"] = root_base_score
 
@@ -362,6 +379,7 @@ def main():
     summary["mf_lambda"] = args.mf_lambda
     summary["mf_combination_mode"] = args.mf_combination_mode
     summary["argument_score_source"] = args.argument_score_source
+    summary["no_clamp_final_score"] = args.no_clamp_final_score
 
     with summary_path.open("w", encoding="utf-8") as f:
         json.dump(summary, f, indent=2, ensure_ascii=False)
