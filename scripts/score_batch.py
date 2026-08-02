@@ -1,6 +1,7 @@
 import argparse
 import json
 import time
+from collections import deque
 from pathlib import Path
 
 from src.argumentation.schema import build_arguments_from_parsed_json
@@ -16,6 +17,55 @@ from src.llm.config import LLMConfig
 from src.llm.loader import load_model_and_tokenizer
 from src.llm.generator import LocalLLMGenerator
 from src.llm.gemini_generator import GeminiGenerator, SCORING_RESPONSE_SCHEMA
+
+
+
+def load_existing_jsonl(path: Path) -> list[dict]:
+    if not path.exists():
+        return []
+
+    records = []
+    with path.open("r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if line:
+                records.append(json.loads(line))
+
+    return records
+
+
+def is_rate_limit_error(error: Exception) -> bool:
+    text = str(error).lower()
+    return (
+        "429" in text
+        or "resource_exhausted" in text
+        or "quota" in text
+        or "rate" in text
+    )
+
+
+def wait_for_rate_limit(
+    request_timestamps: deque,
+    requests_to_send: int,
+    requests_per_minute: int,
+):
+    if requests_per_minute <= 0:
+        return
+
+    now = time.monotonic()
+
+    while request_timestamps and now - request_timestamps[0] >= 60:
+        request_timestamps.popleft()
+
+    while len(request_timestamps) + requests_to_send > requests_per_minute:
+        sleep_for = 60 - (now - request_timestamps[0]) + 0.5
+        sleep_for = max(sleep_for, 1.0)
+        print(f"Rate limit reached. Sleeping {sleep_for:.1f}s...")
+        time.sleep(sleep_for)
+
+        now = time.monotonic()
+        while request_timestamps and now - request_timestamps[0] >= 60:
+            request_timestamps.popleft()
 
 
 class DisabledLLMScorer:
@@ -164,6 +214,29 @@ def main():
         default=1,
         help="Number of Gemini scoring prompts sent in parallel.",
     )
+    parser.add_argument(
+        "--resume",
+        action="store_true",
+        help="Resume from an existing output file and skip already scored indices.",
+    )
+    parser.add_argument(
+        "--requests-per-minute",
+        type=int,
+        default=0,
+        help="Maximum number of Gemini requests per minute. Use 0 to disable throttling.",
+    )
+    parser.add_argument(
+        "--max-retries",
+        type=int,
+        default=6,
+        help="Maximum number of retries after a rate-limit error.",
+    )
+    parser.add_argument(
+        "--retry-wait-seconds",
+        type=float,
+        default=60.0,
+        help="Initial waiting time after a rate-limit error.",
+    )
 
     args = parser.parse_args()
 
@@ -244,6 +317,10 @@ def main():
     scored_records = []
     skipped_records = 0
 
+    if args.resume:
+        scored_records = load_existing_jsonl(output_path)
+        print(f"Resume enabled: loaded {len(scored_records)} existing scored records.")
+
     print(f"Loaded {len(records)} generated records from {input_path}")
     print(f"MF source: {mf_source}")
     print(f"LLM backend: {llm_backend}")
@@ -256,9 +333,18 @@ def main():
         and llm_backend == "gemini"
         and hasattr(llm_scorer, "score_batches")
     ):
+        existing_indices = {
+            record.get("index")
+            for record in scored_records
+            if isinstance(record.get("index"), int)
+        }
+
         jobs = []
 
         for i, record in enumerate(records, start=1):
+            if record.get("index") in existing_indices:
+                continue
+
             validation = record.get("validation", {})
             is_valid = validation.get("is_valid", False)
 
@@ -288,66 +374,102 @@ def main():
                 }
             )
 
-        argument_batches = [
-            job["arguments"]
-            for job in jobs
-        ]
+        print(f"Already scored: {len(existing_indices)}")
+        print(f"Pending scoring jobs: {len(jobs)}")
 
-        llm_score_batches = llm_scorer.score_batches(
-            argument_batches,
-            batch_size=args.batch_size,
-        )
+        request_timestamps = deque()
 
-        for job, llm_scores in zip(jobs, llm_score_batches):
-            record = job["record"]
-            example = job["example"]
-            arguments = job["arguments"]
+        for batch_start in range(0, len(jobs), args.batch_size):
+            batch_jobs = jobs[batch_start: batch_start + args.batch_size]
+            argument_batches = [job["arguments"] for job in batch_jobs]
 
-            if args.mf_predictions is not None:
-                mf_scorer.set_user(example.get("user_id"))
+            attempt = 0
 
-            scored_arguments_dicts = []
-
-            for argument, llm_score in zip(arguments, llm_scores):
-                mf_score = mf_scorer.score(argument)
-                combined_score = combine_scores(
-                    llm_score=llm_score,
-                    mf_score=mf_score,
-                    config=score_config,
+            while True:
+                wait_for_rate_limit(
+                    request_timestamps=request_timestamps,
+                    requests_to_send=len(argument_batches),
+                    requests_per_minute=args.requests_per_minute,
                 )
 
-                argument.llm_score = llm_score
-                argument.mf_score = mf_score
-                argument.combined_score = combined_score
+                try:
+                    llm_score_batches = llm_scorer.score_batches(
+                        argument_batches,
+                        batch_size=args.batch_size,
+                    )
 
-                argument_dict = argument.to_dict()
+                    now = time.monotonic()
+                    for _ in argument_batches:
+                        request_timestamps.append(now)
 
-                if not args.save_llm_prompt:
-                    argument_dict.pop("llm_scoring_prompt", None)
+                    break
 
-                if not args.save_llm_raw:
-                    argument_dict.pop("llm_scoring_raw_output", None)
+                except Exception as error:
+                    attempt += 1
 
-                scored_arguments_dicts.append(argument_dict)
+                    if not is_rate_limit_error(error) or attempt > args.max_retries:
+                        save_jsonl(scored_records, output_path)
+                        raise
 
-            enriched_record = dict(record)
-            enriched_record["scoring"] = {
-                "llm_backend": llm_backend,
-                "llm_model": llm_model_name,
-                "llm_weight": args.llm_weight,
-                "mf_weight": args.mf_weight,
-                "mf_source": mf_source,
-            }
-            enriched_record["scored_arguments"] = scored_arguments_dicts
+                    wait_time = args.retry_wait_seconds * attempt
+                    print(
+                        f"Rate-limit error on scoring batch starting at {batch_start}. "
+                        f"Retry {attempt}/{args.max_retries} after {wait_time:.1f}s."
+                    )
+                    time.sleep(wait_time)
 
-            scored_records.append(enriched_record)
+            for job, llm_scores in zip(batch_jobs, llm_score_batches):
+                record = job["record"]
+                example = job["example"]
+                arguments = job["arguments"]
 
-            print(
-                f"[{job['position']}/{len(records)}] "
-                f"index={record.get('index')} "
-                f"target={record.get('target_name')} "
-                f"scored_arguments={len(scored_arguments_dicts)}"
-            )
+                if args.mf_predictions is not None:
+                    mf_scorer.set_user(example.get("user_id"))
+
+                scored_arguments_dicts = []
+
+                for argument, llm_score in zip(arguments, llm_scores):
+                    mf_score = mf_scorer.score(argument)
+                    combined_score = combine_scores(
+                        llm_score=llm_score,
+                        mf_score=mf_score,
+                        config=score_config,
+                    )
+
+                    argument.llm_score = llm_score
+                    argument.mf_score = mf_score
+                    argument.combined_score = combined_score
+
+                    argument_dict = argument.to_dict()
+
+                    if not args.save_llm_prompt:
+                        argument_dict.pop("llm_scoring_prompt", None)
+
+                    if not args.save_llm_raw:
+                        argument_dict.pop("llm_scoring_raw_output", None)
+
+                    scored_arguments_dicts.append(argument_dict)
+
+                enriched_record = dict(record)
+                enriched_record["scoring"] = {
+                    "llm_backend": llm_backend,
+                    "llm_model": llm_model_name,
+                    "llm_weight": args.llm_weight,
+                    "mf_weight": args.mf_weight,
+                    "mf_source": mf_source,
+                }
+                enriched_record["scored_arguments"] = scored_arguments_dicts
+
+                scored_records.append(enriched_record)
+
+                print(
+                    f"[{len(scored_records)}/{len(records)}] "
+                    f"index={record.get('index')} "
+                    f"target={record.get('target_name')} "
+                    f"scored_arguments={len(scored_arguments_dicts)}"
+                )
+
+            save_jsonl(scored_records, output_path)
 
     else:
         for i, record in enumerate(records, start=1):
@@ -441,6 +563,10 @@ def main():
     summary["elapsed_seconds"] = elapsed_seconds
     summary["elapsed_minutes"] = elapsed_minutes
     summary["batch_size"] = args.batch_size
+    summary["resume"] = args.resume
+    summary["requests_per_minute"] = args.requests_per_minute
+    summary["max_retries"] = args.max_retries
+    summary["retry_wait_seconds"] = args.retry_wait_seconds
 
     with summary_path.open("w", encoding="utf-8") as f:
         json.dump(summary, f, indent=2, ensure_ascii=False)

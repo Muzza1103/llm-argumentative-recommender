@@ -3,7 +3,7 @@ import json
 import random
 import time
 
-from collections import Counter
+from collections import Counter, deque
 from pathlib import Path
 
 from src.llm.config import LLMConfig
@@ -71,6 +71,68 @@ def build_output_paths(output_path: Path) -> tuple[Path, Path, Path, Path]:
     summary_path = parent / f"{stem}_summary.json"
 
     return all_path, valid_path, invalid_path, summary_path
+
+
+
+def load_existing_jsonl(path: Path) -> list[dict]:
+    if not path.exists():
+        return []
+
+    records = []
+    with path.open("r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if line:
+                records.append(json.loads(line))
+
+    return records
+
+
+def save_partial_outputs(
+    all_records: list[dict],
+    valid_records: list[dict],
+    invalid_records: list[dict],
+    all_output_path: Path,
+    valid_output_path: Path,
+    invalid_output_path: Path,
+):
+    save_jsonl(all_records, all_output_path)
+    save_jsonl(valid_records, valid_output_path)
+    save_jsonl(invalid_records, invalid_output_path)
+
+
+def is_rate_limit_error(error: Exception) -> bool:
+    text = str(error).lower()
+    return (
+        "429" in text
+        or "resource_exhausted" in text
+        or "quota" in text
+        or "rate" in text
+    )
+
+
+def wait_for_rate_limit(
+    request_timestamps: deque,
+    requests_to_send: int,
+    requests_per_minute: int,
+):
+    if requests_per_minute <= 0:
+        return
+
+    now = time.monotonic()
+
+    while request_timestamps and now - request_timestamps[0] >= 60:
+        request_timestamps.popleft()
+
+    while len(request_timestamps) + requests_to_send > requests_per_minute:
+        sleep_for = 60 - (now - request_timestamps[0]) + 0.5
+        sleep_for = max(sleep_for, 1.0)
+        print(f"Rate limit reached. Sleeping {sleep_for:.1f}s...")
+        time.sleep(sleep_for)
+
+        now = time.monotonic()
+        while request_timestamps and now - request_timestamps[0] >= 60:
+            request_timestamps.popleft()
 
 
 def main():
@@ -174,6 +236,29 @@ def main():
         default="balanced",
         help="Argument generation mode: balanced = 2 supports/2 attacks, unbalanced = 4 arguments with free support/attack split.",
     )
+    parser.add_argument(
+        "--resume",
+        action="store_true",
+        help="Resume from existing output files and skip already processed example indices.",
+    )
+    parser.add_argument(
+        "--requests-per-minute",
+        type=int,
+        default=0,
+        help="Maximum number of Gemini requests per minute. Use 0 to disable throttling.",
+    )
+    parser.add_argument(
+        "--max-retries",
+        type=int,
+        default=6,
+        help="Maximum number of retries after a rate-limit error.",
+    )
+    parser.add_argument(
+        "--retry-wait-seconds",
+        type=float,
+        default=60.0,
+        help="Initial waiting time after a rate-limit error.",
+    )
     args = parser.parse_args()
 
     input_path = Path(args.input)
@@ -225,6 +310,12 @@ def main():
     invalid_records = []
     global_error_counter = Counter()
 
+    if args.resume:
+        all_records = load_existing_jsonl(all_output_path)
+        valid_records = load_existing_jsonl(valid_output_path)
+        invalid_records = load_existing_jsonl(invalid_output_path)
+        print(f"Resume enabled: loaded {len(all_records)} existing records.")
+
     print(f"Loaded {len(examples)} examples.")
     print(f"Processing {len(indices)} examples...")
     print(f"Batch size: {args.batch_size}")
@@ -267,55 +358,119 @@ def main():
             }
         )
 
-    output_texts = generator.generate_batch(
-        prompts,
-        batch_size=args.batch_size,
-    )
+    processed_indices = {
+        record.get("index")
+        for record in all_records
+        if isinstance(record.get("index"), int)
+    }
 
-    for position, (job, output_text) in enumerate(
-        zip(selected_examples, output_texts),
-        start=1,
-    ):
-        idx = job["index"]
-        example = job["example"]
-        prompt = job["prompt"]
+    pending_jobs = [
+        job
+        for job in selected_examples
+        if job["index"] not in processed_indices
+    ]
 
-        parsed_json = extract_first_json_object(output_text)
-        validation = validate_generated_arguments(
-            example,
-            parsed_json,
-            argument_mode=args.argument_mode,
-        )
+    print(f"Already processed: {len(processed_indices)}")
+    print(f"Pending examples:  {len(pending_jobs)}")
 
-        for error in validation["errors"]:
-            global_error_counter[error["code"]] += 1
+    request_timestamps = deque()
 
-        record = {
-            "index": idx,
-            "user_id": example.get("user_id"),
-            "target_name": example.get("target_item", {}).get("name"),
-            "raw_output": output_text,
-            "parsed_json": parsed_json,
-            "validation": validation,
-        }
+    for batch_start in range(0, len(pending_jobs), args.batch_size):
+        batch_jobs = pending_jobs[batch_start: batch_start + args.batch_size]
+        batch_prompts = [job["prompt"] for job in batch_jobs]
 
-        if args.save_prompt:
-            record["prompt"] = prompt
+        attempt = 0
 
-        all_records.append(record)
+        while True:
+            wait_for_rate_limit(
+                request_timestamps=request_timestamps,
+                requests_to_send=len(batch_prompts),
+                requests_per_minute=args.requests_per_minute,
+            )
 
-        if validation["is_valid"]:
-            valid_records.append(record)
-            status = "VALID"
-        else:
-            invalid_records.append(record)
-            status = "INVALID"
+            try:
+                output_texts = generator.generate_batch(
+                    batch_prompts,
+                    batch_size=args.batch_size,
+                )
 
-        print(
-            f"[{position}/{len(indices)}] "
-            f"index={idx} "
-            f"target={record['target_name']} "
-            f"status={status}"
+                now = time.monotonic()
+                for _ in batch_prompts:
+                    request_timestamps.append(now)
+
+                break
+
+            except Exception as error:
+                attempt += 1
+
+                if not is_rate_limit_error(error) or attempt > args.max_retries:
+                    save_partial_outputs(
+                        all_records=all_records,
+                        valid_records=valid_records,
+                        invalid_records=invalid_records,
+                        all_output_path=all_output_path,
+                        valid_output_path=valid_output_path,
+                        invalid_output_path=invalid_output_path,
+                    )
+                    raise
+
+                wait_time = args.retry_wait_seconds * attempt
+                print(
+                    f"Rate-limit error on batch starting at {batch_start}. "
+                    f"Retry {attempt}/{args.max_retries} after {wait_time:.1f}s."
+                )
+                time.sleep(wait_time)
+
+        for job, output_text in zip(batch_jobs, output_texts):
+            idx = job["index"]
+            example = job["example"]
+            prompt = job["prompt"]
+
+            parsed_json = extract_first_json_object(output_text)
+            validation = validate_generated_arguments(
+                example,
+                parsed_json,
+                argument_mode=args.argument_mode,
+            )
+
+            for error in validation["errors"]:
+                global_error_counter[error["code"]] += 1
+
+            record = {
+                "index": idx,
+                "user_id": example.get("user_id"),
+                "target_name": example.get("target_item", {}).get("name"),
+                "raw_output": output_text,
+                "parsed_json": parsed_json,
+                "validation": validation,
+            }
+
+            if args.save_prompt:
+                record["prompt"] = prompt
+
+            all_records.append(record)
+
+            if validation["is_valid"]:
+                valid_records.append(record)
+                status = "VALID"
+            else:
+                invalid_records.append(record)
+                status = "INVALID"
+
+            print(
+                f"[{len(all_records)}/{len(indices)}] "
+                f"index={idx} "
+                f"target={record['target_name']} "
+                f"status={status}"
+            )
+
+        save_partial_outputs(
+            all_records=all_records,
+            valid_records=valid_records,
+            invalid_records=invalid_records,
+            all_output_path=all_output_path,
+            valid_output_path=valid_output_path,
+            invalid_output_path=invalid_output_path,
         )
 
     save_jsonl(all_records, all_output_path)
@@ -347,6 +502,10 @@ def main():
         "error_counts": dict(global_error_counter),
         "elapsed_seconds": elapsed_seconds,
         "elapsed_minutes": elapsed_minutes,
+        "resume": args.resume,
+        "requests_per_minute": args.requests_per_minute,
+        "max_retries": args.max_retries,
+        "retry_wait_seconds": args.retry_wait_seconds,
     }
 
     summary_path.parent.mkdir(parents=True, exist_ok=True)

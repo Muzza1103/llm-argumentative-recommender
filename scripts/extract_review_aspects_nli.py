@@ -1,5 +1,6 @@
 import argparse
 import json
+import time
 from pathlib import Path
 
 from transformers import pipeline
@@ -246,6 +247,7 @@ def main():
         default=2500,
     )
     args = parser.parse_args()
+    start_time = time.perf_counter()
 
     input_path = Path(args.input)
     output_path = Path(args.output)
@@ -332,6 +334,10 @@ def main():
         sentiment_model=args.sentiment_model,
         aspect_threshold=args.aspect_threshold,
     )
+
+    runtime_seconds = time.perf_counter() - start_time
+    summary["runtime_seconds"] = runtime_seconds
+    summary["runtime_minutes"] = runtime_seconds / 60
 
     with summary_path.open("w", encoding="utf-8") as f:
         json.dump(summary, f, indent=2, ensure_ascii=False)
