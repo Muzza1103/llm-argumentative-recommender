@@ -1,5 +1,28 @@
 from .aspects import HOTEL_ASPECTS, HOTEL_ASPECT_SET, validate_hotel_aspect
-from .errors import HotelDataValidationError
+from .argument_builder import (
+    EMPIRICAL_ASPECT,
+    SEMANTIC_EXTRA,
+    STRUCTURED_FACT,
+    SemanticArgumentProvider,
+    build_empirical_arguments,
+    build_structured_fact_arguments,
+    select_review_sources,
+)
+from .constraints import (
+    ConstraintOutcome,
+    ConstraintStatus,
+    evaluate_constraint,
+    evaluate_constraints,
+)
+from .errors import HotelDataValidationError, HotelPreferenceValidationError
+from .evaluator import (
+    ROOT_BASE_SCORE,
+    ROOT_TEXT,
+    EligibilityResult,
+    HotelEvaluationResult,
+    evaluate_hotel_by_id,
+    evaluate_hotel_session,
+)
 from .loader import (
     deduplicate_facilities,
     hotel_profile_dataset_from_dict,
@@ -23,29 +46,75 @@ from .models import (
     ReviewSignal,
     Stance,
 )
+from .preference_interpreter import (
+    GeneratorPreferenceInterpreter,
+    PreferenceInterpreter,
+    TextGenerator,
+    build_preference_interpretation_prompt,
+    interpret_session_preferences,
+)
+from .preferences import (
+    CONSTRAINT_MODES,
+    AspectPreference,
+    SessionConstraint,
+    SessionPreferences,
+    load_session_preferences,
+    session_preferences_from_dict,
+)
+from .wilson import wilson_lower_bound
 
 __all__ = [
     "HOTEL_ASPECTS",
     "HOTEL_ASPECT_SET",
+    "CONSTRAINT_MODES",
+    "EMPIRICAL_ASPECT",
+    "ROOT_BASE_SCORE",
+    "ROOT_TEXT",
+    "SEMANTIC_EXTRA",
+    "STRUCTURED_FACT",
     "AnnotationStatus",
     "AspectLabel",
+    "AspectPreference",
     "AspectProfile",
+    "ConstraintOutcome",
+    "ConstraintStatus",
+    "EligibilityResult",
     "Facility",
     "HotelDataValidationError",
+    "HotelEvaluationResult",
     "HotelMetadata",
     "HotelPolicy",
+    "HotelPreferenceValidationError",
     "HotelProfile",
     "HotelProfileDataset",
     "HotelReview",
     "HotelStats",
     "ReviewSignal",
+    "SessionConstraint",
+    "SessionPreferences",
+    "SemanticArgumentProvider",
     "Stance",
+    "GeneratorPreferenceInterpreter",
+    "PreferenceInterpreter",
+    "TextGenerator",
+    "build_empirical_arguments",
+    "build_preference_interpretation_prompt",
+    "build_structured_fact_arguments",
     "deduplicate_facilities",
     "hotel_profile_dataset_from_dict",
     "hotel_review_from_dict",
+    "interpret_session_preferences",
     "iter_review_annotations",
     "load_hotel_profiles",
     "load_review_annotations",
+    "load_session_preferences",
+    "evaluate_constraint",
+    "evaluate_constraints",
+    "evaluate_hotel_by_id",
+    "evaluate_hotel_session",
+    "select_review_sources",
+    "session_preferences_from_dict",
     "validate_hotel_aspect",
     "validate_reviews_match_profiles",
+    "wilson_lower_bound",
 ]

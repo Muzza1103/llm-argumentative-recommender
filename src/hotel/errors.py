@@ -5,3 +5,12 @@ class HotelDataValidationError(ValueError):
         self.path = path
         prefix = f"{path}: " if path else ""
         super().__init__(f"{prefix}{message}")
+
+
+class HotelPreferenceValidationError(ValueError):
+    """Raised when session preferences violate the public input contract."""
+
+    def __init__(self, message: str, *, path: str | None = None):
+        self.path = path
+        prefix = f"{path}: " if path else ""
+        super().__init__(f"{prefix}{message}")

@@ -88,6 +88,9 @@ def get_argument_base_score(argument: Argument) -> float:
     """
     Choose the best available intrinsic score for one argument.
     """
+    if argument.intrinsic_strength is not None:
+        return float(argument.intrinsic_strength)
+
     if argument.combined_score is not None:
         return float(argument.combined_score)
 
@@ -103,6 +106,10 @@ def get_argument_base_score(argument: Argument) -> float:
 def build_argument_graph(
     arguments: list[Argument],
     root_base_score: float = 0.5,
+    *,
+    root_text: str | None = None,
+    target_item_name: str | None = None,
+    allow_empty: bool = False,
 ) -> ArgumentGraph:
     """
     Build a minimal argument graph.
@@ -112,19 +119,22 @@ def build_argument_graph(
     - each argument node points to the root
       with either a support or attack relation
     """
-    if not arguments:
+    if not arguments and not allow_empty:
         raise ValueError("Cannot build an argument graph from an empty argument list.")
 
-    target_item_name = arguments[0].target_item_name or "target_item"
+    resolved_target_name = target_item_name
+    if resolved_target_name is None and arguments:
+        resolved_target_name = arguments[0].target_item_name
+    resolved_target_name = resolved_target_name or "target_item"
     root_id = "ROOT"
 
     root_node = ArgumentNode(
         node_id=root_id,
         node_type="root",
-        text=f"Recommend item: {target_item_name}",
+        text=root_text or f"Recommend item: {resolved_target_name}",
         base_score=root_base_score,
         metadata={
-            "target_item_name": target_item_name,
+            "target_item_name": resolved_target_name,
         },
     )
 
@@ -134,21 +144,38 @@ def build_argument_graph(
     edges: list[ArgumentEdge] = []
 
     for argument in arguments:
+        node_metadata = {
+            "arg_type": argument.arg_type,
+            "evidence": argument.evidence,
+            "used_aspects": argument.used_aspects,
+            "aspect_effect": argument.aspect_effect,
+            "llm_score": argument.llm_score,
+            "llm_score_reason": argument.llm_score_reason,
+            "mf_score": argument.mf_score,
+            "combined_score": argument.combined_score,
+        }
+        if argument.argument_family is not None:
+            node_metadata.update(
+                {
+                    "argument_family": argument.argument_family,
+                    "aspect": argument.aspect,
+                    "intrinsic_strength": argument.intrinsic_strength,
+                    "importance_raw": argument.importance_raw,
+                    "normalized_weight": argument.normalized_weight,
+                    "evidence_score": argument.evidence_score,
+                    "n_support": argument.n_support,
+                    "n_attack": argument.n_attack,
+                    "n_neutral": argument.n_neutral,
+                    "review_sources": argument.review_sources,
+                }
+            )
+
         node = ArgumentNode(
             node_id=argument.id,
             node_type="argument",
             text=argument.text,
             base_score=get_argument_base_score(argument),
-            metadata={
-                "arg_type": argument.arg_type,
-                "evidence": argument.evidence,
-                "used_aspects": argument.used_aspects,
-                "aspect_effect": argument.aspect_effect,
-                "llm_score": argument.llm_score,
-                "llm_score_reason": argument.llm_score_reason,
-                "mf_score": argument.mf_score,
-                "combined_score": argument.combined_score,
-            },
+            metadata=node_metadata,
         )
         nodes[node.node_id] = node
 

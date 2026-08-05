@@ -13,7 +13,6 @@ from .scoring import (
     score_argument,
     score_arguments,
 )
-from .llm_scorer import LLMScorerConfig, LocalLLMScorer
 from .graph_builder import (
     ArgumentNode,
     ArgumentEdge,
@@ -60,3 +59,21 @@ __all__ = [
     "dfquad_combine",
     "evaluate_root_dfquad",
 ]
+
+
+def __getattr__(name: str):
+    """Load local-LLM scoring only when explicitly requested.
+
+    Importing the deterministic schema, graph, or DF-QuAD core must not require
+    optional Torch/Transformers dependencies.  Attribute access remains
+    backward compatible for callers importing these scorer names from the
+    package root.
+    """
+    if name in {"LLMScorerConfig", "LocalLLMScorer"}:
+        from .llm_scorer import LLMScorerConfig, LocalLLMScorer
+
+        return {
+            "LLMScorerConfig": LLMScorerConfig,
+            "LocalLLMScorer": LocalLLMScorer,
+        }[name]
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
