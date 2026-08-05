@@ -10,6 +10,10 @@ outputs/
 checkpoints/
 models/
 
+**/hotel_profiles_complete*.json
+**/hotel_review_annotations.jsonl
+**/hotel_session_evaluation*.json
+
 data/raw/*
 !data/raw/
 !data/raw/.gitkeep
