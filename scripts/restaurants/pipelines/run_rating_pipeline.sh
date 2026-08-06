@@ -4,7 +4,7 @@ set -euo pipefail
 PROJECT_ID="${1:-YOUR_PROJECT_ID}"
 DATASET="data/processed/yelp_subset_500_with_review_aspects_nli.jsonl"
 
-python -m scripts.generate_batch \
+python -m scripts.restaurants.generate_batch \
   --input "$DATASET" \
   --output data/processed/generated_arguments_gemini_flash_500_unbalanced.jsonl \
   --backend gemini \
@@ -16,7 +16,7 @@ python -m scripts.generate_batch \
   --num-examples 500 \
   --argument-mode unbalanced
 
-python -m scripts.score_batch \
+python -m scripts.restaurants.score_batch \
   --dataset "$DATASET" \
   --input data/processed/generated_arguments_gemini_flash_500_unbalanced_valid.jsonl \
   --output data/processed/scored_arguments_gemini_flash_500_unbalanced.jsonl \
@@ -28,7 +28,7 @@ python -m scripts.score_batch \
   --batch-size 5 \
   --max-new-tokens 4000
 
-python -m scripts.dfquad_batch \
+python -m scripts.restaurants.dfquad_batch \
   --input data/processed/scored_arguments_gemini_flash_500_unbalanced.jsonl \
   --output data/processed/dfquad_original_500_unbalanced.jsonl \
   --dataset "$DATASET" \
@@ -36,7 +36,7 @@ python -m scripts.dfquad_batch \
   --combination-method dfquad \
   --save-graph
 
-python -m scripts.evaluate_dfquad_scores \
+python -m scripts.restaurants.evaluate_dfquad_scores \
   --input data/processed/dfquad_original_500_unbalanced.jsonl \
   --dataset "$DATASET" \
   --output-csv data/processed/evaluation_dfquad_original_500_unbalanced.csv \

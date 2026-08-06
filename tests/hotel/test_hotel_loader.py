@@ -2,7 +2,7 @@ import json
 import unittest
 from pathlib import Path
 
-from scripts.validate_hotel_data import build_validation_summary
+from scripts.hotel.validate_hotel_data import build_validation_summary
 from src.hotel import (
     HOTEL_ASPECTS,
     AnnotationStatus,

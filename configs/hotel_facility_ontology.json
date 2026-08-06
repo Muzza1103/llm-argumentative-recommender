@@ -1,0 +1,174 @@
+{
+  "schema_version": "1.0",
+  "ontology_version": "2026-08-06",
+  "dataset_scope": {
+    "description": "Mappings justified by facilities observed in the current 200-hotel enriched dataset; this is not a provider-wide exhaustive catalogue.",
+    "observed_hotels": 200,
+    "observed_unique_id_name_pairs": 349
+  },
+  "operators": [
+    "present",
+    "equals"
+  ],
+  "capabilities": {
+    "parking": {
+      "aliases": ["car park", "garage parking"],
+      "qualifiers": {
+        "price": ["free", "paid", "unknown"],
+        "location": ["on_site", "nearby", "unknown"],
+        "access": ["private", "public", "unknown"],
+        "type": ["standard", "self", "garage", "valet", "street", "covered", "secured", "long_term", "oversized", "unknown"],
+        "accessible": [true, false, "unknown"]
+      }
+    },
+    "wifi": {
+      "aliases": ["wi-fi", "wireless internet"],
+      "qualifiers": {
+        "price": ["free", "paid", "unknown"],
+        "coverage": ["rooms", "common_areas", "all_areas", "unknown"]
+      }
+    },
+    "swimming_pool": {
+      "aliases": ["pool"],
+      "qualifiers": {
+        "location": ["indoor", "outdoor", "on_site", "nearby", "unknown"],
+        "heated": [true, false, "unknown"],
+        "accessible": [true, false, "unknown"]
+      }
+    },
+    "spa": {
+      "aliases": ["wellness centre", "wellness center"],
+      "qualifiers": {
+        "location": ["on_site", "nearby", "unknown"],
+        "price": ["free", "paid", "unknown"],
+        "accessible": [true, false, "unknown"]
+      }
+    },
+    "gym": {
+      "aliases": ["fitness center", "fitness centre", "fitness facilities", "health club"],
+      "qualifiers": {
+        "location": ["on_site", "nearby", "unknown"],
+        "price": ["free", "paid", "unknown"],
+        "accessible": [true, false, "unknown"],
+        "hours": ["24h", "limited", "unknown"]
+      }
+    },
+    "air_conditioning": {
+      "aliases": ["air conditioning"],
+      "qualifiers": {}
+    },
+    "accessible_facilities": {
+      "aliases": ["wheelchair accessible", "disabled facilities"],
+      "qualifiers": {}
+    },
+    "pets_allowed": {
+      "aliases": ["pet friendly", "pets"],
+      "qualifiers": {}
+    },
+    "restaurant": {
+      "aliases": ["on-site restaurant"],
+      "qualifiers": {
+        "accessible": [true, false, "unknown"]
+      }
+    },
+    "breakfast": {
+      "aliases": ["breakfast service"],
+      "qualifiers": {
+        "price": ["free", "paid", "unknown"],
+        "style": ["continental", "english", "buffet", "cooked_to_order", "full", "takeaway", "room_service", "vegetarian", "unknown"]
+      }
+    },
+    "airport_shuttle": {
+      "aliases": ["airport transportation", "airport transfer"],
+      "qualifiers": {
+        "price": ["free", "paid", "unknown"],
+        "direction": ["pickup", "dropoff", "both", "unknown"],
+        "accessible": [true, false, "unknown"]
+      }
+    },
+    "front_desk_24h": {
+      "aliases": ["24-hour front desk", "24/7 reception"],
+      "qualifiers": {}
+    },
+    "family_room": {
+      "aliases": ["family rooms"],
+      "qualifiers": {}
+    }
+  },
+  "facility_mappings": [
+    {"facility_id": 2, "expected_names": ["Parking"], "capability": "parking", "qualifiers": {"type": "standard"}},
+    {"facility_id": 46, "expected_names": ["Free Parking"], "capability": "parking", "qualifiers": {"price": "free"}},
+    {"facility_id": 161, "expected_names": ["Private parking"], "capability": "parking", "qualifiers": {"access": "private"}},
+    {"facility_id": 180, "expected_names": ["Street parking"], "capability": "parking", "qualifiers": {"location": "nearby", "access": "public", "type": "street"}},
+    {"facility_id": 184, "expected_names": ["Accessible parking"], "capability": "parking", "qualifiers": {"accessible": true}},
+    {"facility_id": 590, "expected_names": ["Wheelchair accessible parking"], "capability": "parking", "qualifiers": {"accessible": true}},
+    {"facility_id": 604, "expected_names": ["RV, bus, truck parking"], "capability": "parking", "qualifiers": {"type": "oversized"}},
+    {"facility_id": 628, "expected_names": ["Parking (limited spaces)"], "capability": "parking", "qualifiers": {"type": "standard"}},
+    {"facility_id": 674, "expected_names": ["Free self parking"], "capability": "parking", "qualifiers": {"price": "free", "type": "self"}},
+    {"facility_id": 675, "expected_names": ["Self parking (surcharge)"], "capability": "parking", "qualifiers": {"price": "paid", "type": "self"}},
+    {"facility_id": 676, "expected_names": ["Free valet parking"], "capability": "parking", "qualifiers": {"price": "free", "type": "valet"}},
+    {"facility_id": 715, "expected_names": ["Free long-term parking"], "capability": "parking", "qualifiers": {"price": "free", "type": "long_term"}},
+    {"facility_id": 716, "expected_names": ["Long-term parking (surcharge)"], "capability": "parking", "qualifiers": {"price": "paid", "type": "long_term"}},
+    {"facility_id": 717, "expected_names": ["Free RV, bus, truck parking"], "capability": "parking", "qualifiers": {"price": "free", "type": "oversized"}},
+    {"facility_id": 718, "expected_names": ["RV, bus, truck parking (surcharge)"], "capability": "parking", "qualifiers": {"price": "paid", "type": "oversized"}},
+    {"facility_id": 720, "expected_names": ["Offsite parking discounted rates available"], "capability": "parking", "qualifiers": {"price": "paid", "location": "nearby"}},
+    {"facility_id": 721, "expected_names": ["Offsite parking reservations required"], "capability": "parking", "qualifiers": {"location": "nearby"}},
+    {"facility_id": 857, "expected_names": ["Covered parking"], "capability": "parking", "qualifiers": {"type": "covered"}},
+    {"facility_id": 859, "expected_names": ["Secured parking"], "capability": "parking", "qualifiers": {"type": "secured"}},
+    {"facility_id": 880, "expected_names": ["Garage"], "capability": "parking", "qualifiers": {"type": "garage"}},
+    {"facility_id": 936, "expected_names": ["Wheelchair-accessible van parking"], "capability": "parking", "qualifiers": {"accessible": true}},
+
+    {"facility_id": 47, "expected_names": ["WiFi available"], "capability": "wifi", "qualifiers": {}},
+    {"facility_id": 107, "expected_names": ["Free WiFi"], "capability": "wifi", "qualifiers": {"price": "free"}},
+
+    {"facility_id": 195, "expected_names": ["Heated pool"], "capability": "swimming_pool", "qualifiers": {"heated": true}},
+    {"facility_id": 301, "expected_names": ["Swimming pool"], "capability": "swimming_pool", "qualifiers": {}},
+    {"facility_id": 630, "expected_names": ["Access to nearby indoor pool"], "capability": "swimming_pool", "qualifiers": {"location": "nearby"}},
+    {"facility_id": 941, "expected_names": ["Wheelchair-accessible pool"], "capability": "swimming_pool", "qualifiers": {"accessible": true}},
+
+    {"facility_id": 557, "expected_names": ["Full-service spa"], "capability": "spa", "qualifiers": {}},
+    {"facility_id": 901, "expected_names": ["Health or beauty spa nearby"], "capability": "spa", "qualifiers": {"location": "nearby"}},
+    {"facility_id": 940, "expected_names": ["Wheelchair-accessible spa"], "capability": "spa", "qualifiers": {"accessible": true}},
+    {"facility_id": 1102, "expected_names": ["Full-service spa"], "capability": "spa", "qualifiers": {}},
+    {"facility_id": 1814, "expected_names": ["Health or beauty spa nearby"], "capability": "spa", "qualifiers": {"location": "nearby"}},
+
+    {"facility_id": 11, "expected_names": ["Fitness center"], "capability": "gym", "qualifiers": {}},
+    {"facility_id": 492, "expected_names": ["Fitness facilities"], "capability": "gym", "qualifiers": {}},
+    {"facility_id": 530, "expected_names": ["Health club"], "capability": "gym", "qualifiers": {}},
+    {"facility_id": 537, "expected_names": ["Free use of nearby fitness center"], "capability": "gym", "qualifiers": {"location": "nearby", "price": "free"}},
+    {"facility_id": 569, "expected_names": ["Use of nearby fitness center (discount)"], "capability": "gym", "qualifiers": {"location": "nearby", "price": "paid"}},
+    {"facility_id": 723, "expected_names": ["24-hour fitness facilities"], "capability": "gym", "qualifiers": {"hours": "24h"}},
+    {"facility_id": 757, "expected_names": ["Fitness facilities (surcharge)"], "capability": "gym", "qualifiers": {"price": "paid"}},
+    {"facility_id": 942, "expected_names": ["Wheelchair-accessible fitness center"], "capability": "gym", "qualifiers": {"accessible": true}},
+    {"facility_id": 1725, "expected_names": ["Fitness facilities"], "capability": "gym", "qualifiers": {}},
+    {"facility_id": 2066, "expected_names": ["Health club"], "capability": "gym", "qualifiers": {}},
+    {"facility_id": 6848, "expected_names": ["Fitness facilities (surcharge)"], "capability": "gym", "qualifiers": {"price": "paid"}},
+
+    {"facility_id": 109, "expected_names": ["Air conditioning"], "capability": "air_conditioning", "qualifiers": {}},
+    {"facility_id": 25, "expected_names": ["Facilities for disabled guests"], "capability": "accessible_facilities", "qualifiers": {}},
+    {"facility_id": 185, "expected_names": ["Wheelchair accessible"], "capability": "accessible_facilities", "qualifiers": {}},
+    {"facility_id": 4, "expected_names": ["Pets allowed"], "capability": "pets_allowed", "qualifiers": {}},
+    {"facility_id": 3, "expected_names": ["Restaurant"], "capability": "restaurant", "qualifiers": {}},
+    {"facility_id": 944, "expected_names": ["Wheelchair-accessible on-site restaurant"], "capability": "restaurant", "qualifiers": {"accessible": true}},
+
+    {"facility_id": 24, "expected_names": ["Continental breakfast"], "capability": "breakfast", "qualifiers": {"style": "continental"}},
+    {"facility_id": 43, "expected_names": ["Breakfast in the room"], "capability": "breakfast", "qualifiers": {"style": "room_service"}},
+    {"facility_id": 519, "expected_names": ["Breakfast available (surcharge)"], "capability": "breakfast", "qualifiers": {"price": "paid"}},
+    {"facility_id": 529, "expected_names": ["Free breakfast"], "capability": "breakfast", "qualifiers": {"price": "free"}},
+    {"facility_id": 729, "expected_names": ["Free continental breakfast"], "capability": "breakfast", "qualifiers": {"price": "free", "style": "continental"}},
+    {"facility_id": 730, "expected_names": ["Free buffet breakfast"], "capability": "breakfast", "qualifiers": {"price": "free", "style": "buffet"}},
+    {"facility_id": 731, "expected_names": ["Free cooked-to-order breakfast"], "capability": "breakfast", "qualifiers": {"price": "free", "style": "cooked_to_order"}},
+    {"facility_id": 732, "expected_names": ["Free English breakfast"], "capability": "breakfast", "qualifiers": {"price": "free", "style": "english"}},
+    {"facility_id": 733, "expected_names": ["Free full breakfast"], "capability": "breakfast", "qualifiers": {"price": "free", "style": "full"}},
+    {"facility_id": 756, "expected_names": ["Free breakfast to go"], "capability": "breakfast", "qualifiers": {"price": "free", "style": "takeaway"}},
+    {"facility_id": 987, "expected_names": ["Vegetarian breakfast available"], "capability": "breakfast", "qualifiers": {"style": "vegetarian"}},
+    {"facility_id": 1054, "expected_names": ["Free breakfast"], "capability": "breakfast", "qualifiers": {"price": "free"}},
+
+    {"facility_id": 493, "expected_names": ["Free airport transportation"], "capability": "airport_shuttle", "qualifiers": {"price": "free"}},
+    {"facility_id": 691, "expected_names": ["Airport transportation - pickup (surcharge)"], "capability": "airport_shuttle", "qualifiers": {"price": "paid", "direction": "pickup"}},
+    {"facility_id": 1023, "expected_names": ["Accessible airport shuttle"], "capability": "airport_shuttle", "qualifiers": {"accessible": true}},
+
+    {"facility_id": 8, "expected_names": ["24-hour front desk"], "capability": "front_desk_24h", "qualifiers": {}},
+    {"facility_id": 28, "expected_names": ["Family rooms"], "capability": "family_room", "qualifiers": {}}
+  ]
+}

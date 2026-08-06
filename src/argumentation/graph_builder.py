@@ -169,6 +169,20 @@ def build_argument_graph(
                     "review_sources": argument.review_sources,
                 }
             )
+            if (
+                argument.source_refs
+                or argument.preference_refs
+                or argument.scoring_unit_id is not None
+                or argument.explanatory_only
+            ):
+                node_metadata.update(
+                    {
+                        "source_refs": argument.source_refs,
+                        "preference_refs": argument.preference_refs,
+                        "scoring_unit_id": argument.scoring_unit_id,
+                        "explanatory_only": argument.explanatory_only,
+                    }
+                )
 
         node = ArgumentNode(
             node_id=argument.id,

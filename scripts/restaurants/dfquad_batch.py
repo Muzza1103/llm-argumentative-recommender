@@ -5,7 +5,7 @@ from pathlib import Path
 from src.argumentation.schema import build_arguments_from_scored_json
 from src.argumentation.graph_builder import build_argument_graph
 from src.argumentation.dfquad import evaluate_root_dfquad
-from scripts.test_dfquad import build_context_summary
+from scripts.restaurants.context_summary import build_context_summary
 
 
 def load_jsonl(path: Path) -> list[dict]:

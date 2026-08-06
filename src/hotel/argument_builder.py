@@ -164,12 +164,19 @@ _FACT_ASPECTS = {
     "parking_voiture": "parking_voiture",
     "piscine": "piscine_spa_bien_etre",
     "pool": "piscine_spa_bien_etre",
+    "swimming_pool": "piscine_spa_bien_etre",
     "spa": "piscine_spa_bien_etre",
+    "gym": "piscine_spa_bien_etre",
     "wifi": "wifi_internet",
     "wifi_internet": "wifi_internet",
     "accessibilite": "accessibilite_batiment",
     "accessibility": "accessibilite_batiment",
     "accessibilite_batiment": "accessibilite_batiment",
+    "accessible_facilities": "accessibilite_batiment",
+    "air_conditioning": "climatisation_chauffage_temperature",
+    "restaurant": "petit_dejeuner_restauration",
+    "breakfast": "petit_dejeuner_restauration",
+    "family_room": "chambre_taille_confort",
 }
 
 
@@ -189,9 +196,10 @@ def build_structured_fact_arguments(
         )
         normalized_importance = constraint.importance_raw / 5.0
         direction = "satisfies" if arg_type == "support" else "conflicts with"
+        target = constraint.canonical_target
         arguments.append(
             Argument(
-                id=f"FACT::{index:02d}::{constraint.field}",
+                id=f"FACT::{index:02d}::{target}",
                 arg_type=arg_type,
                 text=(
                     f"Hotel metadata explicitly {direction} the constraint: "
@@ -206,7 +214,7 @@ def build_structured_fact_arguments(
                 used_aspects=[],
                 target_item_name=hotel.metadata.name,
                 argument_family=STRUCTURED_FACT,
-                aspect=_FACT_ASPECTS.get(constraint.field),
+                aspect=_FACT_ASPECTS.get(target),
                 intrinsic_strength=normalized_importance,
                 importance_raw=constraint.importance_raw,
                 normalized_weight=normalized_importance,
@@ -217,10 +225,17 @@ def build_structured_fact_arguments(
                 review_sources=[],
                 metadata={
                     "hotel_id": hotel.hotel_id,
+                    "constraint_id": constraint.preference_ref,
                     "constraint_mode": constraint.mode,
-                    "constraint_field": constraint.field,
+                    "constraint_field": target,
                     "constraint_value": constraint.value,
+                    "constraint_qualifiers": dict(constraint.qualifiers),
                     "constraint_status": outcome.status.value,
+                    "source_refs": [
+                        source.get("source_ref")
+                        for source in outcome.fact_sources
+                        if source.get("source_ref")
+                    ],
                     "fact_sources": [
                         dict(source) for source in outcome.fact_sources
                     ],

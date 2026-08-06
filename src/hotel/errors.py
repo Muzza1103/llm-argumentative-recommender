@@ -14,3 +14,11 @@ class HotelPreferenceValidationError(ValueError):
         self.path = path
         prefix = f"{path}: " if path else ""
         super().__init__(f"{prefix}{message}")
+
+
+class HotelGeminiError(RuntimeError):
+    """Raised when a Gemini call or response cannot be used safely."""
+
+
+class HotelHybridValidationError(ValueError):
+    """Raised when a hybrid proposal batch has no valid JSON structure."""

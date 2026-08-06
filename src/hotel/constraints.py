@@ -1,10 +1,16 @@
 from __future__ import annotations
 
-import re
 from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 
+from .facility_ontology import (
+    FacilityNormalizationResult,
+    FacilityOntology,
+    load_default_facility_ontology,
+    normalize_facility_text,
+    normalize_hotel_facilities,
+)
 from .models import HotelProfile
 from .preferences import SessionConstraint
 
@@ -22,6 +28,7 @@ class ConstraintOutcome:
     reason: str
     evidence: tuple[str, ...] = ()
     fact_sources: tuple[dict[str, Any], ...] = ()
+    warnings: tuple[str, ...] = ()
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -30,49 +37,22 @@ class ConstraintOutcome:
             "reason": self.reason,
             "evidence": list(self.evidence),
             "fact_sources": [dict(source) for source in self.fact_sources],
+            "warnings": list(self.warnings),
         }
 
 
 _FIELD_ALIASES = {
     "facilities": "facility",
     "parking_voiture": "parking",
-    "pool": "piscine",
-    "swimming_pool": "piscine",
+    "pool": "swimming_pool",
+    "piscine": "swimming_pool",
     "wifi_internet": "wifi",
     "wi-fi": "wifi",
-    "accessibility": "accessibilite",
-    "accessibilite_batiment": "accessibilite",
+    "accessibility": "accessible_facilities",
+    "accessibilite": "accessible_facilities",
+    "accessibilite_batiment": "accessible_facilities",
     "ville": "city",
 }
-
-_FACILITY_TERMS = {
-    "parking": ("parking", "car park", "garage"),
-    "piscine": ("swimming pool", "pool"),
-    "spa": ("spa",),
-    "wifi": ("wifi", "wi fi", "wireless internet"),
-    "accessibilite": (
-        "wheelchair accessible",
-        "wheelchair access",
-        "accessible room",
-        "disabled access",
-    ),
-}
-
-_FALSE_TEXTS = {
-    "false",
-    "no",
-    "none",
-    "not available",
-    "unavailable",
-    "no parking",
-    "parking not available",
-    "parking is not available",
-}
-
-
-def _normalize(value: str) -> str:
-    normalized = re.sub(r"[^a-z0-9]+", " ", value.casefold())
-    return re.sub(r"\s+", " ", normalized).strip()
 
 
 def _expected_boolean(value: Any) -> bool | None:
@@ -81,7 +61,7 @@ def _expected_boolean(value: Any) -> bool | None:
     if isinstance(value, bool):
         return value
     if isinstance(value, str):
-        normalized = _normalize(value)
+        normalized = normalize_facility_text(value)
         if normalized in {"true", "yes", "required", "present", "available"}:
             return True
         if normalized in {"false", "no", "absent", "unavailable"}:
@@ -89,20 +69,16 @@ def _expected_boolean(value: Any) -> bool | None:
     return None
 
 
-def _status_for_observation(
-    *,
-    expected_present: bool,
-    observed_present: bool,
-) -> ConstraintStatus:
-    if expected_present == observed_present:
-        return ConstraintStatus.SATISFIED
-    return ConstraintStatus.VIOLATED
-
-
 def _evaluate_city(
     hotel: HotelProfile,
     constraint: SessionConstraint,
 ) -> ConstraintOutcome:
+    if constraint.operator not in {None, "equals"}:
+        return ConstraintOutcome(
+            constraint=constraint,
+            status=ConstraintStatus.UNKNOWN,
+            reason="city constraints support only the equals operator",
+        )
     if not isinstance(constraint.value, str) or not constraint.value.strip():
         return ConstraintOutcome(
             constraint=constraint,
@@ -110,90 +86,74 @@ def _evaluate_city(
             reason="city constraint has no comparable expected value",
         )
 
-    expected_city = _normalize(constraint.value)
+    expected_city = normalize_facility_text(constraint.value)
     if not expected_city:
         return ConstraintOutcome(
             constraint=constraint,
             status=ConstraintStatus.UNKNOWN,
             reason="city constraint has no comparable expected value",
         )
-
     city = hotel.metadata.city
-    if city is None or not _normalize(city):
+    if city is None or not normalize_facility_text(city):
         return ConstraintOutcome(
             constraint=constraint,
             status=ConstraintStatus.UNKNOWN,
             reason="city metadata is absent",
         )
-
-    source = ({"source": "city", "value": city},)
-    evidence = (f"city: {city}",)
-    actual_city = _normalize(city)
+    source_ref = "METADATA::city"
     return ConstraintOutcome(
         constraint=constraint,
         status=(
             ConstraintStatus.SATISFIED
-            if expected_city == actual_city
+            if expected_city == normalize_facility_text(city)
             else ConstraintStatus.VIOLATED
         ),
         reason="city metadata was compared with the requested city",
-        evidence=evidence,
-        fact_sources=source,
+        evidence=(f"city: {city}",),
+        fact_sources=(
+            {
+                "source_ref": source_ref,
+                "source": "city",
+                "value": city,
+            },
+        ),
     )
 
 
-def _matching_facilities(
-    hotel: HotelProfile,
-    terms: tuple[str, ...],
-) -> tuple[str, ...]:
-    normalized_terms = tuple(
-        normalized_term
-        for term in terms
-        if (normalized_term := _normalize(term))
-    )
-    matches = []
-    for facility in hotel.metadata.facilities:
-        normalized_name = _normalize(facility.name)
-        if any(
-            re.search(
-                rf"(?:^|\s){re.escape(term)}(?:$|\s)",
-                normalized_name,
-            )
-            is not None
-            for term in normalized_terms
-        ):
-            matches.append(facility.name)
-    return tuple(matches)
+def _source_payload(observation) -> dict[str, Any]:
+    return {
+        "source_ref": observation.source_ref,
+        "source": observation.source_kind,
+        "capability": observation.capability,
+        "present": observation.present,
+        "qualifiers": dict(observation.qualifiers),
+        "value": observation.evidence,
+        "facility_id": observation.facility_id,
+    }
 
 
-def _parking_policy_observation(
-    hotel: HotelProfile,
-) -> tuple[bool, str, dict[str, Any]] | None:
-    for policy in hotel.metadata.policies:
-        if policy.parking is None:
-            continue
-        normalized = _normalize(policy.parking)
-        present = not (
-            normalized in _FALSE_TEXTS
-            or normalized.startswith("no ")
-            or "not available" in normalized
-            or "unavailable" in normalized
-        )
-        evidence = f"parking policy: {policy.parking}"
-        source = {
-            "source": "policy.parking",
-            "policy_name": policy.name,
-            "value": policy.parking,
-        }
-        return present, evidence, source
-    return None
-
-
-def _evaluate_named_facility(
-    hotel: HotelProfile,
+def _evaluate_canonical_facility(
     constraint: SessionConstraint,
-    field: str,
+    capability: str,
+    ontology: FacilityOntology,
+    normalization: FacilityNormalizationResult,
 ) -> ConstraintOutcome:
+    if constraint.operator not in {None, "present"}:
+        return ConstraintOutcome(
+            constraint=constraint,
+            status=ConstraintStatus.UNKNOWN,
+            reason="facility constraints support only the present operator",
+        )
+    qualifier_errors = ontology.qualifier_errors(
+        capability,
+        constraint.qualifiers,
+    )
+    if qualifier_errors:
+        return ConstraintOutcome(
+            constraint=constraint,
+            status=ConstraintStatus.UNKNOWN,
+            reason="; ".join(qualifier_errors),
+        )
     expected_present = _expected_boolean(constraint.value)
     if expected_present is None:
         return ConstraintOutcome(
@@ -202,67 +162,114 @@ def _evaluate_named_facility(
             reason="facility constraint value is not a supported boolean",
         )
 
-    matches = _matching_facilities(hotel, _FACILITY_TERMS[field])
-    policy_observation = (
-        _parking_policy_observation(hotel)
-        if field == "parking"
-        else None
-    )
-    if (
-        matches
-        and policy_observation is not None
-        and policy_observation[0] is False
-    ):
+    fact = normalization.get_fact(capability)
+    if fact is None:
         return ConstraintOutcome(
             constraint=constraint,
             status=ConstraintStatus.UNKNOWN,
-            reason="facility and policy metadata conflict",
-            evidence=(
-                f"facility: {matches[0]}",
-                policy_observation[1],
-            ),
-            fact_sources=(
-                {"source": "facility", "value": matches[0]},
-                policy_observation[2],
+            reason=(
+                "no explicit matching fact was found; an omitted facility "
+                "is not evidence of absence"
             ),
         )
-    if matches:
-        evidence = tuple(f"facility: {name}" for name in matches[:2])
-        sources = tuple(
-            {"source": "facility", "value": name}
-            for name in matches[:2]
-        )
+    observations = fact.observations
+    evidence = tuple(item.evidence for item in observations[:3])
+    sources = tuple(_source_payload(item) for item in observations[:3])
+    if fact.status == "contradictory":
         return ConstraintOutcome(
             constraint=constraint,
-            status=_status_for_observation(
-                expected_present=expected_present,
-                observed_present=True,
-            ),
-            reason="a matching facility is explicitly declared",
+            status=ConstraintStatus.UNKNOWN,
+            reason="positive and negative structured sources conflict",
             evidence=evidence,
             fact_sources=sources,
+            warnings=("contradictory_capability_evidence",),
         )
 
-    if policy_observation is not None:
-        observed_present, evidence, source = policy_observation
+    positives = tuple(item for item in observations if item.present)
+    negatives = tuple(item for item in observations if not item.present)
+    if not expected_present:
+        if positives:
+            return ConstraintOutcome(
+                constraint=constraint,
+                status=ConstraintStatus.VIOLATED,
+                reason="the facility is explicitly declared present",
+                evidence=tuple(item.evidence for item in positives[:3]),
+                fact_sources=tuple(
+                    _source_payload(item) for item in positives[:3]
+                ),
+            )
+        if negatives:
+            return ConstraintOutcome(
+                constraint=constraint,
+                status=ConstraintStatus.SATISFIED,
+                reason="the facility is explicitly declared absent",
+                evidence=tuple(item.evidence for item in negatives[:3]),
+                fact_sources=tuple(
+                    _source_payload(item) for item in negatives[:3]
+                ),
+            )
+
+    if negatives and not positives:
         return ConstraintOutcome(
             constraint=constraint,
-            status=_status_for_observation(
-                expected_present=expected_present,
-                observed_present=observed_present,
+            status=ConstraintStatus.VIOLATED,
+            reason="the facility is explicitly declared absent",
+            evidence=tuple(item.evidence for item in negatives[:3]),
+            fact_sources=tuple(
+                _source_payload(item) for item in negatives[:3]
             ),
-            reason="an explicit parking policy was found",
-            evidence=(evidence,),
-            fact_sources=(source,),
+        )
+    if not positives:
+        return ConstraintOutcome(
+            constraint=constraint,
+            status=ConstraintStatus.UNKNOWN,
+            reason="no positive facility observation is available",
+        )
+
+    requested_qualifiers = constraint.qualifiers
+    if not requested_qualifiers:
+        return ConstraintOutcome(
+            constraint=constraint,
+            status=ConstraintStatus.SATISFIED,
+            reason="the canonical capability is explicitly confirmed",
+            evidence=tuple(item.evidence for item in positives[:3]),
+            fact_sources=tuple(
+                _source_payload(item) for item in positives[:3]
+            ),
+        )
+
+    matching = tuple(
+        item
+        for item in positives
+        if all(
+            key in item.qualifiers and item.qualifiers[key] == value
+            for key, value in requested_qualifiers.items()
+        )
+    )
+    if matching:
+        return ConstraintOutcome(
+            constraint=constraint,
+            status=ConstraintStatus.SATISFIED,
+            reason="the capability and every requested qualifier are confirmed",
+            evidence=tuple(item.evidence for item in matching[:3]),
+            fact_sources=tuple(
+                _source_payload(item) for item in matching[:3]
+            ),
         )
 
     return ConstraintOutcome(
         constraint=constraint,
         status=ConstraintStatus.UNKNOWN,
         reason=(
-            "no explicit matching fact was found; an omitted facility is not "
-            "evidence of absence"
+            "the capability is present but the requested qualifiers are not "
+            "fully confirmed; non-matching observations do not prove that "
+            "another valid option is absent"
         ),
+        evidence=tuple(item.evidence for item in positives[:3]),
+        fact_sources=tuple(
+            _source_payload(item) for item in positives[:3]
+        ),
+        warnings=("qualifier_not_fully_verified",),
     )
 
 
@@ -274,18 +281,26 @@ def _evaluate_generic_facility(
         return ConstraintOutcome(
             constraint=constraint,
             status=ConstraintStatus.UNKNOWN,
-            reason="generic facility constraints require a facility name",
+            reason="generic facility constraints require an exact facility name",
         )
-    expected = _normalize(constraint.value)
+    expected = normalize_facility_text(constraint.value)
     for facility in hotel.metadata.facilities:
-        if _normalize(facility.name) == expected:
+        if normalize_facility_text(facility.name) == expected:
             return ConstraintOutcome(
                 constraint=constraint,
                 status=ConstraintStatus.SATISFIED,
-                reason="the requested facility is explicitly declared",
-                evidence=(f"facility: {facility.name}",),
+                reason="the exact requested facility is explicitly declared",
+                evidence=(facility.name,),
                 fact_sources=(
-                    {"source": "facility", "value": facility.name},
+                    {
+                        "source_ref": (
+                            f"FACILITY_RAW::{facility.facility_ids[0]}"
+                            if facility.facility_ids
+                            else "FACILITY_RAW::unknown"
+                        ),
+                        "source": "facility",
+                        "value": facility.name,
+                    },
                 ),
             )
     return ConstraintOutcome(
@@ -301,26 +316,51 @@ def _evaluate_generic_facility(
 def evaluate_constraint(
     hotel: HotelProfile,
     constraint: SessionConstraint,
+    *,
+    ontology: FacilityOntology | None = None,
+    normalization: FacilityNormalizationResult | None = None,
 ) -> ConstraintOutcome:
-    field = _FIELD_ALIASES.get(constraint.field, constraint.field)
+    resolved_ontology = ontology or load_default_facility_ontology()
+    resolved_normalization = normalization or normalize_hotel_facilities(
+        hotel,
+        resolved_ontology,
+    )
+    field = _FIELD_ALIASES.get(
+        constraint.canonical_target,
+        constraint.canonical_target,
+    )
     if field == "city":
         return _evaluate_city(hotel, constraint)
     if field == "facility":
         return _evaluate_generic_facility(hotel, constraint)
-    if field in _FACILITY_TERMS:
-        return _evaluate_named_facility(hotel, constraint, field)
+    if field in resolved_ontology.capabilities:
+        return _evaluate_canonical_facility(
+            constraint,
+            field,
+            resolved_ontology,
+            resolved_normalization,
+        )
     return ConstraintOutcome(
         constraint=constraint,
         status=ConstraintStatus.UNKNOWN,
-        reason=f"unsupported factual field: {constraint.field}",
+        reason=f"unsupported factual field: {constraint.canonical_target}",
     )
 
 
 def evaluate_constraints(
     hotel: HotelProfile,
     constraints: tuple[SessionConstraint, ...],
+    *,
+    ontology: FacilityOntology | None = None,
 ) -> tuple[ConstraintOutcome, ...]:
+    resolved_ontology = ontology or load_default_facility_ontology()
+    normalization = normalize_hotel_facilities(hotel, resolved_ontology)
     return tuple(
-        evaluate_constraint(hotel, constraint)
+        evaluate_constraint(
+            hotel,
+            constraint,
+            ontology=resolved_ontology,
+            normalization=normalization,
+        )
         for constraint in constraints
     )

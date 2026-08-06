@@ -7,8 +7,16 @@ from pathlib import Path
 from typing import Any
 
 from src.hotel import (
+    ARGUMENT_MODES,
+    DEFAULT_FACILITY_ONTOLOGY_PATH,
+    FacilityOntology,
+    GeminiHybridArgumentGenerator,
+    GeminiPreferenceInterpreter,
     HotelDataValidationError,
+    HotelGeminiError,
+    HotelHybridValidationError,
     HotelPreferenceValidationError,
+    HybridArgumentGenerator,
     PreferenceInterpreter,
     evaluate_hotel_by_id,
     interpret_session_preferences,
@@ -17,11 +25,11 @@ from src.hotel import (
 )
 
 
-def _load_interpreter(specification: str) -> PreferenceInterpreter:
+def _load_component(specification: str, protocol: type, label: str):
     module_name, separator, attribute_name = specification.partition(":")
     if not separator or not module_name or not attribute_name:
         raise ValueError(
-            "interpreter factory must use the form 'module:attribute'"
+            f"{label} factory must use the form 'module:attribute'"
         )
     module = importlib.import_module(module_name)
     target: Any = getattr(module, attribute_name)
@@ -35,12 +43,29 @@ def _load_interpreter(specification: str) -> PreferenceInterpreter:
     else:
         candidate = target
 
-    if not isinstance(candidate, PreferenceInterpreter):
+    if not isinstance(candidate, protocol):
         raise TypeError(
-            "configured interpreter factory did not provide an object with "
-            "interpret(text)"
+            f"configured {label} factory returned an incompatible object"
         )
     return candidate
+
+
+def _load_interpreter(specification: str) -> PreferenceInterpreter:
+    return _load_component(
+        specification,
+        PreferenceInterpreter,
+        "interpreter",
+    )
+
+
+def _load_hybrid_generator(
+    specification: str,
+) -> HybridArgumentGenerator:
+    return _load_component(
+        specification,
+        HybridArgumentGenerator,
+        "hybrid generator",
+    )
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -52,6 +77,12 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--profiles", required=True)
     parser.add_argument("--hotel-id", required=True)
+    parser.add_argument(
+        "--argument-mode",
+        choices=sorted(ARGUMENT_MODES),
+        default="baseline",
+        help="Keep baseline as the default; hybrid validates Gemini proposals.",
+    )
     preference_group = parser.add_mutually_exclusive_group(required=True)
     preference_group.add_argument("--preferences")
     preference_group.add_argument("--preference-text")
@@ -63,6 +94,18 @@ def build_parser() -> argparse.ArgumentParser:
             "zero-argument factory."
         ),
     )
+    parser.add_argument(
+        "--hybrid-generator-factory",
+        help=(
+            "Offline injection hook for hybrid mode, using "
+            "'module:attribute'. Without it, hybrid mode uses Gemini."
+        ),
+    )
+    parser.add_argument(
+        "--facility-ontology",
+        default=str(DEFAULT_FACILITY_ONTOLOGY_PATH),
+    )
+    parser.add_argument("--gemini-model", default="gemini-2.5-flash")
     parser.add_argument("--output", required=True)
     return parser
 
@@ -71,7 +114,11 @@ def main() -> None:
     parser = build_parser()
     args = parser.parse_args()
 
-    if args.preference_text is not None and not args.interpreter_factory:
+    if (
+        args.preference_text is not None
+        and not args.interpreter_factory
+        and args.argument_mode == "baseline"
+    ):
         parser.error(
             "--preference-text requires an explicitly configured "
             "--interpreter-factory; use --preferences for deterministic "
@@ -79,21 +126,54 @@ def main() -> None:
         )
     if args.preferences is not None and args.interpreter_factory:
         parser.error("--interpreter-factory is only valid with --preference-text")
+    if (
+        args.argument_mode == "baseline"
+        and args.hybrid_generator_factory
+    ):
+        parser.error(
+            "--hybrid-generator-factory is only valid in hybrid mode"
+        )
 
     try:
         dataset = load_hotel_profiles(args.profiles)
+        ontology = FacilityOntology.load(args.facility_ontology)
         if args.preferences is not None:
             preferences = load_session_preferences(args.preferences)
         else:
-            interpreter = _load_interpreter(args.interpreter_factory)
+            interpreter = (
+                _load_interpreter(args.interpreter_factory)
+                if args.interpreter_factory
+                else GeminiPreferenceInterpreter(
+                    model_name=args.gemini_model,
+                    ontology=ontology,
+                )
+            )
             preferences = interpret_session_preferences(
                 args.preference_text,
                 interpreter,
             )
-        result = evaluate_hotel_by_id(dataset, args.hotel_id, preferences)
+        hybrid_generator = None
+        if args.argument_mode == "hybrid":
+            hybrid_generator = (
+                _load_hybrid_generator(args.hybrid_generator_factory)
+                if args.hybrid_generator_factory
+                else GeminiHybridArgumentGenerator(
+                    model_name=args.gemini_model
+                )
+            )
+        result = evaluate_hotel_by_id(
+            dataset,
+            args.hotel_id,
+            preferences,
+            argument_mode=args.argument_mode,
+            hybrid_generator=hybrid_generator,
+            facility_ontology=ontology,
+        )
     except (
         HotelDataValidationError,
         HotelPreferenceValidationError,
+        HotelGeminiError,
+        HotelHybridValidationError,
         ImportError,
         AttributeError,
         KeyError,

@@ -260,8 +260,8 @@ class HotelArgumentBuilderTests(unittest.TestCase):
                 spacious_hotel.metadata,
                 facilities=(
                     Facility(
-                        name="Spa and wellness centre",
-                        facility_ids=(902,),
+                        name="Full-service spa",
+                        facility_ids=(557,),
                     ),
                 ),
             ),

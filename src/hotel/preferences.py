@@ -89,10 +89,24 @@ class SessionConstraint:
     field: str
     value: Any = None
     uninterpreted: dict[str, Any] = field(default_factory=dict)
+    constraint_id: str | None = None
+    target_type: str | None = None
+    target: str | None = None
+    operator: str | None = None
+    qualifiers: dict[str, Any] = field(default_factory=dict)
+    source_text: str | None = None
 
     @property
     def hard(self) -> bool:
         return self.mode == "hard"
+
+    @property
+    def preference_ref(self) -> str:
+        return self.constraint_id or f"constraint::{self.field}"
+
+    @property
+    def canonical_target(self) -> str:
+        return self.target or self.field
 
     def to_dict(self) -> dict[str, Any]:
         payload = {
@@ -103,6 +117,18 @@ class SessionConstraint:
         }
         if self.value is not None:
             payload["value"] = self.value
+        if self.constraint_id is not None:
+            payload["constraint_id"] = self.constraint_id
+        if self.target_type is not None:
+            payload["target_type"] = self.target_type
+        if self.target is not None:
+            payload["target"] = self.target
+        if self.operator is not None:
+            payload["operator"] = self.operator
+        if self.qualifiers:
+            payload["qualifiers"] = dict(self.qualifiers)
+        if self.source_text is not None:
+            payload["source_text"] = self.source_text
         if self.uninterpreted:
             payload["uninterpreted"] = dict(self.uninterpreted)
         return payload
@@ -114,6 +140,7 @@ class SessionPreferences:
     constraints: tuple[SessionConstraint, ...] = field(default_factory=tuple)
     original_text: str | None = None
     uninterpreted_items: tuple[Any, ...] = field(default_factory=tuple)
+    interpretation_trace: dict[str, Any] | None = None
 
     @property
     def active_aspect_preferences(self) -> tuple[AspectPreference, ...]:
@@ -130,7 +157,7 @@ class SessionPreferences:
         )
 
     def to_dict(self) -> dict[str, Any]:
-        return {
+        payload = {
             "original_text": self.original_text,
             "aspect_preferences": {
                 item.aspect: item.to_dict()
@@ -139,6 +166,11 @@ class SessionPreferences:
             "constraints": [item.to_dict() for item in self.constraints],
             "uninterpreted_items": list(self.uninterpreted_items),
         }
+        if self.interpretation_trace is not None:
+            payload["interpretation_trace"] = dict(
+                self.interpretation_trace
+            )
+        return payload
 
 
 def session_preferences_from_dict(
@@ -199,26 +231,99 @@ def session_preferences_from_dict(
     )
 
     constraints = []
+    seen_constraint_ids: set[str] = set()
+    mode_counts = {"hard": 0, "soft": 0}
     for index, raw_constraint in enumerate(
         _sequence(preferences.get("constraints", []), f"{path}.constraints")
     ):
         constraint_path = f"{path}.constraints[{index}]"
         constraint = _mapping(raw_constraint, constraint_path)
-        mode = _required_string(
-            constraint.get("mode"),
-            f"{constraint_path}.mode",
-        ).lower()
+        raw_mode = constraint.get("mode")
+        raw_hard = constraint.get("hard")
+        if raw_mode is None and isinstance(raw_hard, bool):
+            mode = "hard" if raw_hard else "soft"
+        else:
+            mode = _required_string(
+                raw_mode,
+                f"{constraint_path}.mode",
+            ).lower()
         if mode not in CONSTRAINT_MODES:
             raise HotelPreferenceValidationError(
                 "expected 'hard' or 'soft'",
                 path=f"{constraint_path}.mode",
             )
 
+        if isinstance(raw_hard, bool) and raw_hard != (mode == "hard"):
+            raise HotelPreferenceValidationError(
+                "hard and mode describe different constraint modes",
+                path=constraint_path,
+            )
+
+        mode_counts[mode] += 1
+        supplied_constraint_id = constraint.get("constraint_id")
+        constraint_id = (
+            _required_string(
+                supplied_constraint_id,
+                f"{constraint_path}.constraint_id",
+            )
+            if supplied_constraint_id is not None
+            else f"{mode}_{mode_counts[mode]:02d}"
+        )
+        if constraint_id in seen_constraint_ids:
+            raise HotelPreferenceValidationError(
+                f"duplicate constraint_id {constraint_id!r}",
+                path=f"{constraint_path}.constraint_id",
+            )
+        seen_constraint_ids.add(constraint_id)
+
+        raw_target = constraint.get("target", constraint.get("field"))
+        target = _required_string(
+            raw_target,
+            f"{constraint_path}.target",
+        ).casefold()
+        raw_target_type = constraint.get("target_type")
+        if raw_target_type is None:
+            target_type = "metadata" if target in {"city", "ville"} else "facility"
+        else:
+            target_type = _required_string(
+                raw_target_type,
+                f"{constraint_path}.target_type",
+            ).casefold()
+        if target_type not in {"facility", "metadata"}:
+            raise HotelPreferenceValidationError(
+                "expected 'facility' or 'metadata'",
+                path=f"{constraint_path}.target_type",
+            )
+
+        default_operator = "equals" if target in {"city", "ville"} else "present"
+        operator = _required_string(
+            constraint.get("operator", default_operator),
+            f"{constraint_path}.operator",
+        ).casefold()
+        if operator not in {"present", "equals"}:
+            raise HotelPreferenceValidationError(
+                "expected 'present' or 'equals'",
+                path=f"{constraint_path}.operator",
+            )
+        qualifiers = constraint.get("qualifiers", {})
+        if not isinstance(qualifiers, Mapping):
+            raise HotelPreferenceValidationError(
+                "expected an object",
+                path=f"{constraint_path}.qualifiers",
+            )
+
         known_keys = {
             "text",
+            "source_text",
             "importance_raw",
             "mode",
+            "hard",
             "field",
+            "constraint_id",
+            "target_type",
+            "target",
+            "operator",
+            "qualifiers",
             "value",
             "expected_value",
         }
@@ -231,10 +336,17 @@ def session_preferences_from_dict(
             "value",
             constraint.get("expected_value"),
         )
+        source_text = _required_string(
+            constraint.get(
+                "source_text",
+                constraint.get("text"),
+            ),
+            f"{constraint_path}.source_text",
+        )
         constraints.append(
             SessionConstraint(
                 text=_required_string(
-                    constraint.get("text"),
+                    constraint.get("text", source_text),
                     f"{constraint_path}.text",
                 ),
                 importance_raw=_importance(
@@ -242,16 +354,19 @@ def session_preferences_from_dict(
                     f"{constraint_path}.importance_raw",
                 ),
                 mode=mode,
-                field=_required_string(
-                    constraint.get("field"),
-                    f"{constraint_path}.field",
-                ).casefold(),
+                field=target,
                 value=expected_value,
                 uninterpreted={
                     key: value
                     for key, value in constraint.items()
                     if key not in known_keys
                 },
+                constraint_id=constraint_id,
+                target_type=target_type,
+                target=target,
+                operator=operator,
+                qualifiers=dict(qualifiers),
+                source_text=source_text,
             )
         )
 
@@ -268,6 +383,7 @@ def session_preferences_from_dict(
         "original_text",
         "uninterpreted_items",
         "unknown_items",
+        "interpretation_trace",
     }
     explicit_unknown.extend(
         {"field": key, "value": value}
@@ -287,6 +403,11 @@ def session_preferences_from_dict(
         constraints=tuple(constraints),
         original_text=resolved_original_text,
         uninterpreted_items=tuple(explicit_unknown),
+        interpretation_trace=(
+            dict(preferences["interpretation_trace"])
+            if isinstance(preferences.get("interpretation_trace"), Mapping)
+            else None
+        ),
     )
 
 

@@ -13,8 +13,14 @@ from src.hotel import (
 )
 
 
-REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
-FIXTURE = REPOSITORY_ROOT / "tests" / "fixtures" / "hotel_profiles_minimal.json"
+REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
+FIXTURE = (
+    REPOSITORY_ROOT
+    / "tests"
+    / "hotel"
+    / "fixtures"
+    / "hotel_profiles_minimal.json"
+)
 EXAMPLE_PREFERENCES = REPOSITORY_ROOT / "configs" / "hotel_session_example.json"
 
 
@@ -261,7 +267,7 @@ class HotelEvaluatorTests(unittest.TestCase):
                 [
                     sys.executable,
                     "-m",
-                    "scripts.evaluate_hotel_session",
+                    "scripts.hotel.evaluate_hotel_session",
                     "--profiles",
                     str(FIXTURE),
                     "--hotel-id",
@@ -287,7 +293,7 @@ class HotelEvaluatorTests(unittest.TestCase):
                 [
                     sys.executable,
                     "-m",
-                    "scripts.evaluate_hotel_session",
+                    "scripts.hotel.evaluate_hotel_session",
                     "--profiles",
                     str(FIXTURE),
                     "--hotel-id",

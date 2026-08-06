@@ -12,12 +12,18 @@ from .argument_builder import (
     build_structured_fact_arguments,
 )
 from .constraints import ConstraintOutcome, ConstraintStatus, evaluate_constraints
+from .facility_ontology import (
+    FacilityOntology,
+    normalize_hotel_facilities,
+)
+from .hybrid import HybridArgumentGenerator, run_hybrid_generation
 from .models import HotelProfile, HotelProfileDataset
 from .preferences import SessionPreferences
 
 
 ROOT_TEXT = "Recommend this hotel for the current session"
 ROOT_BASE_SCORE = 0.5
+ARGUMENT_MODES = frozenset({"baseline", "hybrid"})
 
 
 @dataclass(frozen=True, slots=True)
@@ -38,8 +44,11 @@ class EligibilityResult:
 class HotelEvaluationResult:
     hotel_id: str
     hotel_name: str
+    argument_mode: str
     session_preferences: SessionPreferences
     eligibility: EligibilityResult
+    constraint_outcomes: tuple[ConstraintOutcome, ...]
+    ineligibility_reasons: tuple[dict[str, Any], ...]
     observed_preference_aspects: tuple[str, ...]
     missing_preference_aspects: tuple[str, ...]
     unknown_constraints: tuple[ConstraintOutcome, ...]
@@ -49,13 +58,22 @@ class HotelEvaluationResult:
     arguments: tuple[Argument, ...]
     graph: dict[str, Any]
     dfquad: dict[str, Any]
+    facility_normalization: dict[str, Any]
+    hybrid: dict[str, Any] | None
 
     def to_dict(self) -> dict[str, Any]:
         return {
             "hotel_id": self.hotel_id,
             "hotel_name": self.hotel_name,
+            "argument_mode": self.argument_mode,
             "session_preferences": self.session_preferences.to_dict(),
             "eligibility": self.eligibility.to_dict(),
+            "constraint_outcomes": [
+                outcome.to_dict() for outcome in self.constraint_outcomes
+            ],
+            "ineligibility_reasons": [
+                dict(reason) for reason in self.ineligibility_reasons
+            ],
             "observed_preference_aspects": list(
                 self.observed_preference_aspects
             ),
@@ -71,6 +89,8 @@ class HotelEvaluationResult:
             "arguments": [argument.to_dict() for argument in self.arguments],
             "graph": self.graph,
             "dfquad": self.dfquad,
+            "facility_normalization": self.facility_normalization,
+            "hybrid": self.hybrid,
         }
 
 
@@ -118,18 +138,55 @@ def _empirical_baseline(
 def evaluate_hotel_session(
     hotel: HotelProfile,
     preferences: SessionPreferences,
+    *,
+    argument_mode: str = "baseline",
+    hybrid_generator: HybridArgumentGenerator | None = None,
+    facility_ontology: FacilityOntology | None = None,
 ) -> HotelEvaluationResult:
+    if argument_mode not in ARGUMENT_MODES:
+        raise ValueError(
+            f"argument_mode must be one of {sorted(ARGUMENT_MODES)}"
+        )
     observed, missing, coverage, linear_score = _empirical_baseline(
         hotel,
         preferences,
     )
-    empirical_arguments = build_empirical_arguments(hotel, preferences)
-    constraint_outcomes = evaluate_constraints(hotel, preferences.constraints)
-    factual_arguments = build_structured_fact_arguments(
+    constraint_outcomes = evaluate_constraints(
         hotel,
-        constraint_outcomes,
+        preferences.constraints,
+        ontology=facility_ontology,
     )
-    arguments = tuple(empirical_arguments + factual_arguments)
+    facility_normalization = normalize_hotel_facilities(
+        hotel,
+        facility_ontology,
+    )
+    hybrid_payload = None
+    if argument_mode == "baseline":
+        empirical_arguments = build_empirical_arguments(hotel, preferences)
+        factual_arguments = build_structured_fact_arguments(
+            hotel,
+            constraint_outcomes,
+        )
+        arguments = tuple(empirical_arguments + factual_arguments)
+    else:
+        if hybrid_generator is None:
+            raise ValueError(
+                "hybrid argument mode requires a HybridArgumentGenerator"
+            )
+        prepared, hybrid_validation, generator_trace = run_hybrid_generation(
+            hotel=hotel,
+            preferences=preferences,
+            generator=hybrid_generator,
+            ontology=facility_ontology,
+            constraint_outcomes=constraint_outcomes,
+        )
+        arguments = hybrid_validation.scoring_arguments
+        facility_normalization = prepared.facility_normalization
+        hybrid_payload = {
+            "prepared_context": prepared.to_dict(),
+            "validation": hybrid_validation.to_dict(),
+            "generator_trace": generator_trace,
+        }
 
     graph = build_argument_graph(
         list(arguments),
@@ -173,12 +230,24 @@ def evaluate_hotel_session(
         for outcome in constraint_outcomes
         if outcome.status is ConstraintStatus.UNKNOWN
     )
+    ineligibility_reasons = tuple(
+        {
+            "constraint_id": outcome.constraint.preference_ref,
+            "reason": outcome.reason,
+            "status": outcome.status.value,
+        }
+        for outcome in hard_outcomes
+        if outcome.status is ConstraintStatus.VIOLATED
+    )
 
     return HotelEvaluationResult(
         hotel_id=hotel.hotel_id,
         hotel_name=hotel.metadata.name,
+        argument_mode=argument_mode,
         session_preferences=preferences,
         eligibility=eligibility,
+        constraint_outcomes=constraint_outcomes,
+        ineligibility_reasons=ineligibility_reasons,
         observed_preference_aspects=observed,
         missing_preference_aspects=missing,
         unknown_constraints=unknown_constraints,
@@ -188,6 +257,8 @@ def evaluate_hotel_session(
         arguments=arguments,
         graph=graph.to_dict(),
         dfquad=dfquad_payload,
+        facility_normalization=facility_normalization.to_dict(),
+        hybrid=hybrid_payload,
     )
 
 
@@ -195,8 +266,18 @@ def evaluate_hotel_by_id(
     dataset: HotelProfileDataset,
     hotel_id: str,
     preferences: SessionPreferences,
+    *,
+    argument_mode: str = "baseline",
+    hybrid_generator: HybridArgumentGenerator | None = None,
+    facility_ontology: FacilityOntology | None = None,
 ) -> HotelEvaluationResult:
     hotel = dataset.get_hotel(hotel_id)
     if hotel is None:
         raise KeyError(f"unknown hotel_id: {hotel_id}")
-    return evaluate_hotel_session(hotel, preferences)
+    return evaluate_hotel_session(
+        hotel,
+        preferences,
+        argument_mode=argument_mode,
+        hybrid_generator=hybrid_generator,
+        facility_ontology=facility_ontology,
+    )

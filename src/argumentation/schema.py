@@ -104,6 +104,12 @@ class Argument:
     n_neutral: int | None = None
     review_sources: list[dict[str, Any]] = field(default_factory=list)
 
+    # Optional hotel-hybrid provenance. Defaults preserve the Yelp payload.
+    source_refs: list[str] = field(default_factory=list)
+    preference_refs: list[str] = field(default_factory=list)
+    scoring_unit_id: str | None = None
+    explanatory_only: bool = False
+
     metadata: dict[str, Any] = field(default_factory=dict)
 
     def is_support(self) -> bool:
@@ -144,6 +150,21 @@ class Argument:
                     "n_attack": self.n_attack,
                     "n_neutral": self.n_neutral,
                     "review_sources": self.review_sources,
+                }
+            )
+
+        if (
+            self.source_refs
+            or self.preference_refs
+            or self.scoring_unit_id is not None
+            or self.explanatory_only
+        ):
+            payload.update(
+                {
+                    "source_refs": self.source_refs,
+                    "preference_refs": self.preference_refs,
+                    "scoring_unit_id": self.scoring_unit_id,
+                    "explanatory_only": self.explanatory_only,
                 }
             )
 
@@ -224,6 +245,10 @@ def build_arguments_from_scored_json(
             n_attack=argument_json.get("n_attack"),
             n_neutral=argument_json.get("n_neutral"),
             review_sources=argument_json.get("review_sources", []),
+            source_refs=argument_json.get("source_refs", []),
+            preference_refs=argument_json.get("preference_refs", []),
+            scoring_unit_id=argument_json.get("scoring_unit_id"),
+            explanatory_only=argument_json.get("explanatory_only", False),
             metadata=argument_json.get("metadata", {}),
         )
 
