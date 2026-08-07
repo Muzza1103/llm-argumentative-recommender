@@ -33,6 +33,9 @@ HYBRID_ARGUMENT_TYPES = frozenset({"support", "attack"})
 EXPLANATORY_KINDS = frozenset({"contextual", "tradeoff", "summary"})
 MAX_HYBRID_ARGUMENTS = 8
 MAX_HYBRID_RELATIONS = 8
+MAX_HYBRID_PREFERENCE_REFS = 5
+MAX_HYBRID_SOURCE_REFS = 8
+MAX_HYBRID_SCORING_UNIT_REFS = 3
 MAX_FACILITY_SOURCES_PER_CAPABILITY = 3
 
 
@@ -666,18 +669,22 @@ def _proposal_reasons(
         reasons.append("unsupported_argument_type")
     if not isinstance(cleaned["text"], str) or not cleaned["text"].strip():
         reasons.append("invalid_argument_text")
-    for field_name in (
-        "preference_refs",
-        "source_refs",
-        "scoring_unit_refs",
-    ):
+    reference_limits = {
+        "preference_refs": MAX_HYBRID_PREFERENCE_REFS,
+        "source_refs": MAX_HYBRID_SOURCE_REFS,
+        "scoring_unit_refs": MAX_HYBRID_SCORING_UNIT_REFS,
+    }
+    for field_name, maximum in reference_limits.items():
         value = cleaned[field_name]
         if not isinstance(value, list) or not all(
             isinstance(item, str) and item for item in value
         ):
             reasons.append("invalid_argument_schema")
-    if not cleaned["preference_refs"] or not cleaned["source_refs"]:
-        reasons.append("invalid_argument_schema")
+            continue
+        if len(value) > maximum:
+            reasons.append("invalid_argument_schema")
+        if field_name in {"preference_refs", "source_refs"} and not value:
+            reasons.append("invalid_argument_schema")
     if not isinstance(cleaned["explanatory_only"], bool):
         reasons.append("invalid_argument_schema")
     if reasons:
@@ -925,24 +932,37 @@ def validate_hybrid_proposals(
             normalized_relation = relation if isinstance(relation, dict) else {}
         else:
             normalized_relation = dict(relation)
-            if relation["id"] in seen_relation_ids:
+            if not all(
+                isinstance(relation[field], str) and relation[field].strip()
+                for field in (
+                    "id",
+                    "source_argument_id",
+                    "target_argument_id",
+                    "relation_type",
+                )
+            ):
+                reasons.append("invalid_relation_schema")
+            elif relation["id"] in seen_relation_ids:
                 reasons.append("duplicate_relation_id")
             else:
                 seen_relation_ids.add(relation["id"])
-            if relation["source_argument_id"] not in accepted_ids or relation[
-                "target_argument_id"
-            ] not in accepted_ids:
-                reasons.append("unknown_relation_argument_ref")
-            if relation["source_argument_id"] == relation["target_argument_id"]:
-                reasons.append("self_relation")
-            if relation["relation_type"] not in {
-                "support",
-                "attack",
-                "qualifies",
-                "tradeoff",
-                "synthesis",
-            }:
-                reasons.append("unsupported_relation_type")
+            if "invalid_relation_schema" not in reasons:
+                if relation["source_argument_id"] not in accepted_ids or relation[
+                    "target_argument_id"
+                ] not in accepted_ids:
+                    reasons.append("unknown_relation_argument_ref")
+                if relation["source_argument_id"] == relation[
+                    "target_argument_id"
+                ]:
+                    reasons.append("self_relation")
+                if relation["relation_type"] not in {
+                    "support",
+                    "attack",
+                    "qualifies",
+                    "tradeoff",
+                    "synthesis",
+                }:
+                    reasons.append("unsupported_relation_type")
         if not reasons:
             reasons.append("current_graph_relations_are_root_only")
         relations.append(

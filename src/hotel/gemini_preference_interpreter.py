@@ -24,6 +24,10 @@ _UNINTERPRETED_REASONS = (
     "insufficient_information",
 )
 
+MAX_ASPECT_PREFERENCES = 15
+MAX_PREFERENCE_CONSTRAINTS = 12
+MAX_UNINTERPRETED_ITEMS = 20
+
 
 def _normalized_excerpt(value: str) -> str:
     return re.sub(r"\s+", " ", value.casefold()).strip()
@@ -62,37 +66,24 @@ def _importance(value: object, path: str) -> float:
 def build_preference_response_schema(
     ontology: FacilityOntology,
 ) -> dict[str, Any]:
-    qualifier_values: dict[str, list[Any]] = {}
-    for specification in ontology.capabilities.values():
-        for key, values in specification.get("qualifiers", {}).items():
-            current = qualifier_values.setdefault(key, [])
-            for value in values:
-                if value != "unknown" and value not in current:
-                    current.append(value)
-
     return {
         "type": "object",
         "additionalProperties": False,
         "properties": {
             "aspect_preferences": {
                 "type": "array",
-                "maxItems": 15,
                 "items": {
                     "type": "object",
                     "additionalProperties": False,
                     "properties": {
                         "aspect": {
                             "type": "string",
-                            "enum": list(HOTEL_ASPECTS),
                         },
                         "importance_raw": {
                             "type": "number",
-                            "minimum": 0,
-                            "maximum": 5,
                         },
                         "source_text": {
                             "type": "string",
-                            "minLength": 1,
                         },
                     },
                     "required": [
@@ -104,7 +95,6 @@ def build_preference_response_schema(
             },
             "constraints": {
                 "type": "array",
-                "maxItems": 12,
                 "items": {
                     "type": "object",
                     "additionalProperties": False,
@@ -116,7 +106,6 @@ def build_preference_response_schema(
                         },
                         "target": {
                             "type": "string",
-                            "enum": list(ontology.capability_names) + ["city"],
                         },
                         "operator": {
                             "type": "string",
@@ -124,11 +113,6 @@ def build_preference_response_schema(
                         },
                         "qualifiers": {
                             "type": "object",
-                            "additionalProperties": False,
-                            "properties": {
-                                key: {"enum": values}
-                                for key, values in qualifier_values.items()
-                            },
                         },
                         "value": {
                             "type": ["string", "null"],
@@ -136,12 +120,9 @@ def build_preference_response_schema(
                         "hard": {"type": "boolean"},
                         "importance_raw": {
                             "type": "number",
-                            "minimum": 0,
-                            "maximum": 5,
                         },
                         "source_text": {
                             "type": "string",
-                            "minLength": 1,
                         },
                     },
                     "required": [
@@ -159,12 +140,11 @@ def build_preference_response_schema(
             },
             "uninterpreted_items": {
                 "type": "array",
-                "maxItems": 20,
                 "items": {
                     "type": "object",
                     "additionalProperties": False,
                     "properties": {
-                        "text": {"type": "string", "minLength": 1},
+                        "text": {"type": "string"},
                         "reason": {
                             "type": "string",
                             "enum": list(_UNINTERPRETED_REASONS),
@@ -182,11 +162,39 @@ def build_preference_response_schema(
     }
 
 
+def build_preference_prompt_contract(
+    ontology: FacilityOntology,
+) -> str:
+    contract = ontology.compact_prompt_contract()
+    lines = [
+        "Allowed facility targets:",
+        ", ".join(contract["capabilities"]),
+        "",
+        "Allowed metadata targets:",
+        "city",
+        "",
+        "Allowed operators:",
+        ", ".join(contract["operators"]),
+        "",
+        "Allowed qualifiers by facility:",
+    ]
+    for facility, specification in contract["capabilities"].items():
+        qualifier_parts = []
+        for qualifier, values in specification["qualifiers"].items():
+            rendered_values = ", ".join(
+                json.dumps(value, ensure_ascii=False) for value in values
+            )
+            qualifier_parts.append(f"{qualifier}=[{rendered_values}]")
+        rendered_qualifiers = ", ".join(qualifier_parts) or "(none)"
+        lines.append(f"- {facility}: {rendered_qualifiers}")
+    return "\n".join(lines)
+
+
 def build_gemini_preference_prompt(
     text: str,
     ontology: FacilityOntology,
 ) -> str:
-    contract = ontology.compact_prompt_contract()
+    contract = build_preference_prompt_contract(ontology)
     return f"""Translate the user's hotel request into the closed JSON schema.
 
 Rules:
@@ -204,12 +212,15 @@ Rules:
 - Copy source_text from the user's text. Preserve unsupported or ambiguous
   requests in uninterpreted_items instead of approximating them.
 - Importance uses the existing 0-to-5 scale.
+- Return at most {MAX_ASPECT_PREFERENCES} aspect preferences,
+  {MAX_PREFERENCE_CONSTRAINTS} constraints, and
+  {MAX_UNINTERPRETED_ITEMS} uninterpreted items.
 
 Allowed aspects:
 {json.dumps(list(HOTEL_ASPECTS), ensure_ascii=False)}
 
 Canonical facility contract (not raw provider facilities):
-{json.dumps(contract, ensure_ascii=False, sort_keys=True)}
+{contract}
 
 User text:
 {text}
@@ -245,6 +256,18 @@ def _validate_interpretation_payload(
     if not isinstance(uninterpreted, list):
         raise HotelPreferenceValidationError(
             "uninterpreted_items must be a list"
+        )
+    if len(aspects) > MAX_ASPECT_PREFERENCES:
+        raise HotelPreferenceValidationError(
+            "interpreter output has too many aspect preferences"
+        )
+    if len(constraints) > MAX_PREFERENCE_CONSTRAINTS:
+        raise HotelPreferenceValidationError(
+            "interpreter output has too many constraints"
+        )
+    if len(uninterpreted) > MAX_UNINTERPRETED_ITEMS:
+        raise HotelPreferenceValidationError(
+            "interpreter output has too many uninterpreted items"
         )
 
     aspect_mapping = {}
@@ -324,6 +347,24 @@ def _validate_interpretation_payload(
                 "hard must be a boolean",
                 path=f"{path}.hard",
             )
+        if not isinstance(target_type, str) or target_type not in {
+            "facility",
+            "metadata",
+        }:
+            raise HotelPreferenceValidationError(
+                "target_type must be facility or metadata",
+                path=f"{path}.target_type",
+            )
+        if not isinstance(target, str) or not target.strip():
+            raise HotelPreferenceValidationError(
+                "target must be a non-empty string",
+                path=f"{path}.target",
+            )
+        if operator not in ontology.operators:
+            raise HotelPreferenceValidationError(
+                f"unsupported operator {operator!r}",
+                path=f"{path}.operator",
+            )
         if target_type == "facility":
             if target not in ontology.capabilities:
                 raise HotelPreferenceValidationError(
@@ -357,11 +398,6 @@ def _validate_interpretation_payload(
                     "city requires an explicit structured value",
                     path=f"{path}.value",
                 )
-        else:
-            raise HotelPreferenceValidationError(
-                "target_type must be facility or metadata",
-                path=f"{path}.target_type",
-            )
         source_text = _assert_excerpt(
             entry["source_text"],
             original_text,

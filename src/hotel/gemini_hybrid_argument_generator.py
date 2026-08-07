@@ -10,7 +10,10 @@ from .hybrid import (
     HYBRID_ARGUMENT_KINDS,
     HYBRID_ARGUMENT_TYPES,
     MAX_HYBRID_ARGUMENTS,
+    MAX_HYBRID_PREFERENCE_REFS,
     MAX_HYBRID_RELATIONS,
+    MAX_HYBRID_SCORING_UNIT_REFS,
+    MAX_HYBRID_SOURCE_REFS,
 )
 from .preferences import SessionPreferences
 
@@ -22,7 +25,6 @@ def build_hybrid_argument_response_schema() -> dict[str, Any]:
         "properties": {
             "arguments": {
                 "type": "array",
-                "maxItems": MAX_HYBRID_ARGUMENTS,
                 "items": {
                     "type": "object",
                     "additionalProperties": False,
@@ -39,19 +41,14 @@ def build_hybrid_argument_response_schema() -> dict[str, Any]:
                         "text": {"type": "string"},
                         "preference_refs": {
                             "type": "array",
-                            "minItems": 1,
-                            "maxItems": 5,
                             "items": {"type": "string"},
                         },
                         "source_refs": {
                             "type": "array",
-                            "minItems": 1,
-                            "maxItems": 8,
                             "items": {"type": "string"},
                         },
                         "scoring_unit_refs": {
                             "type": "array",
-                            "maxItems": 3,
                             "items": {"type": "string"},
                         },
                         "explanatory_only": {"type": "boolean"},
@@ -70,7 +67,6 @@ def build_hybrid_argument_response_schema() -> dict[str, Any]:
             },
             "relations": {
                 "type": "array",
-                "maxItems": MAX_HYBRID_RELATIONS,
                 "items": {
                     "type": "object",
                     "additionalProperties": False,
@@ -133,6 +129,10 @@ Rules:
 - Relations are suggestions only and will remain explanatory because the
   validated graph currently connects atomic arguments directly to the root.
 - Return at most {MAX_HYBRID_ARGUMENTS} useful arguments. Do not force four.
+- Return at most {MAX_HYBRID_RELATIONS} relations. Each argument must use
+  1-{MAX_HYBRID_PREFERENCE_REFS} preference_refs,
+  1-{MAX_HYBRID_SOURCE_REFS} source_refs, and at most
+  {MAX_HYBRID_SCORING_UNIT_REFS} scoring_unit_refs.
 
 Explanatory-only kinds:
 {json.dumps(sorted(EXPLANATORY_KINDS))}

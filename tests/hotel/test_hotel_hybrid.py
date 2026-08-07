@@ -296,6 +296,71 @@ class HotelHybridTests(unittest.TestCase):
         self.assertTrue(relation["explanatory_only"])
         self.assertEqual(len(result.graph["edges"]), 1)
 
+    def test_hybrid_reference_limits_are_enforced_locally(self):
+        profile = preferences({"localisation_transport": 5})
+        prepared = prepare_hybrid_context(self.hotel, profile)
+        unit = prepared.scoring_units[0]
+
+        def payload(**_):
+            common = {
+                "kind": unit.kind,
+                "type": unit.arg_type,
+                "text": "A bounded proposal.",
+                "preference_refs": list(unit.preference_refs),
+                "source_refs": list(unit.source_refs),
+                "scoring_unit_refs": [unit.unit_id],
+                "explanatory_only": False,
+            }
+            return {
+                "arguments": [
+                    {
+                        **common,
+                        "id": "TOO_MANY_PREFERENCES",
+                        "preference_refs": [unit.preference_refs[0]] * 6,
+                    },
+                    {
+                        **common,
+                        "id": "TOO_MANY_SOURCES",
+                        "source_refs": [unit.source_refs[0]] * 9,
+                    },
+                    {
+                        **common,
+                        "id": "TOO_MANY_UNITS",
+                        "scoring_unit_refs": [unit.unit_id] * 4,
+                    },
+                ],
+                "relations": [],
+            }
+
+        result = evaluate_hotel_session(
+            self.hotel,
+            profile,
+            argument_mode="hybrid",
+            hybrid_generator=StaticGenerator(payload),
+        )
+        rejected = result.hybrid["validation"]["rejected_arguments"]
+        self.assertEqual(len(rejected), 3)
+        self.assertTrue(
+            all("invalid_argument_schema" in row["reasons"] for row in rejected)
+        )
+        self.assertEqual(result.arguments, ())
+
+    def test_hybrid_batch_limits_are_enforced_locally(self):
+        profile = preferences({"localisation_transport": 5})
+
+        for payload in (
+            {"arguments": [{}] * 9, "relations": []},
+            {"arguments": [], "relations": [{}] * 9},
+        ):
+            with self.subTest(payload=payload):
+                with self.assertRaises(HotelHybridValidationError):
+                    evaluate_hotel_session(
+                        self.hotel,
+                        profile,
+                        argument_mode="hybrid",
+                        hybrid_generator=StaticGenerator(lambda **_: payload),
+                    )
+
     def test_json_and_provider_errors_are_never_silently_baselined(self):
         profile = preferences({"localisation_transport": 5})
 
