@@ -18,6 +18,42 @@ from .hybrid import (
 from .preferences import SessionPreferences
 
 
+_PROMPT_SCORING_FIELDS = frozenset(
+    {
+        "importance_raw",
+        "normalized_weight",
+        "weighting_method",
+        "intrinsic_strength",
+        "evidence_score",
+        "confidence_factor",
+        "wilson_lower_bound",
+        "force_formula",
+        "force_components",
+        "final_force",
+        "strength_method",
+        "budget_included",
+        "weight_active",
+        "interpretation_trace",
+        "raw_response",
+    }
+)
+
+
+def _without_scoring_values(value: Any) -> Any:
+    """Build a prompt-only copy without deterministic scoring information."""
+    if isinstance(value, dict):
+        return {
+            key: _without_scoring_values(item)
+            for key, item in value.items()
+            if key not in _PROMPT_SCORING_FIELDS
+        }
+    if isinstance(value, list):
+        return [_without_scoring_values(item) for item in value]
+    if isinstance(value, tuple):
+        return [_without_scoring_values(item) for item in value]
+    return value
+
+
 def build_hybrid_argument_response_schema() -> dict[str, Any]:
     return {
         "type": "object",
@@ -105,14 +141,18 @@ def build_hybrid_argument_prompt(
     scoring_units: list[dict[str, Any]],
     constraint_outcomes: list[dict[str, Any]],
 ) -> str:
-    clean_preferences = preferences.to_dict()
+    clean_preferences = _without_scoring_values(preferences.to_dict())
     clean_preferences.pop("interpretation_trace", None)
+    clean_hotel_context = _without_scoring_values(hotel_context)
+    clean_constraint_outcomes = _without_scoring_values(constraint_outcomes)
+    clean_authorized_sources = _without_scoring_values(authorized_sources)
+    clean_scoring_units = _without_scoring_values(scoring_units)
     return f"""Propose a small set of contextual hotel arguments as JSON.
 
 You are a language and selection component, never a fact checker or scorer.
 Use only the exact source_id, preference reference, and scoring_unit_id values
 provided below. Never invent a hotel field, review_id, facility_id, fact,
-numeric strength, user importance, Wilson value, graph edge, or DF-QuAD score.
+numeric scoring input, confidence coefficient, graph edge, or DF-QuAD score.
 
 Rules:
 - Atomic opinion/fact arguments may influence scoring only when they cite
@@ -144,16 +184,16 @@ Validated preferences:
 {json.dumps(clean_preferences, ensure_ascii=False, sort_keys=True)}
 
 Compact hotel context:
-{json.dumps(hotel_context, ensure_ascii=False, sort_keys=True)}
+{json.dumps(clean_hotel_context, ensure_ascii=False, sort_keys=True)}
 
 Constraint outcomes:
-{json.dumps(constraint_outcomes, ensure_ascii=False, sort_keys=True)}
+{json.dumps(clean_constraint_outcomes, ensure_ascii=False, sort_keys=True)}
 
 Authorized sources:
-{json.dumps(authorized_sources, ensure_ascii=False, sort_keys=True)}
+{json.dumps(clean_authorized_sources, ensure_ascii=False, sort_keys=True)}
 
-Available scoring units (intentionally without numeric strengths):
-{json.dumps(scoring_units, ensure_ascii=False, sort_keys=True)}
+Available scoring units (identifiers and compatibility only):
+{json.dumps(clean_scoring_units, ensure_ascii=False, sort_keys=True)}
 """
 
 

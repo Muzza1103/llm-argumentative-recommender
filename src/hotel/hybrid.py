@@ -22,7 +22,7 @@ from .facility_ontology import (
     normalize_hotel_facilities,
 )
 from .models import HotelProfile
-from .preferences import SessionPreferences
+from .preferences import ABSOLUTE_5_WEIGHTING_METHOD, SessionPreferences
 
 
 HYBRID_ARGUMENT_KINDS = frozenset(
@@ -111,6 +111,7 @@ class ScoringUnit:
                     "intrinsic_strength": self.intrinsic_strength,
                     "importance_raw": self.atomic_argument.importance_raw,
                     "normalized_weight": self.atomic_argument.normalized_weight,
+                    "weighting_method": ABSOLUTE_5_WEIGHTING_METHOD,
                     "confidence_factor": self.atomic_argument.evidence_score,
                     "force_formula": metadata.get("force_formula"),
                     "force_components": dict(
@@ -119,7 +120,7 @@ class ScoringUnit:
                     "final_force": self.intrinsic_strength,
                     "availability_reason": metadata.get("inclusion_reason"),
                     "availability_status": "available",
-                    "budget_included": True,
+                    "weight_active": True,
                 }
             )
         return payload
@@ -200,7 +201,7 @@ def _unit_for_argument(
         kind = "opinion"
         unit_id = (
             f"OPINION::{hotel.hotel_id}::{argument.aspect}::"
-            f"{argument.arg_type}::wilson_lower_bound"
+            f"{argument.arg_type}::review_evidence"
         )
         preference_refs = (str(argument.aspect),)
     elif argument.argument_family == STRUCTURED_FACT:
@@ -335,7 +336,7 @@ def prepare_hybrid_context(
                 "n_support": argument.n_support,
                 "n_attack": argument.n_attack,
                 "n_neutral": argument.n_neutral,
-                "strength_method": "wilson_lower_bound_then_user_weight",
+                "evidence_basis": "aggregated_aspect_counts_and_citations",
             },
             allowed_types=(argument.arg_type,),
             unit_id=unit.unit_id,
@@ -658,6 +659,11 @@ def _proposal_reasons(
         "intrinsic_strength",
         "importance_raw",
         "normalized_weight",
+        "importance_coefficient",
+        "weighting_method",
+        "final_force",
+        "force_formula",
+        "force_components",
     }:
         reasons.append("forbidden_strength_field")
     if extra_fields & {
@@ -673,6 +679,11 @@ def _proposal_reasons(
         "intrinsic_strength",
         "importance_raw",
         "normalized_weight",
+        "importance_coefficient",
+        "weighting_method",
+        "final_force",
+        "force_formula",
+        "force_components",
         "hotel_field",
         "hotel_fields",
         "facility_id",

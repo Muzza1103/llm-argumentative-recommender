@@ -15,11 +15,13 @@ from src.hotel import (
     ConstraintStatus,
     Facility,
     GeminiPreferenceInterpreter,
+    build_hybrid_argument_prompt,
     build_structured_fact_arguments,
     canonicalize_city_name,
     deduplicate_preference_intentions,
     evaluate_hotel_session,
     load_hotel_profiles,
+    prepare_hybrid_context,
     session_preferences_from_dict,
 )
 
@@ -88,22 +90,22 @@ def example_interpreter_payload():
         "aspect_preferences": [
             {
                 "aspect": "localisation_transport",
-                "importance_raw": 3,
+                "importance_raw": 5,
                 "source_text": "proche du centre",
             },
             {
                 "aspect": "bruit_calme",
-                "importance_raw": 3,
+                "importance_raw": 5,
                 "source_text": "calme",
             },
             {
                 "aspect": "wifi_internet",
-                "importance_raw": 3,
+                "importance_raw": 5,
                 "source_text": "bon Wi-Fi",
             },
             {
                 "aspect": "parking_voiture",
-                "importance_raw": 2,
+                "importance_raw": 5,
                 "source_text": "Un parking serait utile",
             },
         ],
@@ -115,8 +117,8 @@ def example_interpreter_payload():
                 "operator": "equals",
                 "qualifiers": {},
                 "value": "Londres",
-                "hard": True,
-                "importance_raw": 5,
+                "hard": False,
+                "importance_raw": 3,
                 "source_text": "Londres",
             },
             {
@@ -126,8 +128,8 @@ def example_interpreter_payload():
                 "operator": "present",
                 "qualifiers": {},
                 "value": None,
-                "hard": False,
-                "importance_raw": 3,
+                "hard": True,
+                "importance_raw": 5,
                 "source_text": "bon Wi-Fi",
             },
             {
@@ -137,8 +139,8 @@ def example_interpreter_payload():
                 "operator": "present",
                 "qualifiers": {},
                 "value": None,
-                "hard": False,
-                "importance_raw": 2,
+                "hard": True,
+                "importance_raw": 5,
                 "source_text": "Un parking serait utile",
             },
         ],
@@ -302,6 +304,145 @@ class HotelIntentPipelineTests(unittest.TestCase):
         self.assertEqual(len(both["constraints"]), 1)
         self.assertEqual(trace[0]["action"], "keep_both")
 
+    def test_source_postprocessing_corrects_gemini_class_and_importance(self):
+        wifi_payload = {
+            "aspect_preferences": [],
+            "constraints": [
+                {
+                    "constraint_id": "wrong_wifi",
+                    "target_type": "facility",
+                    "target": "wifi",
+                    "operator": "present",
+                    "qualifiers": {},
+                    "value": None,
+                    "hard": True,
+                    "importance_raw": 5,
+                    "source_text": "bon Wi-Fi",
+                }
+            ],
+            "uninterpreted_items": [],
+        }
+        wifi = GeminiPreferenceInterpreter(
+            client=FakeClient(wifi_payload)
+        ).interpret("bon Wi-Fi")
+        self.assertEqual(len(wifi.aspect_preferences), 1)
+        self.assertEqual(wifi.aspect_preferences[0].aspect, "wifi_internet")
+        self.assertEqual(wifi.aspect_preferences[0].importance_raw, 3.0)
+        self.assertEqual(wifi.aspect_preferences[0].normalized_weight, 0.6)
+        self.assertEqual(wifi.constraints, ())
+
+        parking_payload = {
+            "aspect_preferences": [
+                {
+                    "aspect": "parking_voiture",
+                    "importance_raw": 5,
+                    "source_text": "un parking serait utile",
+                }
+            ],
+            "constraints": [],
+            "uninterpreted_items": [],
+        }
+        parking = GeminiPreferenceInterpreter(
+            client=FakeClient(parking_payload)
+        ).interpret("un parking serait utile")
+        self.assertEqual(parking.aspect_preferences, ())
+        self.assertEqual(len(parking.constraints), 1)
+        self.assertFalse(parking.constraints[0].hard)
+        self.assertEqual(parking.constraints[0].importance_raw, 2.0)
+        self.assertEqual(parking.constraints[0].normalized_weight, 0.4)
+
+    def test_free_and_fast_wifi_keeps_two_distinct_intentions(self):
+        payload = {
+            "aspect_preferences": [
+                {
+                    "aspect": "wifi_internet",
+                    "importance_raw": 5,
+                    "source_text": "Wi-Fi gratuit et rapide",
+                }
+            ],
+            "constraints": [],
+            "uninterpreted_items": [],
+        }
+        preferences = GeminiPreferenceInterpreter(
+            client=FakeClient(payload)
+        ).interpret("Wi-Fi gratuit et rapide")
+        self.assertEqual(
+            [item.aspect for item in preferences.aspect_preferences],
+            ["wifi_internet"],
+        )
+        self.assertEqual(preferences.aspect_preferences[0].importance_raw, 3.0)
+        self.assertEqual(len(preferences.constraints), 1)
+        self.assertEqual(preferences.constraints[0].target, "wifi")
+        self.assertEqual(
+            preferences.constraints[0].qualifiers,
+            {"price": "free"},
+        )
+        self.assertFalse(preferences.constraints[0].hard)
+
+    def test_hardness_requires_eligibility_or_explicit_necessity(self):
+        cases = (
+            ("parking important", "parking", True, False, 4.0, 0.8),
+            ("Wi-Fi indispensable", "wifi", False, True, 5.0, 0.0),
+            ("must have parking", "parking", False, True, 5.0, 0.0),
+        )
+        for text, target, proposed_hard, expected_hard, importance, weight in cases:
+            with self.subTest(text=text):
+                payload = {
+                    "aspect_preferences": [],
+                    "constraints": [
+                        {
+                            "constraint_id": "requirement",
+                            "target_type": "facility",
+                            "target": target,
+                            "operator": "present",
+                            "qualifiers": {},
+                            "value": None,
+                            "hard": proposed_hard,
+                            "importance_raw": 5,
+                            "source_text": text,
+                        }
+                    ],
+                    "uninterpreted_items": [],
+                }
+                preferences = GeminiPreferenceInterpreter(
+                    client=FakeClient(payload)
+                ).interpret(text)
+                constraint = preferences.constraints[0]
+                self.assertEqual(constraint.hard, expected_hard)
+                self.assertEqual(constraint.importance_raw, importance)
+                self.assertEqual(constraint.normalized_weight, weight)
+
+    def test_city_eligibility_does_not_create_an_unmentioned_aspect(self):
+        payload = {
+            "aspect_preferences": [
+                {
+                    "aspect": "localisation_transport",
+                    "importance_raw": 5,
+                    "source_text": "Londres",
+                }
+            ],
+            "constraints": [
+                {
+                    "constraint_id": "city",
+                    "target_type": "metadata",
+                    "target": "city",
+                    "operator": "equals",
+                    "qualifiers": {},
+                    "value": "Londres",
+                    "hard": False,
+                    "importance_raw": 3,
+                    "source_text": "Londres",
+                }
+            ],
+            "uninterpreted_items": [],
+        }
+        preferences = GeminiPreferenceInterpreter(
+            client=FakeClient(payload)
+        ).interpret("Je cherche un hôtel à Londres")
+        self.assertEqual(preferences.aspect_preferences, ())
+        self.assertTrue(preferences.constraints[0].hard)
+        self.assertEqual(preferences.constraints[0].normalized_weight, 0.0)
+
     def build_example(self, *, with_parking=True):
         interpreter = GeminiPreferenceInterpreter(
             client=FakeClient(example_interpreter_payload())
@@ -324,7 +465,7 @@ class HotelIntentPipelineTests(unittest.TestCase):
         )
         return preferences, result
 
-    def test_example_uses_one_global_budget_and_authoritative_units(self):
+    def test_example_uses_absolute_weights_and_authoritative_units(self):
         preferences, result = self.build_example()
         self.assertEqual(result.eligibility.status, "eligible")
         self.assertEqual(result.constraint_outcomes[0].status.value, "satisfied")
@@ -337,9 +478,9 @@ class HotelIntentPipelineTests(unittest.TestCase):
             ["c1", "c3"],
         )
         expected_weights = {
-            "localisation_transport": 3 / 11,
-            "bruit_calme": 3 / 11,
-            "wifi_internet": 3 / 11,
+            "localisation_transport": 0.6,
+            "bruit_calme": 0.6,
+            "wifi_internet": 0.6,
         }
         for aspect, expected in expected_weights.items():
             self.assertAlmostEqual(
@@ -348,7 +489,9 @@ class HotelIntentPipelineTests(unittest.TestCase):
             )
         hard, parking = preferences.constraints
         self.assertEqual(hard.normalized_weight, 0.0)
-        self.assertAlmostEqual(parking.normalized_weight, 2 / 11)
+        self.assertFalse(parking.hard)
+        self.assertAlmostEqual(parking.normalized_weight, 0.4)
+        self.assertEqual(preferences.weighting_method, "absolute_5")
         self.assertAlmostEqual(
             sum(
                 item.normalized_weight
@@ -359,7 +502,7 @@ class HotelIntentPipelineTests(unittest.TestCase):
                 for item in preferences.constraints
                 if not item.hard
             ),
-            1.0,
+            2.2,
         )
 
         parking_argument = next(
@@ -368,7 +511,7 @@ class HotelIntentPipelineTests(unittest.TestCase):
             if argument.argument_family == "structured_fact"
         )
         self.assertEqual(parking_argument.arg_type, "support")
-        self.assertAlmostEqual(parking_argument.intrinsic_strength, 2 / 11)
+        self.assertAlmostEqual(parking_argument.intrinsic_strength, 0.4)
         self.assertEqual(parking_argument.preference_refs, ["c3"])
         self.assertTrue(
             all(
@@ -390,7 +533,14 @@ class HotelIntentPipelineTests(unittest.TestCase):
                     argument.intrinsic_strength,
                     argument.normalized_weight * argument.evidence_score,
                 )
+                self.assertEqual(
+                    argument.metadata["force_formula"],
+                    "(importance_raw / 5) * wilson_lower_bound",
+                )
         public = result.to_dict()
+        self.assertEqual(public["weighting_method"], "absolute_5")
+        self.assertEqual(public["scoring_status"], "scored")
+        self.assertTrue(public["is_personalized"])
         self.assertTrue(public["arguments"])
         for argument in public["arguments"]:
             self.assertIn("arg_type", argument)
@@ -403,7 +553,7 @@ class HotelIntentPipelineTests(unittest.TestCase):
             item for item in preferences.constraints
             if item.preference_ref == "c3"
         )
-        self.assertAlmostEqual(parking.normalized_weight, 2 / 11)
+        self.assertAlmostEqual(parking.normalized_weight, 0.4)
         outcome = next(
             item for item in unknown.constraint_outcomes
             if item.constraint.preference_ref == "c3"
@@ -424,7 +574,63 @@ class HotelIntentPipelineTests(unittest.TestCase):
         self.assertIsNone(audit["final_force"])
         self.assertGreater(known.dfquad_score, unknown.dfquad_score)
 
-    def test_violated_soft_fact_uses_the_same_global_weight_as_an_attack(self):
+    def test_no_soft_preferences_keep_neutral_unpersonalized_root(self):
+        hotel = replace(
+            self.base_hotel,
+            metadata=replace(self.base_hotel.metadata, city="London"),
+        )
+        result = evaluate_hotel_session(
+            hotel,
+            self.preferences_for_city("Londres"),
+        )
+        public = result.to_dict()
+        self.assertEqual(public["dfquad_score"], 0.5)
+        self.assertEqual(public["scoring_status"], "no_soft_preferences")
+        self.assertFalse(public["is_personalized"])
+        self.assertEqual(public["arguments"], [])
+        self.assertEqual(list(public["graph"]["nodes"]), ["ROOT"])
+        self.assertTrue(
+            all(
+                not unit["included_in_dfquad"]
+                for unit in public["scoring_units"]
+            )
+        )
+
+    def test_second_prompt_excludes_deterministic_scoring_values(self):
+        preferences = session_preferences_from_dict(
+            {
+                "aspect_preferences": {
+                    "localisation_transport": {
+                        "importance_raw": 3,
+                        "source_text": "proche du centre",
+                    }
+                },
+                "constraints": [],
+            },
+            original_text="proche du centre",
+        )
+        prepared = prepare_hybrid_context(self.base_hotel, preferences)
+        prompt = build_hybrid_argument_prompt(
+            preferences=preferences,
+            hotel_context=prepared.hotel_context,
+            authorized_sources=prepared.prompt_sources(),
+            scoring_units=prepared.prompt_units(),
+            constraint_outcomes=[
+                outcome.to_dict() for outcome in prepared.constraint_outcomes
+            ],
+        ).casefold()
+        for forbidden in (
+            "importance_raw",
+            "normalized_weight",
+            "weighting_method",
+            "intrinsic_strength",
+            "final_force",
+            "force_formula",
+            "wilson",
+        ):
+            self.assertNotIn(forbidden, prompt)
+
+    def test_violated_soft_fact_uses_absolute_weight_as_an_attack(self):
         preferences = session_preferences_from_dict(
             {
                 "aspect_preferences": {
@@ -463,7 +669,7 @@ class HotelIntentPipelineTests(unittest.TestCase):
         self.assertAlmostEqual(argument.intrinsic_strength, 2 / 5)
         self.assertEqual(
             argument.metadata["force_formula"],
-            "normalized_weight",
+            "importance_raw / 5",
         )
 
     def test_renderer_is_autonomous_complete_and_escapes_text(self):
@@ -474,6 +680,9 @@ class HotelIntentPipelineTests(unittest.TestCase):
         rendered = build_hotel_html(payload)
         self.assertIn("Contraintes factuelles souples", rendered)
         self.assertIn("Registre auditable des unités de score", rendered)
+        self.assertIn("absolute_5", rendered)
+        self.assertIn("Unités enregistrées / comptées", rendered)
+        self.assertIn("Personnalisation", rendered)
         self.assertIn("Support agrégé", rendered)
         self.assertIn("--green:#217a3c", rendered)
         self.assertIn("--red:#b42318", rendered)
@@ -498,6 +707,11 @@ class HotelIntentPipelineTests(unittest.TestCase):
         self.assertNotIn('a.get("type")', code)
         self.assertIn('argument["arg_type"]', code)
         self.assertIn("render_hotel_graph(payload, HOTEL_HTML_PATH)", code)
+        self.assertIn("AnnotationStatus.ANNOTATED_NO_ASPECT", code)
+        self.assertIn('"unités_enregistrées"', code)
+        self.assertIn('"unités_comptées_DF_QuAD"', code)
+        self.assertNotIn('"unités_de_score"', code)
+        self.assertNotIn("dataset.n_reviews - annotated_reviews", code)
         for index, cell in enumerate(notebook["cells"]):
             if cell.get("cell_type") != "code":
                 continue

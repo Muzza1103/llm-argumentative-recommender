@@ -67,7 +67,7 @@ class HotelPreferenceTests(unittest.TestCase):
                         preference_payload(proprete_hygiene=value)
                     )
 
-    def test_normalizes_active_weights_and_ignores_zero(self):
+    def test_uses_independent_absolute_5_weights_and_ignores_zero(self):
         preferences = session_preferences_from_dict(
             preference_payload(
                 proprete_hygiene=5,
@@ -78,11 +78,11 @@ class HotelPreferenceTests(unittest.TestCase):
 
         self.assertAlmostEqual(
             preferences.get_aspect("proprete_hygiene").normalized_weight,
-            5 / 8,
+            1.0,
         )
         self.assertAlmostEqual(
             preferences.get_aspect("bruit_calme").normalized_weight,
-            3 / 8,
+            0.6,
         )
         self.assertEqual(
             preferences.get_aspect("wifi_internet").normalized_weight,
@@ -91,6 +91,30 @@ class HotelPreferenceTests(unittest.TestCase):
         self.assertEqual(
             [item.aspect for item in preferences.active_aspect_preferences],
             ["proprete_hygiene", "bruit_calme"],
+        )
+        self.assertEqual(preferences.weighting_method, "absolute_5")
+        self.assertAlmostEqual(
+            sum(
+                item.normalized_weight
+                for item in preferences.active_aspect_preferences
+            ),
+            1.6,
+        )
+
+        extended = session_preferences_from_dict(
+            preference_payload(
+                proprete_hygiene=5,
+                bruit_calme=3,
+                wifi_internet=2,
+            )
+        )
+        self.assertEqual(
+            extended.get_aspect("proprete_hygiene").normalized_weight,
+            preferences.get_aspect("proprete_hygiene").normalized_weight,
+        )
+        self.assertEqual(
+            extended.get_aspect("bruit_calme").normalized_weight,
+            preferences.get_aspect("bruit_calme").normalized_weight,
         )
 
     def test_preserves_constraints_original_text_and_unknown_items(self):

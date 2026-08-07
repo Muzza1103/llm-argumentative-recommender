@@ -113,6 +113,9 @@ def _constraint_rows(payload: Mapping[str, Any]) -> list[dict[str, str]]:
                 "normalized_weight": _number(
                     constraint.get("normalized_weight")
                 ),
+                "weighting_method": _escape(
+                    constraint.get("weighting_method")
+                ),
                 "status": _status_badge(outcome.get("status")),
                 "reason": _escape(outcome.get("reason")),
                 "requested": _escape(comparison.get("requested_value")),
@@ -144,6 +147,7 @@ def _aspect_rows(payload: Mapping[str, Any]) -> list[dict[str, str]]:
                 "normalized_weight": _number(
                     details.get("normalized_weight")
                 ),
+                "weighting_method": _escape(details.get("weighting_method")),
                 "hotel_evidence": _status_badge(
                     "observed" if aspect in observed else "missing"
                 ),
@@ -154,6 +158,7 @@ def _aspect_rows(payload: Mapping[str, Any]) -> list[dict[str, str]]:
 
 def _argument_card(argument_value: object, arg_type: str) -> str:
     argument = _mapping(argument_value)
+    metadata = _mapping(argument.get("metadata"))
     evidence = _sequence(argument.get("evidence"))
     evidence_html = "".join(
         f"<li>{_escape(item)}</li>" for item in evidence
@@ -163,7 +168,8 @@ def _argument_card(argument_value: object, arg_type: str) -> str:
     return f"""
     <article class="argument-card {arg_type}">
       <div class="argument-title"><code>{_escape(argument.get('id'))}</code></div>
-      <div class="argument-force">force = {_number(argument.get('intrinsic_strength'))}</div>
+      <div class="argument-force">importance = {_number(argument.get('importance_raw'))} ; coefficient /5 = {_number(argument.get('normalized_weight'))} ; Wilson/confiance = {_number(argument.get('evidence_score'))} ; force = {_number(argument.get('intrinsic_strength'))}</div>
+      <div><strong>Méthode :</strong> {_escape(metadata.get('weighting_method'))}</div>
       <p>{_escape(argument.get('text'))}</p>
       <div><strong>Préférences :</strong> {_json(refs)}</div>
       <div><strong>Sources :</strong> {_json(sources)}</div>
@@ -309,6 +315,7 @@ def _unit_rows(payload: Mapping[str, Any]) -> list[dict[str, str]]:
                 "intent": _escape(unit.get("intent_ref")),
                 "importance": _number(unit.get("importance_raw")),
                 "weight": _number(unit.get("normalized_weight")),
+                "method": _escape(unit.get("weighting_method")),
                 "confidence": _number(unit.get("confidence_factor")),
                 "formula": _escape(unit.get("force_formula")),
                 "force": _number(unit.get("final_force")),
@@ -348,8 +355,19 @@ def build_hotel_html(result: Mapping[str, Any] | object) -> str:
         for value in _sequence(validation.get("excluded_arguments"))
     ]
     dfquad = _mapping(payload.get("dfquad"))
+    scoring_units = list(_sequence(payload.get("scoring_units")))
+    registered_units = len(scoring_units)
+    counted_units = sum(
+        bool(_mapping(unit).get("included_in_dfquad"))
+        for unit in scoring_units
+    )
     score_rows = [
         {
+            "method": _escape(payload.get("weighting_method")),
+            "status": _status_badge(payload.get("scoring_status")),
+            "personalized": _escape(payload.get("is_personalized")),
+            "registered": _number(registered_units),
+            "counted": _number(counted_units),
             "initial": _number(dfquad.get("root_base_score")),
             "support": _number(dfquad.get("aggregated_support")),
             "attack": _number(dfquad.get("aggregated_attack")),
@@ -375,7 +393,8 @@ def build_hotel_html(result: Mapping[str, Any] | object) -> str:
         ("qualifiers", "Qualifiers"),
         ("source_text", "Demande originale"),
         ("importance_raw", "Importance"),
-        ("normalized_weight", "Poids"),
+        ("normalized_weight", "Coefficient importance / 5"),
+        ("weighting_method", "Méthode"),
         ("status", "Statut"),
         ("reason", "Raison"),
         ("proof", "Facility / métadonnée de preuve"),
@@ -407,13 +426,17 @@ h1 {{ margin:0 0 8px; color:var(--blue); }} h2 {{ color:var(--blue); margin:0 0 
   <div class="summary">
     <div class="metric"><strong>Éligibilité</strong>{_status_badge(_mapping(payload.get('eligibility')).get('status'))}</div>
     <div class="metric"><strong>Mode</strong>{_escape(payload.get('argument_mode'))}</div>
+    <div class="metric"><strong>Personnalisation</strong>{_escape(payload.get('is_personalized'))}</div>
+    <div class="metric"><strong>Statut du scoring</strong>{_status_badge(payload.get('scoring_status'))}</div>
+    <div class="metric"><strong>Pondération</strong>{_escape(payload.get('weighting_method'))}</div>
+    <div class="metric"><strong>Unités enregistrées / comptées</strong>{_number(registered_units)} / {_number(counted_units)}</div>
     <div class="metric"><strong>Score DF-QuAD</strong>{_number(payload.get('dfquad_score'))}</div>
     <div class="metric"><strong>Baseline linéaire</strong>{_number(payload.get('linear_empirical_score'))}</div>
   </div>
 </header>
 <section><h2>Demande utilisateur</h2><div class="request">{_escape(preferences.get('original_text'))}</div></section>
 <section><h2>1. Contraintes dures</h2>{_table(hard_headers, hard_rows)}</section>
-<section><h2>2. Préférences qualitatives par aspect</h2>{_table((("aspect","Aspect"),("source_text","Demande originale"),("importance_raw","Importance"),("normalized_weight","Poids"),("hotel_evidence","Preuves hôtel")), _aspect_rows(payload))}</section>
+<section><h2>2. Préférences qualitatives par aspect</h2>{_table((("aspect","Aspect"),("source_text","Demande originale"),("importance_raw","Importance"),("normalized_weight","Coefficient importance / 5"),("weighting_method","Méthode"),("hotel_evidence","Preuves hôtel")), _aspect_rows(payload))}</section>
 <section><h2>3. Contraintes factuelles souples</h2>{_table(soft_headers, soft_rows)}</section>
 <section><h2>4. Graphe argumentatif compté dans DF-QuAD</h2>{_graph_html(payload)}</section>
 <section><h2>5. Arguments acceptés</h2>{_table((("id","ID"),("kind","Nature"),("type","Polarité"),("status","Statut score"),("unit","Unité"),("preferences","Préférences"),("sources","Sources"),("text","Texte")), _accepted_rows(validation), empty="Aucun argument hybride accepté.")}</section>
@@ -421,8 +444,8 @@ h1 {{ margin:0 0 8px; color:var(--blue); }} h2 {{ color:var(--blue); margin:0 0 
 <section><h2>7. Propositions rejetées</h2>{_table((("id","ID"),("kind","Nature"),("type","Polarité"),("reasons","Raisons"),("proposal","Proposition brute")), _rejected_rows(validation), empty="Aucune proposition rejetée.")}</section>
 <section><h2>8. Relations validées, uniquement explicatives</h2>{_table((("id","ID"),("source","Source"),("target","Cible"),("type","Relation"),("accepted","Validation"),("scoring","Effet score"),("reasons","Raisons")), _relation_rows(validation), empty="Aucune relation proposée.")}</section>
 <section><h2>9. Preuves exactes et source_ref</h2>{_table((("argument_id","Argument"),("source_ref","source_ref"),("kind","Type de source"),("evidence","Preuve exacte"),("payload","Payload autorisé")), _evidence_rows(payload), empty="Aucune source référencée.")}</section>
-<section><h2>10. Registre auditable des unités de score</h2>{_table((("id","Unité"),("kind","Nature"),("type","Polarité"),("intent","Intention"),("importance","Importance"),("weight","Poids"),("confidence","Wilson / confiance"),("formula","Formule"),("force","Force finale"),("counted","Comptée"),("reason","Raison")), _unit_rows(payload))}</section>
-<section><h2>11. Calcul final</h2>{_table((("initial","Score initial"),("support","Support agrégé"),("attack","Attaque agrégée"),("dfquad","Score DF-QuAD"),("linear","Baseline linéaire")), score_rows)}</section>
+<section><h2>10. Registre auditable des unités de score</h2>{_table((("id","Unité"),("kind","Nature"),("type","Polarité"),("intent","Intention"),("importance","Importance"),("weight","Coefficient / 5"),("method","Méthode"),("confidence","Wilson / confiance"),("formula","Formule"),("force","Force finale"),("counted","Comptée"),("reason","Raison")), _unit_rows(payload))}</section>
+<section><h2>11. Calcul final</h2>{_table((("method","Méthode"),("status","Statut"),("personalized","Personnalisé"),("registered","Unités enregistrées"),("counted","Unités comptées DF-QuAD"),("initial","Score initial"),("support","Support agrégé"),("attack","Attaque agrégée"),("dfquad","Score DF-QuAD"),("linear","Baseline linéaire")), score_rows)}</section>
 </main></body></html>"""
 
 

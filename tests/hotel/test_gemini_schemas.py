@@ -284,6 +284,7 @@ class GeminiSchemaRegressionTests(unittest.TestCase):
             set(public),
             {
                 "original_text",
+                "weighting_method",
                 "aspect_preferences",
                 "constraints",
                 "uninterpreted_items",

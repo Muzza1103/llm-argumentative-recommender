@@ -81,6 +81,7 @@ from .loader import (
 )
 from .intent_deduplication import (
     FACILITY_ASPECTS,
+    calibrate_importance_from_source,
     deduplicate_preference_intentions,
 )
 from .models import (
@@ -105,6 +106,7 @@ from .preference_interpreter import (
     interpret_session_preferences,
 )
 from .preferences import (
+    ABSOLUTE_5_WEIGHTING_METHOD,
     CONSTRAINT_MODES,
     AspectPreference,
     SessionConstraint,
@@ -118,6 +120,7 @@ __all__ = [
     "HOTEL_ASPECTS",
     "HOTEL_ASPECT_SET",
     "CONSTRAINT_MODES",
+    "ABSOLUTE_5_WEIGHTING_METHOD",
     "ARGUMENT_MODES",
     "EMPIRICAL_ASPECT",
     "ROOT_BASE_SCORE",
@@ -179,6 +182,7 @@ __all__ = [
     "build_preference_response_schema",
     "build_structured_fact_arguments",
     "canonicalize_city_name",
+    "calibrate_importance_from_source",
     "deduplicate_facilities",
     "deduplicate_preference_intentions",
     "hotel_profile_dataset_from_dict",

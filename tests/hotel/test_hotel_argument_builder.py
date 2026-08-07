@@ -101,6 +101,39 @@ class HotelArgumentBuilderTests(unittest.TestCase):
             wilson_lower_bound(1, 1),
         )
 
+    def test_absolute_5_scales_opinions_and_known_facts(self):
+        opinion = build_empirical_arguments(
+            self.hotel,
+            preferences({"localisation_transport": 3}),
+        )[0]
+        self.assertEqual(opinion.normalized_weight, 0.6)
+        self.assertAlmostEqual(
+            opinion.intrinsic_strength,
+            0.6 * wilson_lower_bound(1, 1),
+        )
+        self.assertEqual(
+            opinion.metadata["weighting_method"],
+            "absolute_5",
+        )
+
+        soft = preferences(
+            constraints=[
+                {
+                    "text": "Wi-Fi would be useful",
+                    "importance_raw": 2,
+                    "mode": "soft",
+                    "field": "wifi",
+                }
+            ]
+        )
+        fact = build_structured_fact_arguments(
+            self.hotel,
+            evaluate_constraints(self.hotel, soft.constraints),
+        )[0]
+        self.assertEqual(fact.normalized_weight, 0.4)
+        self.assertEqual(fact.intrinsic_strength, 0.4)
+        self.assertEqual(fact.metadata["weighting_method"], "absolute_5")
+
     def test_generates_empirical_attack_without_using_one_minus_support(self):
         arguments = build_empirical_arguments(
             self.hotel,

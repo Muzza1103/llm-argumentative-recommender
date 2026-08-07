@@ -137,6 +137,8 @@ class HotelEvaluatorTests(unittest.TestCase):
         self.assertEqual(result.arguments, ())
         self.assertEqual(list(result.graph["nodes"]), ["ROOT"])
         self.assertEqual(result.graph["edges"], [])
+        self.assertEqual(result.scoring_status, "no_soft_preferences")
+        self.assertFalse(result.is_personalized)
 
     def test_unknown_hard_constraint_is_reported_but_not_ineligible(self):
         result = evaluate_hotel_session(
@@ -215,6 +217,8 @@ class HotelEvaluatorTests(unittest.TestCase):
         self.assertEqual(result.dfquad_score, 0.5)
         self.assertEqual(result.arguments, ())
         self.assertEqual(list(result.graph["nodes"]), ["ROOT"])
+        self.assertEqual(result.scoring_status, "no_usable_evidence")
+        self.assertTrue(result.is_personalized)
 
     def test_full_result_is_json_serializable_and_traceable(self):
         result = evaluate_hotel_session(
@@ -225,6 +229,9 @@ class HotelEvaluatorTests(unittest.TestCase):
         rendered = json.dumps(payload)
         self.assertIn("review_sources", rendered)
         self.assertEqual(payload["hotel_name"], "Fixture Hotel")
+        self.assertEqual(payload["weighting_method"], "absolute_5")
+        self.assertEqual(payload["scoring_status"], "scored")
+        self.assertTrue(payload["is_personalized"])
         required = {
             "id",
             "arg_type",

@@ -13,6 +13,7 @@ from .errors import HotelDataValidationError, HotelPreferenceValidationError
 
 PathLike = str | Path
 CONSTRAINT_MODES = frozenset({"hard", "soft"})
+ABSOLUTE_5_WEIGHTING_METHOD = "absolute_5"
 
 
 def _mapping(value: object, path: str) -> Mapping[str, Any]:
@@ -62,12 +63,29 @@ def _importance(value: object, path: str) -> float:
     return result
 
 
+def _weighting_method(value: object, path: str) -> str:
+    if value is None:
+        return ABSOLUTE_5_WEIGHTING_METHOD
+    if value != ABSOLUTE_5_WEIGHTING_METHOD:
+        raise HotelPreferenceValidationError(
+            f"expected {ABSOLUTE_5_WEIGHTING_METHOD!r}",
+            path=path,
+        )
+    return ABSOLUTE_5_WEIGHTING_METHOD
+
+
+def _absolute_weight(importance_raw: float, *, hard: bool = False) -> float:
+    """Map the fixed 0-to-5 importance scale to an independent coefficient."""
+    return 0.0 if hard or importance_raw <= 0.0 else importance_raw / 5.0
+
+
 @dataclass(frozen=True, slots=True)
 class AspectPreference:
     aspect: str
     importance_raw: float
     source_text: str
     normalized_weight: float
+    weighting_method: str = ABSOLUTE_5_WEIGHTING_METHOD
 
     @property
     def active(self) -> bool:
@@ -78,6 +96,7 @@ class AspectPreference:
             "importance_raw": self.importance_raw,
             "source_text": self.source_text,
             "normalized_weight": self.normalized_weight,
+            "weighting_method": self.weighting_method,
         }
 
 
@@ -96,6 +115,7 @@ class SessionConstraint:
     qualifiers: dict[str, Any] = field(default_factory=dict)
     source_text: str | None = None
     normalized_weight: float = 0.0
+    weighting_method: str = ABSOLUTE_5_WEIGHTING_METHOD
 
     @property
     def hard(self) -> bool:
@@ -114,6 +134,7 @@ class SessionConstraint:
             "text": self.text,
             "importance_raw": self.importance_raw,
             "normalized_weight": self.normalized_weight,
+            "weighting_method": self.weighting_method,
             "mode": self.mode,
             "field": self.field,
         }
@@ -143,6 +164,7 @@ class SessionPreferences:
     original_text: str | None = None
     uninterpreted_items: tuple[Any, ...] = field(default_factory=tuple)
     interpretation_trace: dict[str, Any] | None = None
+    weighting_method: str = ABSOLUTE_5_WEIGHTING_METHOD
 
     @property
     def active_aspect_preferences(self) -> tuple[AspectPreference, ...]:
@@ -161,6 +183,7 @@ class SessionPreferences:
     def to_dict(self) -> dict[str, Any]:
         payload = {
             "original_text": self.original_text,
+            "weighting_method": self.weighting_method,
             "aspect_preferences": {
                 item.aspect: item.to_dict()
                 for item in self.aspect_preferences
@@ -183,6 +206,10 @@ def session_preferences_from_dict(
 ) -> SessionPreferences:
     """Validate, canonicalize, and normalize one session preference payload."""
     preferences = _mapping(raw_preferences, path)
+    weighting_method = _weighting_method(
+        preferences.get("weighting_method"),
+        f"{path}.weighting_method",
+    )
     raw_aspects = _mapping(
         preferences.get("aspect_preferences", {}),
         f"{path}.aspect_preferences",
@@ -298,6 +325,7 @@ def session_preferences_from_dict(
             "source_text",
             "importance_raw",
             "normalized_weight",
+            "weighting_method",
             "mode",
             "hard",
             "field",
@@ -349,6 +377,10 @@ def session_preferences_from_dict(
                 operator=operator,
                 qualifiers=dict(qualifiers),
                 source_text=source_text,
+                weighting_method=_weighting_method(
+                    constraint.get("weighting_method"),
+                    f"{constraint_path}.weighting_method",
+                ),
             )
         )
 
@@ -366,6 +398,7 @@ def session_preferences_from_dict(
         "uninterpreted_items",
         "unknown_items",
         "interpretation_trace",
+        "weighting_method",
     }
     explicit_unknown.extend(
         {"field": key, "value": value}
@@ -380,28 +413,16 @@ def session_preferences_from_dict(
             f"{path}.original_text",
         )
 
-    # One global budget covers every unique soft user intention.  Hard
-    # constraints are eligibility gates and therefore receive weight zero.
-    total_soft_importance = sum(
-        importance
-        for importance, _ in validated_entries.values()
-        if importance > 0.0
-    ) + sum(
-        constraint.importance_raw
-        for constraint in constraints
-        if not constraint.hard and constraint.importance_raw > 0.0
-    )
+    # Every soft intention keeps an independent coefficient on the fixed
+    # 0-to-5 scale. Adding another criterion never changes an existing one.
+    # Hard constraints remain eligibility gates and therefore receive zero.
     aspect_preferences = tuple(
         AspectPreference(
             aspect=aspect,
             importance_raw=validated_entries[aspect][0],
             source_text=validated_entries[aspect][1],
-            normalized_weight=(
-                validated_entries[aspect][0] / total_soft_importance
-                if validated_entries[aspect][0] > 0.0
-                and total_soft_importance > 0.0
-                else 0.0
-            ),
+            normalized_weight=_absolute_weight(validated_entries[aspect][0]),
+            weighting_method=weighting_method,
         )
         for aspect in HOTEL_ASPECTS
         if aspect in validated_entries
@@ -409,13 +430,11 @@ def session_preferences_from_dict(
     normalized_constraints = tuple(
         replace(
             constraint,
-            normalized_weight=(
-                constraint.importance_raw / total_soft_importance
-                if not constraint.hard
-                and constraint.importance_raw > 0.0
-                and total_soft_importance > 0.0
-                else 0.0
+            normalized_weight=_absolute_weight(
+                constraint.importance_raw,
+                hard=constraint.hard,
             ),
+            weighting_method=weighting_method,
         )
         for constraint in constraints
     )
@@ -430,6 +449,7 @@ def session_preferences_from_dict(
             if isinstance(preferences.get("interpretation_trace"), Mapping)
             else None
         ),
+        weighting_method=weighting_method,
     )
 
 

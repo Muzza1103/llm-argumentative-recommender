@@ -20,7 +20,7 @@ from .facility_ontology import (
 )
 from .hybrid import HybridArgumentGenerator, run_hybrid_generation
 from .models import HotelProfile, HotelProfileDataset
-from .preferences import SessionPreferences
+from .preferences import ABSOLUTE_5_WEIGHTING_METHOD, SessionPreferences
 
 
 ROOT_TEXT = "Recommend this hotel for the current session"
@@ -57,6 +57,9 @@ class HotelEvaluationResult:
     preference_coverage: float
     linear_empirical_score: float | None
     dfquad_score: float
+    weighting_method: str
+    scoring_status: str
+    is_personalized: bool
     arguments: tuple[Argument, ...]
     scoring_units: tuple[dict[str, Any], ...]
     graph: dict[str, Any]
@@ -89,6 +92,9 @@ class HotelEvaluationResult:
             "preference_coverage": self.preference_coverage,
             "linear_empirical_score": self.linear_empirical_score,
             "dfquad_score": self.dfquad_score,
+            "weighting_method": self.weighting_method,
+            "scoring_status": self.scoring_status,
+            "is_personalized": self.is_personalized,
             "arguments": [argument.to_dict() for argument in self.arguments],
             "scoring_units": [dict(unit) for unit in self.scoring_units],
             "graph": self.graph,
@@ -163,13 +169,14 @@ def _argument_scoring_unit_row(argument: Argument) -> dict[str, Any]:
         "source_refs": source_refs,
         "importance_raw": argument.importance_raw,
         "normalized_weight": argument.normalized_weight,
+        "weighting_method": ABSOLUTE_5_WEIGHTING_METHOD,
         "confidence_factor": argument.evidence_score,
         "force_formula": metadata.get("force_formula"),
         "force_components": dict(metadata.get("force_components", {})),
         "final_force": argument.intrinsic_strength,
         "availability_status": "available",
         "availability_reason": metadata.get("inclusion_reason"),
-        "budget_included": True,
+        "weight_active": True,
         "attached_argument_ids": [argument.id],
         "counted_argument_id": argument.id,
         "included_in_dfquad": True,
@@ -198,6 +205,8 @@ def _build_scoring_unit_audit(
     }
 
     for preference in preferences.aspect_preferences:
+        if not preference.active:
+            continue
         if preference.aspect in represented_refs:
             continue
         rows.append(
@@ -213,11 +222,13 @@ def _build_scoring_unit_audit(
                 "source_refs": [],
                 "importance_raw": preference.importance_raw,
                 "normalized_weight": preference.normalized_weight,
+                "weighting_method": ABSOLUTE_5_WEIGHTING_METHOD,
                 "confidence_factor": None,
-                "force_formula": "normalized_weight * wilson_lower_bound",
+                "force_formula": "(importance_raw / 5) * wilson_lower_bound",
                 "force_components": {
                     "importance_raw": preference.importance_raw,
-                    "normalized_weight": preference.normalized_weight,
+                    "importance_coefficient": preference.normalized_weight,
+                    "weighting_method": ABSOLUTE_5_WEIGHTING_METHOD,
                     "wilson_lower_bound": None,
                 },
                 "final_force": None,
@@ -225,7 +236,7 @@ def _build_scoring_unit_audit(
                 "availability_reason": (
                     "no support or attack argument had compatible review evidence"
                 ),
-                "budget_included": preference.active,
+                "weight_active": preference.active,
                 "attached_argument_ids": [],
                 "counted_argument_id": None,
                 "included_in_dfquad": False,
@@ -237,22 +248,24 @@ def _build_scoring_unit_audit(
         outcome.constraint.preference_ref: outcome for outcome in outcomes
     }
     for constraint in preferences.constraints:
+        if not constraint.hard and constraint.importance_raw <= 0.0:
+            continue
         reference = constraint.preference_ref
         if reference in represented_refs:
             continue
         outcome = outcomes_by_ref[reference]
         if constraint.hard:
             availability_status = "hard_constraint_eligibility_only"
-            reason = "hard constraints are excluded from the soft-intention budget"
+            reason = "hard constraints are eligibility-only and have weight zero"
             formula = None
         elif outcome.status is ConstraintStatus.UNKNOWN:
             availability_status = "unknown"
             reason = "unknown factual status contributes no DF-QuAD argument"
-            formula = "normalized_weight when the fact becomes known"
+            formula = "importance_raw / 5 when the fact becomes known"
         else:
             availability_status = "known_but_not_selected"
             reason = "no validated scoring argument selected this known fact"
-            formula = "normalized_weight"
+            formula = "importance_raw / 5"
         rows.append(
             {
                 "scoring_unit_id": f"CONSTRAINT_INTENT::{reference}",
@@ -275,6 +288,7 @@ def _build_scoring_unit_audit(
                 ],
                 "importance_raw": constraint.importance_raw,
                 "normalized_weight": constraint.normalized_weight,
+                "weighting_method": ABSOLUTE_5_WEIGHTING_METHOD,
                 "confidence_factor": (
                     1.0
                     if outcome.status is not ConstraintStatus.UNKNOWN
@@ -284,7 +298,8 @@ def _build_scoring_unit_audit(
                 "force_formula": formula,
                 "force_components": {
                     "importance_raw": constraint.importance_raw,
-                    "normalized_weight": constraint.normalized_weight,
+                    "importance_coefficient": constraint.normalized_weight,
+                    "weighting_method": ABSOLUTE_5_WEIGHTING_METHOD,
                     "deterministic_fact_confidence": (
                         None
                         if outcome.status is ConstraintStatus.UNKNOWN
@@ -294,7 +309,7 @@ def _build_scoring_unit_audit(
                 "final_force": None,
                 "availability_status": availability_status,
                 "availability_reason": reason,
-                "budget_included": (
+                "weight_active": (
                     not constraint.hard and constraint.importance_raw > 0.0
                 ),
                 "attached_argument_ids": [],
@@ -378,6 +393,22 @@ def evaluate_hotel_session(
     )
     dfquad_result = evaluate_root_dfquad(graph)
     dfquad_payload = dfquad_result.to_dict()
+    is_personalized = bool(preferences.active_aspect_preferences) or any(
+        not constraint.hard and constraint.importance_raw > 0.0
+        for constraint in preferences.constraints
+    )
+    scoring_status = (
+        "no_soft_preferences"
+        if not is_personalized
+        else ("scored" if arguments else "no_usable_evidence")
+    )
+    dfquad_payload.update(
+        {
+            "weighting_method": ABSOLUTE_5_WEIGHTING_METHOD,
+            "scoring_status": scoring_status,
+            "is_personalized": is_personalized,
+        }
+    )
     dfquad_payload["node_scores"] = {
         node_id: {
             "initial_score": node.base_score,
@@ -435,6 +466,9 @@ def evaluate_hotel_session(
         preference_coverage=coverage,
         linear_empirical_score=linear_score,
         dfquad_score=dfquad_result.final_score,
+        weighting_method=ABSOLUTE_5_WEIGHTING_METHOD,
+        scoring_status=scoring_status,
+        is_personalized=is_personalized,
         arguments=arguments,
         scoring_units=scoring_units,
         graph=graph.to_dict(),

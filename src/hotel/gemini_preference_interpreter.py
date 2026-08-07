@@ -218,7 +218,10 @@ Rules:
   explicit city value for city requirements.
 - Copy source_text from the user's text. Preserve unsupported or ambiguous
   requests in uninterpreted_items instead of approximating them.
-- Importance uses the existing 0-to-5 scale.
+- Importance is calibrated from source_text: ordinary=3, optional or
+  "would be useful/nice to have/de préférence"=2, explicitly very important
+  but still soft=4, and an absolute necessity=5. Do not assign 5 to an
+  ordinary request. Local deterministic code verifies and corrects this value.
 - Return at most {MAX_ASPECT_PREFERENCES} aspect preferences,
   {MAX_PREFERENCE_CONSTRAINTS} constraints, and
   {MAX_UNINTERPRETED_ITEMS} uninterpreted items.

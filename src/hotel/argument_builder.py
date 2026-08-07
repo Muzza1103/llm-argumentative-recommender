@@ -7,7 +7,7 @@ from src.argumentation.schema import Argument
 
 from .constraints import ConstraintOutcome, ConstraintStatus
 from .models import HotelProfile, Stance
-from .preferences import SessionPreferences
+from .preferences import ABSOLUTE_5_WEIGHTING_METHOD, SessionPreferences
 from .wilson import wilson_lower_bound
 
 
@@ -104,7 +104,8 @@ def _empirical_argument(
     intrinsic_strength = normalized_weight * evidence_score
     force_components = {
         "importance_raw": importance_raw,
-        "normalized_weight": normalized_weight,
+        "importance_coefficient": normalized_weight,
+        "weighting_method": ABSOLUTE_5_WEIGHTING_METHOD,
         "wilson_lower_bound": evidence_score,
     }
     direction = "positive" if stance is Stance.SUPPORT else "negative"
@@ -140,7 +141,8 @@ def _empirical_argument(
             "wilson_successes": stance_count,
             "wilson_trials": n_decisive,
             "wilson_z": 1.96,
-            "force_formula": "normalized_weight * wilson_lower_bound",
+            "weighting_method": ABSOLUTE_5_WEIGHTING_METHOD,
+            "force_formula": "(importance_raw / 5) * wilson_lower_bound",
             "force_components": force_components,
             "final_force": intrinsic_strength,
             "inclusion_reason": "compatible_review_evidence_available",
@@ -207,7 +209,7 @@ def build_structured_fact_arguments(
             if outcome.status is ConstraintStatus.SATISFIED
             else "attack"
         )
-        normalized_importance = constraint.normalized_weight
+        importance_coefficient = constraint.normalized_weight
         direction = "satisfies" if arg_type == "support" else "conflicts with"
         target = constraint.canonical_target
         arguments.append(
@@ -228,9 +230,9 @@ def build_structured_fact_arguments(
                 target_item_name=hotel.metadata.name,
                 argument_family=STRUCTURED_FACT,
                 aspect=_FACT_ASPECTS.get(target),
-                intrinsic_strength=normalized_importance,
+                intrinsic_strength=importance_coefficient,
                 importance_raw=constraint.importance_raw,
-                normalized_weight=normalized_importance,
+                normalized_weight=importance_coefficient,
                 evidence_score=1.0,
                 n_support=0,
                 n_attack=0,
@@ -244,13 +246,15 @@ def build_structured_fact_arguments(
                     "constraint_value": constraint.value,
                     "constraint_qualifiers": dict(constraint.qualifiers),
                     "constraint_status": outcome.status.value,
-                    "force_formula": "normalized_weight",
+                    "weighting_method": ABSOLUTE_5_WEIGHTING_METHOD,
+                    "force_formula": "importance_raw / 5",
                     "force_components": {
                         "importance_raw": constraint.importance_raw,
-                        "normalized_weight": normalized_importance,
+                        "importance_coefficient": importance_coefficient,
+                        "weighting_method": ABSOLUTE_5_WEIGHTING_METHOD,
                         "deterministic_fact_confidence": 1.0,
                     },
-                    "final_force": normalized_importance,
+                    "final_force": importance_coefficient,
                     "inclusion_reason": (
                         "known_soft_fact_satisfied"
                         if outcome.status is ConstraintStatus.SATISFIED
