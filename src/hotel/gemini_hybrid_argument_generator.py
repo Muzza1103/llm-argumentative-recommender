@@ -58,7 +58,6 @@ def build_hybrid_argument_response_schema() -> dict[str, Any]:
                         "kind",
                         "type",
                         "text",
-                        "preference_refs",
                         "source_refs",
                         "scoring_unit_refs",
                         "explanatory_only",
@@ -117,11 +116,14 @@ numeric strength, user importance, Wilson value, graph edge, or DF-QuAD score.
 
 Rules:
 - Atomic opinion/fact arguments may influence scoring only when they cite
-  exactly one compatible scoring unit and every required source/preference of
-  that unit. The deterministic code supplies its strength later.
+  exactly one compatible scoring unit and every required source of that unit.
+  The deterministic code derives preference_refs and supplies strength later.
+- preference_refs is optional and non-authoritative whenever one valid
+  scoring_unit_ref is supplied. If emitted, copy the unit's values exactly.
 - More wording or more citations never creates more score.
 - contextual, tradeoff, and summary arguments must set explanatory_only=true.
-- A composite using several units is explanatory only; do not sum units.
+- Never attach several scoring units to one argument. Use one atomic argument
+  per unit and express cross-unit synthesis through explanatory relations.
 - Hard constraints are eligibility-only. They may be mentioned only in an
   explanatory-only statement and never as a scoring argument.
 - Unknown information may be reported as uncertainty, never as an attack or
@@ -130,9 +132,10 @@ Rules:
   validated graph currently connects atomic arguments directly to the root.
 - Return at most {MAX_HYBRID_ARGUMENTS} useful arguments. Do not force four.
 - Return at most {MAX_HYBRID_RELATIONS} relations. Each argument must use
-  1-{MAX_HYBRID_PREFERENCE_REFS} preference_refs,
-  1-{MAX_HYBRID_SOURCE_REFS} source_refs, and at most
+  1-{MAX_HYBRID_SOURCE_REFS} source_refs and at most
   {MAX_HYBRID_SCORING_UNIT_REFS} scoring_unit_refs.
+- An argument without a scoring unit must use 1-{MAX_HYBRID_PREFERENCE_REFS}
+  explicit preference_refs.
 
 Explanatory-only kinds:
 {json.dumps(sorted(EXPLANATORY_KINDS))}

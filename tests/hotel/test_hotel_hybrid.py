@@ -139,6 +139,12 @@ class HotelHybridTests(unittest.TestCase):
                     },
                     {
                         **common,
+                        "id": "BAD_UNIT",
+                        "source_refs": list(unit.source_refs),
+                        "scoring_unit_refs": ["UNIT::invented"],
+                    },
+                    {
+                        **common,
                         "id": "BAD_POLARITY",
                         "kind": "contextual",
                         "type": (
@@ -161,6 +167,7 @@ class HotelHybridTests(unittest.TestCase):
         rejected = result.hybrid["validation"]["rejected_arguments"]
         reasons = {reason for item in rejected for reason in item["reasons"]}
         self.assertIn("unknown_source_ref", reasons)
+        self.assertIn("unknown_scoring_unit_ref", reasons)
         self.assertIn("hallucinated_hotel_field", reasons)
         self.assertIn("polarity_source_mismatch", reasons)
         self.assertEqual(result.arguments, ())
@@ -339,11 +346,24 @@ class HotelHybridTests(unittest.TestCase):
             hybrid_generator=StaticGenerator(payload),
         )
         rejected = result.hybrid["validation"]["rejected_arguments"]
-        self.assertEqual(len(rejected), 3)
+        self.assertEqual(len(rejected), 2)
         self.assertTrue(
             all("invalid_argument_schema" in row["reasons"] for row in rejected)
         )
-        self.assertEqual(result.arguments, ())
+        self.assertEqual(len(result.arguments), 1)
+        self.assertEqual(result.arguments[0].id, "TOO_MANY_PREFERENCES")
+        self.assertEqual(
+            result.arguments[0].preference_refs,
+            list(unit.preference_refs),
+        )
+        self.assertNotIn(
+            "preference_scoring_unit_mismatch",
+            {
+                reason
+                for row in rejected
+                for reason in row["reasons"]
+            },
+        )
 
     def test_hybrid_batch_limits_are_enforced_locally(self):
         profile = preferences({"localisation_transport": 5})

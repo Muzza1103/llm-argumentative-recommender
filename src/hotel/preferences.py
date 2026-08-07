@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import math
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any
 
@@ -95,6 +95,7 @@ class SessionConstraint:
     operator: str | None = None
     qualifiers: dict[str, Any] = field(default_factory=dict)
     source_text: str | None = None
+    normalized_weight: float = 0.0
 
     @property
     def hard(self) -> bool:
@@ -112,6 +113,7 @@ class SessionConstraint:
         payload = {
             "text": self.text,
             "importance_raw": self.importance_raw,
+            "normalized_weight": self.normalized_weight,
             "mode": self.mode,
             "field": self.field,
         }
@@ -209,27 +211,6 @@ def session_preferences_from_dict(
             ),
         )
 
-    total_importance = sum(
-        importance
-        for importance, _ in validated_entries.values()
-        if importance > 0.0
-    )
-    aspect_preferences = tuple(
-        AspectPreference(
-            aspect=aspect,
-            importance_raw=validated_entries[aspect][0],
-            source_text=validated_entries[aspect][1],
-            normalized_weight=(
-                validated_entries[aspect][0] / total_importance
-                if validated_entries[aspect][0] > 0.0
-                and total_importance > 0.0
-                else 0.0
-            ),
-        )
-        for aspect in HOTEL_ASPECTS
-        if aspect in validated_entries
-    )
-
     constraints = []
     seen_constraint_ids: set[str] = set()
     mode_counts = {"hard": 0, "soft": 0}
@@ -316,6 +297,7 @@ def session_preferences_from_dict(
             "text",
             "source_text",
             "importance_raw",
+            "normalized_weight",
             "mode",
             "hard",
             "field",
@@ -398,9 +380,49 @@ def session_preferences_from_dict(
             f"{path}.original_text",
         )
 
+    # One global budget covers every unique soft user intention.  Hard
+    # constraints are eligibility gates and therefore receive weight zero.
+    total_soft_importance = sum(
+        importance
+        for importance, _ in validated_entries.values()
+        if importance > 0.0
+    ) + sum(
+        constraint.importance_raw
+        for constraint in constraints
+        if not constraint.hard and constraint.importance_raw > 0.0
+    )
+    aspect_preferences = tuple(
+        AspectPreference(
+            aspect=aspect,
+            importance_raw=validated_entries[aspect][0],
+            source_text=validated_entries[aspect][1],
+            normalized_weight=(
+                validated_entries[aspect][0] / total_soft_importance
+                if validated_entries[aspect][0] > 0.0
+                and total_soft_importance > 0.0
+                else 0.0
+            ),
+        )
+        for aspect in HOTEL_ASPECTS
+        if aspect in validated_entries
+    )
+    normalized_constraints = tuple(
+        replace(
+            constraint,
+            normalized_weight=(
+                constraint.importance_raw / total_soft_importance
+                if not constraint.hard
+                and constraint.importance_raw > 0.0
+                and total_soft_importance > 0.0
+                else 0.0
+            ),
+        )
+        for constraint in constraints
+    )
+
     return SessionPreferences(
         aspect_preferences=aspect_preferences,
-        constraints=tuple(constraints),
+        constraints=normalized_constraints,
         original_text=resolved_original_text,
         uninterpreted_items=tuple(explicit_unknown),
         interpretation_trace=(

@@ -8,6 +8,8 @@ from src.argumentation.graph_builder import build_argument_graph
 from src.argumentation.schema import Argument
 
 from .argument_builder import (
+    EMPIRICAL_ASPECT,
+    STRUCTURED_FACT,
     build_empirical_arguments,
     build_structured_fact_arguments,
 )
@@ -56,6 +58,7 @@ class HotelEvaluationResult:
     linear_empirical_score: float | None
     dfquad_score: float
     arguments: tuple[Argument, ...]
+    scoring_units: tuple[dict[str, Any], ...]
     graph: dict[str, Any]
     dfquad: dict[str, Any]
     facility_normalization: dict[str, Any]
@@ -87,6 +90,7 @@ class HotelEvaluationResult:
             "linear_empirical_score": self.linear_empirical_score,
             "dfquad_score": self.dfquad_score,
             "arguments": [argument.to_dict() for argument in self.arguments],
+            "scoring_units": [dict(unit) for unit in self.scoring_units],
             "graph": self.graph,
             "dfquad": self.dfquad,
             "facility_normalization": self.facility_normalization,
@@ -135,6 +139,173 @@ def _empirical_baseline(
     return tuple(observed), tuple(missing), coverage, linear_score
 
 
+def _argument_scoring_unit_row(argument: Argument) -> dict[str, Any]:
+    metadata = argument.metadata
+    if argument.argument_family == EMPIRICAL_ASPECT:
+        kind = "opinion"
+        preference_refs = [argument.aspect] if argument.aspect else []
+    elif argument.argument_family == STRUCTURED_FACT:
+        kind = "fact"
+        constraint_id = metadata.get("constraint_id")
+        preference_refs = [constraint_id] if constraint_id else []
+    else:
+        kind = argument.argument_family or "unknown"
+        preference_refs = list(argument.preference_refs)
+    source_refs = list(argument.source_refs) or list(
+        metadata.get("source_refs", [])
+    )
+    return {
+        "scoring_unit_id": argument.scoring_unit_id or argument.id,
+        "kind": kind,
+        "type": argument.arg_type,
+        "intent_ref": preference_refs[0] if preference_refs else None,
+        "preference_refs": preference_refs,
+        "source_refs": source_refs,
+        "importance_raw": argument.importance_raw,
+        "normalized_weight": argument.normalized_weight,
+        "confidence_factor": argument.evidence_score,
+        "force_formula": metadata.get("force_formula"),
+        "force_components": dict(metadata.get("force_components", {})),
+        "final_force": argument.intrinsic_strength,
+        "availability_status": "available",
+        "availability_reason": metadata.get("inclusion_reason"),
+        "budget_included": True,
+        "attached_argument_ids": [argument.id],
+        "counted_argument_id": argument.id,
+        "included_in_dfquad": True,
+        "dfquad_reason": "counted_once_from_deterministic_argument",
+    }
+
+
+def _build_scoring_unit_audit(
+    hotel: HotelProfile,
+    preferences: SessionPreferences,
+    outcomes: tuple[ConstraintOutcome, ...],
+    arguments: tuple[Argument, ...],
+    *,
+    hybrid_rows: tuple[dict[str, Any], ...] | None = None,
+) -> tuple[dict[str, Any], ...]:
+    rows = (
+        [dict(row) for row in hybrid_rows]
+        if hybrid_rows is not None
+        else [_argument_scoring_unit_row(argument) for argument in arguments]
+    )
+    represented_refs = {
+        str(reference)
+        for row in rows
+        for reference in row.get("preference_refs", [])
+        if reference is not None
+    }
+
+    for preference in preferences.aspect_preferences:
+        if preference.aspect in represented_refs:
+            continue
+        rows.append(
+            {
+                "scoring_unit_id": (
+                    f"OPINION::{hotel.hotel_id}::{preference.aspect}::"
+                    "unavailable"
+                ),
+                "kind": "opinion",
+                "type": None,
+                "intent_ref": preference.aspect,
+                "preference_refs": [preference.aspect],
+                "source_refs": [],
+                "importance_raw": preference.importance_raw,
+                "normalized_weight": preference.normalized_weight,
+                "confidence_factor": None,
+                "force_formula": "normalized_weight * wilson_lower_bound",
+                "force_components": {
+                    "importance_raw": preference.importance_raw,
+                    "normalized_weight": preference.normalized_weight,
+                    "wilson_lower_bound": None,
+                },
+                "final_force": None,
+                "availability_status": "no_compatible_empirical_evidence",
+                "availability_reason": (
+                    "no support or attack argument had compatible review evidence"
+                ),
+                "budget_included": preference.active,
+                "attached_argument_ids": [],
+                "counted_argument_id": None,
+                "included_in_dfquad": False,
+                "dfquad_reason": "no_deterministic_force_available",
+            }
+        )
+
+    outcomes_by_ref = {
+        outcome.constraint.preference_ref: outcome for outcome in outcomes
+    }
+    for constraint in preferences.constraints:
+        reference = constraint.preference_ref
+        if reference in represented_refs:
+            continue
+        outcome = outcomes_by_ref[reference]
+        if constraint.hard:
+            availability_status = "hard_constraint_eligibility_only"
+            reason = "hard constraints are excluded from the soft-intention budget"
+            formula = None
+        elif outcome.status is ConstraintStatus.UNKNOWN:
+            availability_status = "unknown"
+            reason = "unknown factual status contributes no DF-QuAD argument"
+            formula = "normalized_weight when the fact becomes known"
+        else:
+            availability_status = "known_but_not_selected"
+            reason = "no validated scoring argument selected this known fact"
+            formula = "normalized_weight"
+        rows.append(
+            {
+                "scoring_unit_id": f"CONSTRAINT_INTENT::{reference}",
+                "kind": "fact",
+                "type": (
+                    "support"
+                    if outcome.status is ConstraintStatus.SATISFIED
+                    else (
+                        "attack"
+                        if outcome.status is ConstraintStatus.VIOLATED
+                        else None
+                    )
+                ),
+                "intent_ref": reference,
+                "preference_refs": [reference],
+                "source_refs": [
+                    str(source.get("source_ref"))
+                    for source in outcome.fact_sources
+                    if source.get("source_ref")
+                ],
+                "importance_raw": constraint.importance_raw,
+                "normalized_weight": constraint.normalized_weight,
+                "confidence_factor": (
+                    1.0
+                    if outcome.status is not ConstraintStatus.UNKNOWN
+                    and not constraint.hard
+                    else None
+                ),
+                "force_formula": formula,
+                "force_components": {
+                    "importance_raw": constraint.importance_raw,
+                    "normalized_weight": constraint.normalized_weight,
+                    "deterministic_fact_confidence": (
+                        None
+                        if outcome.status is ConstraintStatus.UNKNOWN
+                        else 1.0
+                    ),
+                },
+                "final_force": None,
+                "availability_status": availability_status,
+                "availability_reason": reason,
+                "budget_included": (
+                    not constraint.hard and constraint.importance_raw > 0.0
+                ),
+                "attached_argument_ids": [],
+                "counted_argument_id": None,
+                "included_in_dfquad": False,
+                "dfquad_reason": availability_status,
+            }
+        )
+    return tuple(rows)
+
+
 def evaluate_hotel_session(
     hotel: HotelProfile,
     preferences: SessionPreferences,
@@ -161,6 +332,7 @@ def evaluate_hotel_session(
         facility_ontology,
     )
     hybrid_payload = None
+    hybrid_scoring_rows = None
     if argument_mode == "baseline":
         empirical_arguments = build_empirical_arguments(hotel, preferences)
         factual_arguments = build_structured_fact_arguments(
@@ -187,6 +359,15 @@ def evaluate_hotel_session(
             "validation": hybrid_validation.to_dict(),
             "generator_trace": generator_trace,
         }
+        hybrid_scoring_rows = hybrid_validation.scoring_units
+
+    scoring_units = _build_scoring_unit_audit(
+        hotel,
+        preferences,
+        constraint_outcomes,
+        arguments,
+        hybrid_rows=hybrid_scoring_rows,
+    )
 
     graph = build_argument_graph(
         list(arguments),
@@ -255,6 +436,7 @@ def evaluate_hotel_session(
         linear_empirical_score=linear_score,
         dfquad_score=dfquad_result.final_score,
         arguments=arguments,
+        scoring_units=scoring_units,
         graph=graph.to_dict(),
         dfquad=dfquad_payload,
         facility_normalization=facility_normalization.to_dict(),

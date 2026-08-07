@@ -13,6 +13,7 @@ from .facility_ontology import (
     load_default_facility_ontology,
 )
 from .gemini_common import DEFAULT_GEMINI_MODEL, call_gemini_json
+from .intent_deduplication import deduplicate_preference_intentions
 from .preferences import SessionPreferences, session_preferences_from_dict
 
 
@@ -203,9 +204,15 @@ Rules:
 - Use a hard constraint only for an explicit necessity, obligation, absolute
   refusal, or indispensable requirement. The word "important" alone is not
   sufficient.
-- For subjective quality such as "good Wi-Fi", represent the facility presence
-  separately from the corresponding aspect preference. Do not invent a quality
-  threshold or a hard subjective outcome.
+- Subjective quality is an aspect preference only: "good/reliable/fast Wi-Fi"
+  maps to wifi_internet without an additional Wi-Fi-presence constraint;
+  "convenient/difficult-to-access parking" maps to parking_voiture only.
+- Availability, requested presence, or a factual qualifier is a constraint
+  only: "Wi-Fi available/with Wi-Fi/free Wi-Fi" and "parking would be useful/I
+  would like parking" must not also create their corresponding aspect.
+- A sentence with two distinct needs may create two entries.  For example,
+  "free and fast Wi-Fi" is both a price-qualified Wi-Fi fact and a qualitative
+  wifi_internet preference.  Reuse the relevant source excerpt for each.
 - Use target_type=facility, operator=present, and value=null for canonical
   facilities. Use target_type=metadata, target=city, operator=equals, and an
   explicit city value for city requirements.
@@ -484,13 +491,22 @@ class GeminiPreferenceInterpreter:
             original_text=text,
             ontology=self.ontology,
         )
+        deduplicated, deduplication_trace = (
+            deduplicate_preference_intentions(validated)
+        )
         preferences = session_preferences_from_dict(
-            validated,
+            deduplicated,
             path="interpreter_output",
             original_text=text,
         )
-        self.last_trace = dict(result.trace)
+        trace = {
+            **dict(result.trace),
+            "deduplication": [
+                dict(decision) for decision in deduplication_trace
+            ],
+        }
+        self.last_trace = trace
         return replace(
             preferences,
-            interpretation_trace=dict(result.trace),
+            interpretation_trace=trace,
         )

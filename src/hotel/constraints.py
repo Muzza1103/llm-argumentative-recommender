@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
 
+from .city_names import canonicalize_city_name
 from .facility_ontology import (
     FacilityNormalizationResult,
     FacilityOntology,
@@ -29,6 +30,7 @@ class ConstraintOutcome:
     evidence: tuple[str, ...] = ()
     fact_sources: tuple[dict[str, Any], ...] = ()
     warnings: tuple[str, ...] = ()
+    comparison: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -38,6 +40,7 @@ class ConstraintOutcome:
             "evidence": list(self.evidence),
             "fact_sources": [dict(source) for source in self.fact_sources],
             "warnings": list(self.warnings),
+            "comparison": dict(self.comparison),
         }
 
 
@@ -73,50 +76,80 @@ def _evaluate_city(
     hotel: HotelProfile,
     constraint: SessionConstraint,
 ) -> ConstraintOutcome:
+    requested_value = constraint.value
+    metadata_value = hotel.metadata.city
+    comparison = {
+        "requested_value": requested_value,
+        "metadata_value": metadata_value,
+        "requested_canonical": None,
+        "metadata_canonical": None,
+    }
     if constraint.operator not in {None, "equals"}:
         return ConstraintOutcome(
             constraint=constraint,
             status=ConstraintStatus.UNKNOWN,
             reason="city constraints support only the equals operator",
+            comparison=comparison,
         )
-    if not isinstance(constraint.value, str) or not constraint.value.strip():
+    if not isinstance(requested_value, str) or not requested_value.strip():
         return ConstraintOutcome(
             constraint=constraint,
             status=ConstraintStatus.UNKNOWN,
             reason="city constraint has no comparable expected value",
+            comparison=comparison,
         )
 
-    expected_city = normalize_facility_text(constraint.value)
+    expected_city = canonicalize_city_name(requested_value)
+    comparison["requested_canonical"] = expected_city or None
     if not expected_city:
         return ConstraintOutcome(
             constraint=constraint,
             status=ConstraintStatus.UNKNOWN,
             reason="city constraint has no comparable expected value",
+            comparison=comparison,
         )
-    city = hotel.metadata.city
-    if city is None or not normalize_facility_text(city):
+    if metadata_value is None or not metadata_value.strip():
         return ConstraintOutcome(
             constraint=constraint,
             status=ConstraintStatus.UNKNOWN,
             reason="city metadata is absent",
+            comparison=comparison,
         )
+    metadata_city = canonicalize_city_name(metadata_value)
+    comparison["metadata_canonical"] = metadata_city or None
+    if not metadata_city:
+        return ConstraintOutcome(
+            constraint=constraint,
+            status=ConstraintStatus.UNKNOWN,
+            reason="city metadata has no comparable canonical value",
+            comparison=comparison,
+        )
+    matched = expected_city == metadata_city
     source_ref = "METADATA::city"
     return ConstraintOutcome(
         constraint=constraint,
         status=(
             ConstraintStatus.SATISFIED
-            if expected_city == normalize_facility_text(city)
+            if matched
             else ConstraintStatus.VIOLATED
         ),
-        reason="city metadata was compared with the requested city",
-        evidence=(f"city: {city}",),
+        reason=(
+            "requested and metadata cities match after conservative "
+            "canonicalization"
+            if matched
+            else "requested and metadata cities differ after conservative "
+            "canonicalization"
+        ),
+        evidence=(f"city: {metadata_value}",),
         fact_sources=(
             {
                 "source_ref": source_ref,
                 "source": "city",
-                "value": city,
+                "value": metadata_value,
+                "canonical_value": metadata_city,
             },
         ),
+        comparison=comparison,
     )
 
 

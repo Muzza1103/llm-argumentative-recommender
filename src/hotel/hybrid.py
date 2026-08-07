@@ -13,7 +13,6 @@ from .argument_builder import (
     build_empirical_arguments,
     build_structured_fact_arguments,
 )
-from .aspects import HOTEL_ASPECT_SET
 from .constraints import ConstraintOutcome, ConstraintStatus, evaluate_constraints
 from .errors import HotelHybridValidationError
 from .facility_ontology import (
@@ -35,7 +34,7 @@ MAX_HYBRID_ARGUMENTS = 8
 MAX_HYBRID_RELATIONS = 8
 MAX_HYBRID_PREFERENCE_REFS = 5
 MAX_HYBRID_SOURCE_REFS = 8
-MAX_HYBRID_SCORING_UNIT_REFS = 3
+MAX_HYBRID_SCORING_UNIT_REFS = 1
 MAX_FACILITY_SOURCES_PER_CAPABILITY = 3
 
 
@@ -95,15 +94,34 @@ class ScoringUnit:
     atomic_argument: Argument = field(repr=False, compare=False)
 
     def to_dict(self, *, include_strength: bool = True) -> dict[str, Any]:
+        metadata = self.atomic_argument.metadata
         payload = {
             "scoring_unit_id": self.unit_id,
             "kind": self.kind,
             "type": self.arg_type,
             "preference_refs": list(self.preference_refs),
+            "intent_ref": (
+                self.preference_refs[0] if self.preference_refs else None
+            ),
             "source_refs": list(self.source_refs),
         }
         if include_strength:
-            payload["intrinsic_strength"] = self.intrinsic_strength
+            payload.update(
+                {
+                    "intrinsic_strength": self.intrinsic_strength,
+                    "importance_raw": self.atomic_argument.importance_raw,
+                    "normalized_weight": self.atomic_argument.normalized_weight,
+                    "confidence_factor": self.atomic_argument.evidence_score,
+                    "force_formula": metadata.get("force_formula"),
+                    "force_components": dict(
+                        metadata.get("force_components", {})
+                    ),
+                    "final_force": self.intrinsic_strength,
+                    "availability_reason": metadata.get("inclusion_reason"),
+                    "availability_status": "available",
+                    "budget_included": True,
+                }
+            )
         return payload
 
 
@@ -549,6 +567,11 @@ class AcceptedHybridArgument:
                 ),
                 "scoring_status": self.scoring_status,
                 "scoring_unit_id": self.scoring_unit_id,
+                "preference_refs_source": (
+                    "python_scoring_unit_registry"
+                    if self.scoring_unit_id is not None
+                    else "validated_generator_references"
+                ),
             }
         )
         return payload
@@ -617,17 +640,17 @@ def _proposal_reasons(
 ) -> tuple[list[str], dict[str, Any] | None]:
     if not isinstance(proposal, dict):
         return ["invalid_argument_schema"], None
-    expected_fields = {
+    required_fields = {
         "id",
         "kind",
         "type",
         "text",
-        "preference_refs",
         "source_refs",
         "scoring_unit_refs",
         "explanatory_only",
     }
-    extra_fields = set(proposal) - expected_fields
+    allowed_fields = required_fields | {"preference_refs"}
+    extra_fields = set(proposal) - allowed_fields
     reasons = []
     if extra_fields & {
         "strength",
@@ -656,11 +679,13 @@ def _proposal_reasons(
         "review_id",
     }:
         reasons.append("invalid_argument_schema")
-    if expected_fields - set(proposal):
+    if required_fields - set(proposal):
         reasons.append("invalid_argument_schema")
         return list(dict.fromkeys(reasons)), None
 
-    cleaned = {key: proposal[key] for key in expected_fields}
+    cleaned = {key: proposal[key] for key in required_fields}
+    supplied_preference_refs = proposal.get("preference_refs", [])
+    cleaned["preference_refs"] = supplied_preference_refs
     if not isinstance(cleaned["id"], str) or not cleaned["id"].strip():
         reasons.append("invalid_argument_id")
     if cleaned["kind"] not in HYBRID_ARGUMENT_KINDS:
@@ -670,7 +695,6 @@ def _proposal_reasons(
     if not isinstance(cleaned["text"], str) or not cleaned["text"].strip():
         reasons.append("invalid_argument_text")
     reference_limits = {
-        "preference_refs": MAX_HYBRID_PREFERENCE_REFS,
         "source_refs": MAX_HYBRID_SOURCE_REFS,
         "scoring_unit_refs": MAX_HYBRID_SCORING_UNIT_REFS,
     }
@@ -683,18 +707,18 @@ def _proposal_reasons(
             continue
         if len(value) > maximum:
             reasons.append("invalid_argument_schema")
-        if field_name in {"preference_refs", "source_refs"} and not value:
+        if field_name == "source_refs" and not value:
             reasons.append("invalid_argument_schema")
+    if (
+        isinstance(cleaned["scoring_unit_refs"], list)
+        and len(cleaned["scoring_unit_refs"]) > 1
+    ):
+        reasons.append("multiple_scoring_units")
     if not isinstance(cleaned["explanatory_only"], bool):
         reasons.append("invalid_argument_schema")
     if reasons:
         return list(dict.fromkeys(reasons)), cleaned
 
-    if any(
-        reference not in preference_refs
-        for reference in cleaned["preference_refs"]
-    ):
-        reasons.append("unknown_preference_ref")
     unknown_sources = [
         reference
         for reference in cleaned["source_refs"]
@@ -714,6 +738,25 @@ def _proposal_reasons(
 
     sources = [source_lookup[ref] for ref in cleaned["source_refs"]]
     units = [unit_lookup[ref] for ref in cleaned["scoring_unit_refs"]]
+    if len(units) == 1:
+        # The Python scoring registry is authoritative.  Gemini's optional
+        # copy is deliberately ignored, even when it contains extra refs.
+        cleaned["preference_refs"] = list(units[0].preference_refs)
+    else:
+        if not isinstance(supplied_preference_refs, list) or not all(
+            isinstance(item, str) and item
+            for item in supplied_preference_refs
+        ):
+            reasons.append("invalid_argument_schema")
+        elif not supplied_preference_refs:
+            reasons.append("missing_preference_ref")
+        elif len(supplied_preference_refs) > MAX_HYBRID_PREFERENCE_REFS:
+            reasons.append("invalid_argument_schema")
+        elif any(
+            reference not in preference_refs
+            for reference in supplied_preference_refs
+        ):
+            reasons.append("unknown_preference_ref")
     if any(
         source.allowed_types
         and cleaned["type"] not in source.allowed_types
@@ -737,8 +780,6 @@ def _proposal_reasons(
                 reasons.append("scoring_unit_kind_mismatch")
             if unit.arg_type != cleaned["type"]:
                 reasons.append("polarity_source_mismatch")
-            if set(unit.preference_refs) != set(cleaned["preference_refs"]):
-                reasons.append("preference_scoring_unit_mismatch")
             if not set(unit.source_refs).issubset(cleaned["source_refs"]):
                 reasons.append("missing_required_source_ref")
             elif set(unit.source_refs) != set(cleaned["source_refs"]):
@@ -754,11 +795,6 @@ def _proposal_reasons(
         if any(unit.kind != cleaned["kind"] for unit in units):
             reasons.append("scoring_unit_kind_mismatch")
 
-    for reference in cleaned["preference_refs"]:
-        if reference in HOTEL_ASPECT_SET:
-            continue
-        if reference not in preference_refs:
-            reasons.append("unknown_preference_ref")
     return list(dict.fromkeys(reasons)), cleaned
 
 
@@ -990,6 +1026,15 @@ def validate_hybrid_proposals(
                 "attached_argument_ids": attached,
                 "counted_argument_id": used_units.get(unit.unit_id),
                 "included_in_dfquad": unit.unit_id in used_units,
+                "dfquad_reason": (
+                    "counted_once_from_validated_argument"
+                    if unit.unit_id in used_units
+                    else (
+                        "accepted_arguments_were_explanatory_only"
+                        if attached
+                        else "no_validated_argument_selected"
+                    )
+                ),
             }
         )
         scoring_unit_rows.append(row)

@@ -14,6 +14,11 @@ from .constraints import (
     evaluate_constraint,
     evaluate_constraints,
 )
+from .city_names import (
+    CITY_NAME_ALIASES,
+    canonicalize_city_name,
+    normalize_city_name,
+)
 from .errors import (
     HotelDataValidationError,
     HotelGeminiError,
@@ -74,6 +79,10 @@ from .loader import (
     load_review_annotations,
     validate_reviews_match_profiles,
 )
+from .intent_deduplication import (
+    FACILITY_ASPECTS,
+    deduplicate_preference_intentions,
+)
 from .models import (
     AnnotationStatus,
     AspectLabel,
@@ -121,6 +130,7 @@ __all__ = [
     "AspectProfile",
     "ConstraintOutcome",
     "ConstraintStatus",
+    "CITY_NAME_ALIASES",
     "CanonicalFacilityFact",
     "CanonicalFacilityObservation",
     "DEFAULT_FACILITY_ONTOLOGY_PATH",
@@ -129,6 +139,7 @@ __all__ = [
     "FacilityMapping",
     "FacilityNormalizationResult",
     "FacilityOntology",
+    "FACILITY_ASPECTS",
     "HotelDataValidationError",
     "HotelGeminiError",
     "HotelHybridValidationError",
@@ -162,12 +173,14 @@ __all__ = [
     "build_empirical_arguments",
     "build_preference_interpretation_prompt",
     "build_gemini_preference_prompt",
+    "build_preference_prompt_contract",
     "build_hybrid_argument_prompt",
     "build_hybrid_argument_response_schema",
-    "build_preference_prompt_contract",
     "build_preference_response_schema",
     "build_structured_fact_arguments",
+    "canonicalize_city_name",
     "deduplicate_facilities",
+    "deduplicate_preference_intentions",
     "hotel_profile_dataset_from_dict",
     "hotel_review_from_dict",
     "interpret_session_preferences",
@@ -182,6 +195,7 @@ __all__ = [
     "evaluate_hotel_session",
     "select_review_sources",
     "normalize_facility_text",
+    "normalize_city_name",
     "normalize_hotel_facilities",
     "prepare_hybrid_context",
     "run_hybrid_generation",

@@ -102,6 +102,11 @@ def _empirical_argument(
 
     evidence_score = wilson_lower_bound(stance_count, n_decisive)
     intrinsic_strength = normalized_weight * evidence_score
+    force_components = {
+        "importance_raw": importance_raw,
+        "normalized_weight": normalized_weight,
+        "wilson_lower_bound": evidence_score,
+    }
     direction = "positive" if stance is Stance.SUPPORT else "negative"
     text = (
         f"Guest review signals support a {direction} assessment of "
@@ -135,6 +140,10 @@ def _empirical_argument(
             "wilson_successes": stance_count,
             "wilson_trials": n_decisive,
             "wilson_z": 1.96,
+            "force_formula": "normalized_weight * wilson_lower_bound",
+            "force_components": force_components,
+            "final_force": intrinsic_strength,
+            "inclusion_reason": "compatible_review_evidence_available",
         },
     )
 
@@ -187,14 +196,18 @@ def build_structured_fact_arguments(
     arguments = []
     for index, outcome in enumerate(outcomes):
         constraint = outcome.constraint
-        if constraint.hard or outcome.status is ConstraintStatus.UNKNOWN:
+        if (
+            constraint.hard
+            or constraint.normalized_weight <= 0.0
+            or outcome.status is ConstraintStatus.UNKNOWN
+        ):
             continue
         arg_type = (
             "support"
             if outcome.status is ConstraintStatus.SATISFIED
             else "attack"
         )
-        normalized_importance = constraint.importance_raw / 5.0
+        normalized_importance = constraint.normalized_weight
         direction = "satisfies" if arg_type == "support" else "conflicts with"
         target = constraint.canonical_target
         arguments.append(
@@ -231,6 +244,18 @@ def build_structured_fact_arguments(
                     "constraint_value": constraint.value,
                     "constraint_qualifiers": dict(constraint.qualifiers),
                     "constraint_status": outcome.status.value,
+                    "force_formula": "normalized_weight",
+                    "force_components": {
+                        "importance_raw": constraint.importance_raw,
+                        "normalized_weight": normalized_importance,
+                        "deterministic_fact_confidence": 1.0,
+                    },
+                    "final_force": normalized_importance,
+                    "inclusion_reason": (
+                        "known_soft_fact_satisfied"
+                        if outcome.status is ConstraintStatus.SATISFIED
+                        else "known_soft_fact_violated"
+                    ),
                     "source_refs": [
                         source.get("source_ref")
                         for source in outcome.fact_sources

@@ -121,12 +121,13 @@ class GeminiSchemaRegressionTests(unittest.TestCase):
                 "kind",
                 "type",
                 "text",
-                "preference_refs",
                 "source_refs",
                 "scoring_unit_refs",
                 "explanatory_only",
             },
         )
+        self.assertIn("preference_refs", argument["properties"])
+        self.assertNotIn("preference_refs", argument["required"])
         self.assertIn("enum", argument["properties"]["kind"])
         self.assertIn("enum", argument["properties"]["type"])
         assert_absent_recursively(self, schema, {"minItems", "maxItems"})
