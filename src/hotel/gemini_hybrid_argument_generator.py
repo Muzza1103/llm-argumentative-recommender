@@ -147,14 +147,25 @@ def build_hybrid_argument_prompt(
     clean_constraint_outcomes = _without_scoring_values(constraint_outcomes)
     clean_authorized_sources = _without_scoring_values(authorized_sources)
     clean_scoring_units = _without_scoring_values(scoring_units)
-    return f"""Propose a small set of contextual hotel arguments as JSON.
+    return f"""Propose a small set of hotel arguments as JSON.
 
 You are a language and selection component, never a fact checker or scorer.
 Use only the exact source_id, preference reference, and scoring_unit_id values
 provided below. Never invent a hotel field, review_id, facility_id, fact,
 numeric scoring input, confidence coefficient, graph edge, or DF-QuAD score.
 
+Your primary task is to verbalize the available deterministic scoring units.
+For each useful scoring unit selected for the explanation:
+- create one atomic opinion or fact argument;
+- copy exactly one compatible scoring_unit_id into scoring_unit_refs;
+- use every source required by that scoring unit;
+- set explanatory_only=false.
+
+Contextual, tradeoff, or summary arguments are optional secondary arguments
+and must never replace the atomic scoring-unit arguments.
+
 Rules:
+
 - Atomic opinion/fact arguments may influence scoring only when they cite
   exactly one compatible scoring unit and every required source of that unit.
   The deterministic code derives preference_refs and supplies strength later.
