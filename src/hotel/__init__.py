@@ -48,6 +48,7 @@ from .gemini_hybrid_argument_generator import (
 from .gemini_preference_interpreter import (
     GeminiPreferenceInterpreter,
     build_gemini_preference_prompt,
+    build_preference_prompt_contract,
     build_preference_response_schema,
 )
 from .hybrid import (
@@ -163,6 +164,7 @@ __all__ = [
     "build_gemini_preference_prompt",
     "build_hybrid_argument_prompt",
     "build_hybrid_argument_response_schema",
+    "build_preference_prompt_contract",
     "build_preference_response_schema",
     "build_structured_fact_arguments",
     "deduplicate_facilities",
