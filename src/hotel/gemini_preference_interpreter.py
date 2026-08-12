@@ -203,7 +203,8 @@ Rules:
 - Never choose or output a raw facility_id or raw facility name.
 - Use a hard constraint only for an explicit necessity, obligation, absolute
   refusal, or indispensable requirement. The word "important" alone is not
-  sufficient.
+  sufficient. An explicitly negated necessity such as "not mandatory",
+  "not required", "pas obligatoire", or "pas indispensable" is soft.
 - Subjective quality is an aspect preference only: "good/reliable/fast Wi-Fi"
   maps to wifi_internet without an additional Wi-Fi-presence constraint;
   "convenient/difficult-to-access parking" maps to parking_voiture only.
@@ -216,8 +217,11 @@ Rules:
 - Use target_type=facility, operator=present, and value=null for canonical
   facilities. Use target_type=metadata, target=city, operator=equals, and an
   explicit city value for city requirements.
-- Copy source_text from the user's text. Preserve unsupported or ambiguous
-  requests in uninterpreted_items instead of approximating them.
+- For each entry, copy the smallest exact contiguous source_text excerpt that
+  contains that intent. Keep one intention per source_text: never copy an
+  unrelated sentence or proposition merely for context. Preserve the user's
+  wording exactly. Preserve unsupported or ambiguous requests in
+  uninterpreted_items instead of approximating them.
 - Importance is calibrated from source_text: ordinary=3, optional or
   "would be useful/nice to have/de préférence"=2, explicitly very important
   but still soft=4, and an absolute necessity=5. Do not assign 5 to an

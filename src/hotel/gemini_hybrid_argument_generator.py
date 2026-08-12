@@ -20,16 +20,29 @@ from .preferences import SessionPreferences
 
 _PROMPT_SCORING_FIELDS = frozenset(
     {
+        "importance",
         "importance_raw",
         "normalized_weight",
+        "weight",
         "weighting_method",
+        "strength",
         "intrinsic_strength",
+        "final_strength",
         "evidence_score",
         "confidence_factor",
+        "wilson",
         "wilson_lower_bound",
+        "force",
         "force_formula",
         "force_components",
         "final_force",
+        "importance_coefficient",
+        "score",
+        "dfquad_score",
+        "linear_empirical_score",
+        "root_base_score",
+        "aggregated_support",
+        "aggregated_attack",
         "strength_method",
         "budget_included",
         "weight_active",
@@ -45,7 +58,7 @@ def _without_scoring_values(value: Any) -> Any:
         return {
             key: _without_scoring_values(item)
             for key, item in value.items()
-            if key not in _PROMPT_SCORING_FIELDS
+            if str(key).casefold() not in _PROMPT_SCORING_FIELDS
         }
     if isinstance(value, list):
         return [_without_scoring_values(item) for item in value]

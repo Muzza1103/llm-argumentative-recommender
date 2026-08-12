@@ -24,6 +24,15 @@ def _number(value: object) -> str:
     return _escape(value)
 
 
+def format_optional_score(value: object, *, digits: int = 4) -> str:
+    """Format a public optional score without ever formatting ``None``."""
+    if value is None:
+        return "non disponible"
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return str(value)
+    return f"{float(value):.{digits}f}"
+
+
 def _json(value: object) -> str:
     return html.escape(
         json.dumps(value, ensure_ascii=False, sort_keys=True),
@@ -372,7 +381,9 @@ def build_hotel_html(result: Mapping[str, Any] | object) -> str:
             "support": _number(dfquad.get("aggregated_support")),
             "attack": _number(dfquad.get("aggregated_attack")),
             "dfquad": _number(payload.get("dfquad_score")),
-            "linear": _number(payload.get("linear_empirical_score")),
+            "linear": _escape(
+                format_optional_score(payload.get("linear_empirical_score"))
+            ),
         }
     ]
     hard_headers = (
@@ -431,7 +442,7 @@ h1 {{ margin:0 0 8px; color:var(--blue); }} h2 {{ color:var(--blue); margin:0 0 
     <div class="metric"><strong>Pondération</strong>{_escape(payload.get('weighting_method'))}</div>
     <div class="metric"><strong>Unités enregistrées / comptées</strong>{_number(registered_units)} / {_number(counted_units)}</div>
     <div class="metric"><strong>Score DF-QuAD</strong>{_number(payload.get('dfquad_score'))}</div>
-    <div class="metric"><strong>Baseline linéaire</strong>{_number(payload.get('linear_empirical_score'))}</div>
+    <div class="metric"><strong>Baseline linéaire</strong>{_escape(format_optional_score(payload.get('linear_empirical_score')))}</div>
   </div>
 </header>
 <section><h2>Demande utilisateur</h2><div class="request">{_escape(preferences.get('original_text'))}</div></section>

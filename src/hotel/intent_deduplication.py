@@ -49,6 +49,115 @@ _CAPABILITY_TERMS: Mapping[str, tuple[str, ...]] = MappingProxyType(
 )
 
 
+_ASPECT_TERMS: Mapping[str, tuple[str, ...]] = MappingProxyType(
+    {
+        "localisation_transport": (
+            r"\bproche\b",
+            r"\bcentre\b",
+            r"\bcentral(?:e)?\b",
+            r"\blocalisation\b",
+            r"\blocation\b",
+            r"\btransport\b",
+            r"\bmetro\b",
+            r"\bdowntown\b",
+        ),
+        "personnel_accueil_service": (
+            r"\bpersonnel\b",
+            r"\baccueil\b",
+            r"\bservice\b",
+            r"\bstaff\b",
+            r"\breception\b",
+        ),
+        "proprete_hygiene": (
+            r"\bpropre(?:te)?\b",
+            r"\bhygiene\b",
+            r"\bclean(?:liness)?\b",
+        ),
+        "chambre_taille_confort": (
+            r"\bchambre\b",
+            r"\bconfort(?:able)?\b",
+            r"\bspacieu(?:x|se)\b",
+            r"\broom\b",
+            r"\bcomfortable\b",
+            r"\bspacious\b",
+        ),
+        "salle_de_bain": (
+            r"\bsalle de bain\b",
+            r"\bdouche\b",
+            r"\bbathroom\b",
+            r"\bshower\b",
+        ),
+        "petit_dejeuner_restauration": (
+            r"\bpetit dejeuner\b",
+            r"\brestaurant\b",
+            r"\brepas\b",
+            r"\bbreakfast\b",
+            r"\bfood\b",
+        ),
+        "bruit_calme": (
+            r"\bcalme\b",
+            r"\bbruit\b",
+            r"\bsilencieu(?:x|se)\b",
+            r"\bquiet\b",
+            r"\bnoise\b",
+            r"\bnoisy\b",
+        ),
+        "prix_valeur": (
+            r"\bprix\b",
+            r"\btarif\b",
+            r"\bbudget\b",
+            r"\bcher(?:e)?\b",
+            r"\bprice\b",
+            r"\bvalue\b",
+        ),
+        "climatisation_chauffage_temperature": (
+            r"\bclimatisation\b",
+            r"\bchauffage\b",
+            r"\btemperature\b",
+            r"\bair conditioning\b",
+            r"\bheating\b",
+        ),
+        "wifi_internet": (
+            r"\bwi ?fi\b",
+            r"\binternet\b",
+            r"\bconnexion\b",
+            r"\bconnection\b",
+        ),
+        "parking_voiture": (
+            r"\bparking\b",
+            r"\bcar park\b",
+            r"\bgarage\b",
+        ),
+        "equipements_chambre": (
+            r"\bequipement(?:s)?\b",
+            r"\bminibar\b",
+            r"\bcoffre\b",
+            r"\broom amenit(?:y|ies)\b",
+        ),
+        "piscine_spa_bien_etre": (
+            r"\bpiscine\b",
+            r"\bpool\b",
+            r"\bspa\b",
+            r"\bbien etre\b",
+            r"\bwellness\b",
+            r"\bgym\b",
+        ),
+        "accessibilite_batiment": (
+            r"\baccessible\b",
+            r"\baccessibilite\b",
+            r"\bfauteuil roulant\b",
+            r"\bwheelchair\b",
+        ),
+        "vue_environnement": (
+            r"\bvue\b",
+            r"\benvironnement\b",
+            r"\bview\b",
+            r"\bsurroundings?\b",
+        ),
+    }
+)
+
+
 _COMMON_QUALITY_PATTERNS = (
     r"\bbon(?:ne)?\b",
     r"\bmauvais(?:e)?\b",
@@ -111,10 +220,14 @@ _REQUEST_PATTERNS = (
 )
 _OPTIONAL_PATTERNS = (
     r"\bserait utile\b",
+    r"\bseulement utile\b",
+    r"\bjuste utile\b",
     r"\bde preference\b",
     r"\bsi possible\b",
     r"\bidealement\b",
     r"\bwould be useful\b",
+    r"\bonly useful\b",
+    r"\bmerely useful\b",
     r"\bnice to have\b",
     r"\bpreferably\b",
     r"\bif possible\b",
@@ -140,6 +253,15 @@ _ABSOLUTE_NECESSITY_PATTERNS = (
     r"\bstrictly required\b",
     r"\bnon[ -]?negotiable\b",
     r"\bcannot (?:do|stay|travel) without\b",
+    r"\bnecessary\b",
+)
+_NEGATED_NECESSITY_PATTERNS = (
+    r"\b(?:ne |n )?(?:est |sont |sera |serait )?pas "
+    r"(?:obligatoire|indispensable|necessaire)\b",
+    r"\bnon (?:obligatoire|indispensable|necessaire)\b",
+    r"\b(?:is |are |was |were )?not (?:mandatory|required|necessary)\b",
+    r"\b(?:isn t|aren t|wasn t|weren t) "
+    r"(?:mandatory|required|necessary)\b",
 )
 _PRICE_QUALIFIED_CAPABILITIES = frozenset(
     {"parking", "wifi", "spa", "gym", "breakfast", "airport_shuttle"}
@@ -164,6 +286,7 @@ class _SemanticCues:
     factual: bool
     qualified_fact: bool
     absolute_necessity: bool
+    negated_necessity: bool
 
 
 def _normalized_source(value: object) -> str:
@@ -186,6 +309,115 @@ def _matches_any(text: str, patterns: tuple[str, ...]) -> bool:
     return any(re.search(pattern, text) is not None for pattern in patterns)
 
 
+def _known_intent_labels(text: str) -> set[str]:
+    labels = {
+        aspect
+        for aspect, patterns in _ASPECT_TERMS.items()
+        if _matches_any(text, patterns)
+    }
+    for capability, patterns in _CAPABILITY_TERMS.items():
+        if _matches_any(text, patterns):
+            labels.add(FACILITY_ASPECTS.get(capability, f"facility::{capability}"))
+    return labels
+
+
+def _has_negated_necessity(text: str) -> bool:
+    return _matches_any(text, _NEGATED_NECESSITY_PATTERNS)
+
+
+def _without_negated_necessity(text: str) -> str:
+    cleaned = text
+    for pattern in _NEGATED_NECESSITY_PATTERNS:
+        cleaned = re.sub(pattern, " ", cleaned)
+    return re.sub(r"\s+", " ", cleaned).strip()
+
+
+def _has_positive_necessity(text: str) -> bool:
+    return _matches_any(
+        _without_negated_necessity(text),
+        _ABSOLUTE_NECESSITY_PATTERNS,
+    )
+
+
+def _has_intensity_cue(text: str) -> bool:
+    return (
+        _has_positive_necessity(text)
+        or _has_negated_necessity(text)
+        or _matches_any(
+            text,
+            _OPTIONAL_PATTERNS + _STRONG_SOFT_PATTERNS,
+        )
+    )
+
+
+def _smallest_intent_scope(
+    source_text: object,
+    anchor_patterns: tuple[str, ...],
+) -> str:
+    """Return the smallest conservative clause tied to one known intent.
+
+    Segmentation happens before lexical normalization so punctuation is not
+    lost.  When a sentence contains only one recognizable intent, the whole
+    sentence is retained so a following pronoun such as ``il``/``it`` can
+    carry an explicit negation.  With several intents, coordination and
+    contrast boundaries isolate the clause containing the requested anchor.
+    """
+    if not isinstance(source_text, str) or not source_text.strip():
+        return ""
+    sentences = [
+        segment.strip()
+        for segment in re.split(r"[.!?;\n]+", source_text)
+        if segment.strip()
+    ]
+    matching_sentences = [
+        sentence
+        for sentence in sentences
+        if _matches_any(_normalized_source(sentence), anchor_patterns)
+    ]
+    if not matching_sentences:
+        return ""
+    sentence = min(
+        matching_sentences,
+        key=lambda value: len(_normalized_source(value)),
+    )
+    normalized_sentence = _normalized_source(sentence)
+    if len(_known_intent_labels(normalized_sentence)) <= 1:
+        return normalized_sentence
+
+    clauses = [
+        clause.strip()
+        for clause in re.split(
+            r"\s*(?:,|:|\bmais\b|\bbut\b|\bhowever\b|\bwhereas\b|"
+            r"\bwhile\b|\balors\s+que\b|\btandis\s+que\b|\bet\b|"
+            r"\band\b|\bavec\b|\bwith\b)\s*",
+            sentence,
+            flags=re.IGNORECASE,
+        )
+        if clause.strip()
+    ]
+    matching_indices = [
+        index
+        for index, clause in enumerate(clauses)
+        if _matches_any(_normalized_source(clause), anchor_patterns)
+    ]
+    if not matching_indices:
+        return normalized_sentence
+    selected_index = min(
+        matching_indices,
+        key=lambda index: len(_normalized_source(clauses[index])),
+    )
+    selected = _normalized_source(clauses[selected_index])
+
+    # Keep an immediately following, anchor-free qualifier such as
+    # "mais il n'est pas obligatoire" with the intent it qualifies.
+    next_index = selected_index + 1
+    if next_index < len(clauses):
+        following = _normalized_source(clauses[next_index])
+        if not _known_intent_labels(following) and _has_intensity_cue(following):
+            selected = f"{selected} {following}".strip()
+    return selected
+
+
 def _mentions_capability(capability: str, source_text: object) -> bool:
     normalized = _normalized_source(source_text)
     patterns = _CAPABILITY_TERMS.get(
@@ -196,20 +428,11 @@ def _mentions_capability(capability: str, source_text: object) -> bool:
 
 
 def _intent_scope(capability: str, source_text: object) -> str:
-    normalized = _normalized_source(source_text)
-    if not normalized:
-        return ""
-    clauses = [
-        clause.strip()
-        for clause in re.split(r"[.!?;,\n]+", normalized)
-        if clause.strip()
-    ]
-    matching = [
-        clause
-        for clause in clauses
-        if _mentions_capability(capability, clause)
-    ]
-    return min(matching, key=len) if matching else normalized
+    patterns = _CAPABILITY_TERMS.get(
+        capability,
+        (rf"\b{re.escape(capability.replace('_', ' '))}\b",),
+    )
+    return _smallest_intent_scope(source_text, patterns)
 
 
 def _semantic_cues(capability: str, source_text: object) -> _SemanticCues:
@@ -219,9 +442,12 @@ def _semantic_cues(capability: str, source_text: object) -> _SemanticCues:
         _QUALITY_PATTERNS.get(capability, ()) + _COMMON_QUALITY_PATTERNS,
     )
     qualified_fact = _matches_any(scoped, _FREE_PATTERNS + _PAID_PATTERNS)
-    absolute = _matches_any(scoped, _ABSOLUTE_NECESSITY_PATTERNS)
+    absolute = _has_positive_necessity(scoped)
+    negated_necessity = _has_negated_necessity(scoped)
     explicit_availability = _matches_any(scoped, _AVAILABILITY_PATTERNS)
-    optional_presence = _matches_any(scoped, _OPTIONAL_PATTERNS)
+    optional_presence = (
+        _matches_any(scoped, _OPTIONAL_PATTERNS) or negated_necessity
+    )
     requested_presence = _matches_any(scoped, _REQUEST_PATTERNS)
     connector = re.search(r"\b(?:avec|with)\b", scoped) is not None
 
@@ -240,6 +466,7 @@ def _semantic_cues(capability: str, source_text: object) -> _SemanticCues:
         factual=factual,
         qualified_fact=qualified_fact,
         absolute_necessity=absolute,
+        negated_necessity=negated_necessity,
     )
 
 
@@ -251,12 +478,12 @@ def calibrate_importance_from_source(
 ) -> float:
     """Apply the deterministic 2/3/4/5 importance convention."""
     normalized = _normalized_source(source_text)
-    if hard or eligibility or _matches_any(
-        normalized,
-        _ABSOLUTE_NECESSITY_PATTERNS,
-    ):
+    if hard or eligibility or _has_positive_necessity(normalized):
         return 5.0
-    if _matches_any(normalized, _OPTIONAL_PATTERNS):
+    if (
+        _matches_any(normalized, _OPTIONAL_PATTERNS)
+        or _has_negated_necessity(normalized)
+    ):
         return 2.0
     if _matches_any(normalized, _STRONG_SOFT_PATTERNS):
         return 4.0
@@ -275,15 +502,13 @@ def _inferred_qualifiers(capability: str, source_text: object) -> dict[str, Any]
 
 
 def _aspect_intent_scope(aspect: str, source_text: str) -> str:
-    capabilities = [
-        capability
-        for capability, mapped_aspect in FACILITY_ASPECTS.items()
-        if mapped_aspect == aspect
-        and _mentions_capability(capability, source_text)
-    ]
-    if len(capabilities) == 1:
-        return _intent_scope(capabilities[0], source_text)
-    return source_text
+    patterns = list(_ASPECT_TERMS.get(aspect, ()))
+    for capability, mapped_aspect in FACILITY_ASPECTS.items():
+        if mapped_aspect == aspect:
+            patterns.extend(_CAPABILITY_TERMS.get(capability, ()))
+    if not patterns:
+        return ""
+    return _smallest_intent_scope(source_text, tuple(dict.fromkeys(patterns)))
 
 
 def _next_constraint_id(existing_ids: set[str], capability: str) -> str:
