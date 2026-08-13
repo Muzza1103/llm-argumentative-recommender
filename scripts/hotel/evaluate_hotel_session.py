@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import importlib
 import json
+import os
 from pathlib import Path
 from typing import Any
 
@@ -106,6 +107,28 @@ def build_parser() -> argparse.ArgumentParser:
         default=str(DEFAULT_FACILITY_ONTOLOGY_PATH),
     )
     parser.add_argument("--gemini-model", default="gemini-2.5-flash")
+
+    parser.add_argument(
+        "--gcp-project",
+        default=os.environ.get("GOOGLE_CLOUD_PROJECT"),
+        help=(
+            "Google Cloud project used by Vertex AI. Defaults to "
+            "GOOGLE_CLOUD_PROJECT."
+        ),
+    )
+
+    parser.add_argument(
+        "--gcp-location",
+        default=os.environ.get(
+            "GOOGLE_CLOUD_LOCATION",
+            "us-central1",
+        ),
+        help=(
+            "Vertex AI location. Defaults to GOOGLE_CLOUD_LOCATION or "
+            "us-central1."
+        ),
+    )
+
     parser.add_argument("--output", required=True)
     return parser
 
@@ -124,8 +147,12 @@ def main() -> None:
             "--interpreter-factory; use --preferences for deterministic "
             "execution without an LLM"
         )
+
     if args.preferences is not None and args.interpreter_factory:
-        parser.error("--interpreter-factory is only valid with --preference-text")
+        parser.error(
+            "--interpreter-factory is only valid with --preference-text"
+        )
+
     if (
         args.argument_mode == "baseline"
         and args.hybrid_generator_factory
@@ -134,11 +161,47 @@ def main() -> None:
             "--hybrid-generator-factory is only valid in hybrid mode"
         )
 
+    needs_gemini_interpreter = (
+        args.preference_text is not None
+        and not args.interpreter_factory
+    )
+
+    needs_gemini_generator = (
+        args.argument_mode == "hybrid"
+        and not args.hybrid_generator_factory
+    )
+
+    vertex_client = None
+
+    if needs_gemini_interpreter or needs_gemini_generator:
+        if not args.gcp_project:
+            parser.error(
+                "--gcp-project or GOOGLE_CLOUD_PROJECT is required "
+                "for Vertex AI"
+            )
+
+        try:
+            from google import genai
+        except ModuleNotFoundError:
+            parser.error("google-genai is required for Vertex AI")
+
+        vertex_client = genai.Client(
+            vertexai=True,
+            project=args.gcp_project,
+            location=args.gcp_location,
+        )
+
     try:
         dataset = load_hotel_profiles(args.profiles)
-        ontology = FacilityOntology.load(args.facility_ontology)
+
+        ontology = FacilityOntology.load(
+            args.facility_ontology
+        )
+
         if args.preferences is not None:
-            preferences = load_session_preferences(args.preferences)
+            preferences = load_session_preferences(
+                args.preferences
+            )
         else:
             interpreter = (
                 _load_interpreter(args.interpreter_factory)
@@ -146,21 +209,29 @@ def main() -> None:
                 else GeminiPreferenceInterpreter(
                     model_name=args.gemini_model,
                     ontology=ontology,
+                    client=vertex_client,
                 )
             )
+
             preferences = interpret_session_preferences(
                 args.preference_text,
                 interpreter,
             )
+
         hybrid_generator = None
+
         if args.argument_mode == "hybrid":
             hybrid_generator = (
-                _load_hybrid_generator(args.hybrid_generator_factory)
+                _load_hybrid_generator(
+                    args.hybrid_generator_factory
+                )
                 if args.hybrid_generator_factory
                 else GeminiHybridArgumentGenerator(
-                    model_name=args.gemini_model
+                    model_name=args.gemini_model,
+                    client=vertex_client,
                 )
             )
+
         result = evaluate_hotel_by_id(
             dataset,
             args.hotel_id,
@@ -169,6 +240,7 @@ def main() -> None:
             hybrid_generator=hybrid_generator,
             facility_ontology=ontology,
         )
+
     except (
         HotelDataValidationError,
         HotelPreferenceValidationError,
@@ -182,10 +254,22 @@ def main() -> None:
     ) as exc:
         parser.error(str(exc))
 
-    rendered = json.dumps(result.to_dict(), indent=2, ensure_ascii=False)
+    rendered = json.dumps(
+        result.to_dict(),
+        indent=2,
+        ensure_ascii=False,
+    )
+
     output_path = Path(args.output)
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_text(rendered + "\n", encoding="utf-8")
+    output_path.parent.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+    output_path.write_text(
+        rendered + "\n",
+        encoding="utf-8",
+    )
+
     print(rendered)
 
 
