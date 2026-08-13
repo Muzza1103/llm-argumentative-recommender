@@ -20,7 +20,7 @@ def _number(value: object) -> str:
     if isinstance(value, bool):
         return _escape(value)
     if isinstance(value, (int, float)):
-        return f"{float(value):.6f}".rstrip("0").rstriprstrip(".")
+        return f"{float(value):.6f}".rstrip("0").rstrip(".")
 
     return _escape(value)
 
