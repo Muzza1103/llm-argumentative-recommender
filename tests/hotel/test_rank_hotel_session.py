@@ -27,6 +27,7 @@ from scripts.hotel.rank_hotel_session import (
 )
 from src.hotel import (
     FacilityOntology,
+    load_default_facility_ontology,
     load_hotel_profiles,
     session_preferences_from_dict,
 )
@@ -281,6 +282,76 @@ class RankHotelSessionTests(unittest.TestCase):
         self.assertTrue(all(call[0] is self.dataset for call in calls))
         self.assertTrue(all(call[2] is preferences for call in calls))
         self.assertTrue(all(call[3] is generator for call in calls))
+
+    def test_hard_constraints_gate_ranking_without_scoring_directly(self):
+        hotels = []
+        for hotel, city in zip(
+            self.dataset.hotels[:3],
+            ("London", "Paris", None),
+            strict=True,
+        ):
+            hotels.append(
+                replace(
+                    hotel,
+                    metadata=replace(hotel.metadata, city=city),
+                )
+            )
+        dataset = replace(
+            self.dataset,
+            n_hotels=3,
+            hotels=tuple(hotels),
+        )
+        preferences = session_preferences_from_dict(
+            {
+                "aspect_preferences": {},
+                "constraints": [
+                    {
+                        "constraint_id": "city",
+                        "text": "Londres est indispensable",
+                        "source_text": "Londres est indispensable",
+                        "importance_raw": 5,
+                        "hard": True,
+                        "target_type": "metadata",
+                        "target": "city",
+                        "operator": "equals",
+                        "qualifiers": {},
+                        "value": "London",
+                    }
+                ],
+            },
+            original_text="Londres est indispensable",
+        )
+
+        evaluations, failures = evaluate_candidates(
+            dataset,
+            ["h1", "h2", "h3"],
+            preferences,
+            argument_mode="baseline",
+            facility_ontology=load_default_facility_ontology(),
+        )
+        self.assertEqual(failures, [])
+        by_id = {row.hotel_id: row.payload for row in evaluations}
+        self.assertEqual(by_id["h1"]["eligibility"]["status"], "eligible")
+        self.assertEqual(by_id["h2"]["eligibility"]["status"], "ineligible")
+        self.assertEqual(by_id["h3"]["eligibility"]["status"], "eligible")
+        self.assertEqual(len(by_id["h3"]["unknown_constraints"]), 1)
+        self.assertEqual(
+            {payload["dfquad_score"] for payload in by_id.values()},
+            {0.5},
+        )
+        for payload in by_id.values():
+            hard_unit = next(
+                unit
+                for unit in payload["scoring_units"]
+                if unit["intent_ref"] == "city"
+            )
+            self.assertEqual(hard_unit["normalized_weight"], 0.0)
+            self.assertFalse(hard_unit["included_in_dfquad"])
+
+        ranked, not_ranked = build_ranking_rows(evaluations)
+        self.assertEqual([row["hotel_id"] for row in ranked], ["h1", "h3"])
+        self.assertEqual(not_ranked[0]["hotel_id"], "h2")
+        self.assertIsNone(not_ranked[0]["rank"])
 
     def test_one_vertex_client_is_shared_by_both_gemini_components(self):
         client = object()

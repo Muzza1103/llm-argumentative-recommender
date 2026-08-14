@@ -55,6 +55,7 @@ from .gemini_preference_interpreter import (
     build_gemini_preference_prompt,
     build_preference_prompt_contract,
     build_preference_response_schema,
+    validate_preference_structure,
 )
 from .hybrid import (
     HYBRID_ARGUMENT_KINDS,
@@ -80,9 +81,8 @@ from .loader import (
     validate_reviews_match_profiles,
 )
 from .intent_deduplication import (
-    FACILITY_ASPECTS,
-    calibrate_importance_from_source,
     deduplicate_preference_intentions,
+    filter_structurally_valid_preferences,
 )
 from .models import (
     AnnotationStatus,
@@ -142,7 +142,6 @@ __all__ = [
     "FacilityMapping",
     "FacilityNormalizationResult",
     "FacilityOntology",
-    "FACILITY_ASPECTS",
     "HotelDataValidationError",
     "HotelGeminiError",
     "HotelHybridValidationError",
@@ -182,9 +181,9 @@ __all__ = [
     "build_preference_response_schema",
     "build_structured_fact_arguments",
     "canonicalize_city_name",
-    "calibrate_importance_from_source",
     "deduplicate_facilities",
     "deduplicate_preference_intentions",
+    "filter_structurally_valid_preferences",
     "hotel_profile_dataset_from_dict",
     "hotel_review_from_dict",
     "interpret_session_preferences",
@@ -205,6 +204,7 @@ __all__ = [
     "run_hybrid_generation",
     "session_preferences_from_dict",
     "validate_hotel_aspect",
+    "validate_preference_structure",
     "validate_hybrid_proposals",
     "validate_reviews_match_profiles",
     "wilson_lower_bound",

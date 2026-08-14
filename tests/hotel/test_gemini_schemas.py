@@ -11,6 +11,7 @@ from src.hotel import (
     build_preference_response_schema,
     load_default_facility_ontology,
     session_preferences_from_dict,
+    validate_preference_structure,
 )
 from src.hotel.gemini_preference_interpreter import (
     MAX_ASPECT_PREFERENCES,
@@ -69,6 +70,13 @@ class GeminiSchemaRegressionTests(unittest.TestCase):
 
     def validate(self, payload):
         return _validate_interpretation_payload(
+            payload,
+            original_text=USER_TEXT,
+            ontology=self.ontology,
+        )
+
+    def validate_with_trace(self, payload):
+        return validate_preference_structure(
             payload,
             original_text=USER_TEXT,
             ontology=self.ontology,
@@ -176,27 +184,39 @@ class GeminiSchemaRegressionTests(unittest.TestCase):
         self.assertIn("Allowed facility targets:\ncustom_facility", section)
         self.assertIn('- custom_facility: mode=["alpha", "beta"]', section)
         self.assertNotIn("unknown", section)
-
-    def test_local_validation_rejects_unknown_aspect_target_and_operator(self):
+    def test_local_validation_drops_unknown_canonical_entries(self):
         mutations = (
-            ("aspect", lambda row: row["aspect_preferences"][0].update(
-                aspect="unknown_aspect"
-            )),
-            ("target", lambda row: row["constraints"][0].update(
-                target="unknown_facility"
-            )),
-            ("operator", lambda row: row["constraints"][0].update(
-                operator="contains"
-            )),
+            (
+                "aspect_preferences",
+                "unknown_aspect",
+                lambda row: row["aspect_preferences"][0].update(
+                    aspect="unknown_aspect"
+                ),
+            ),
+            (
+                "constraints",
+                "unknown_canonical_target",
+                lambda row: row["constraints"][0].update(
+                    target="unknown_facility"
+                ),
+            ),
+            (
+                "constraints",
+                "unsupported_operator",
+                lambda row: row["constraints"][0].update(
+                    operator="contains"
+                ),
+            ),
         )
-        for label, mutate in mutations:
-            with self.subTest(label=label):
+        for collection, reason, mutate in mutations:
+            with self.subTest(collection=collection, reason=reason):
                 payload = base_payload()
                 mutate(payload)
-                with self.assertRaises(HotelPreferenceValidationError):
-                    self.validate(payload)
+                validated, trace = self.validate_with_trace(payload)
+                self.assertFalse(validated[collection])
+                self.assertIn(reason, trace[0]["reasons"])
 
-    def test_local_validation_rejects_importance_outside_range(self):
+    def test_local_validation_drops_importance_outside_range(self):
         for collection, value in (
             ("aspect_preferences", -0.01),
             ("aspect_preferences", 5.01),
@@ -206,10 +226,14 @@ class GeminiSchemaRegressionTests(unittest.TestCase):
             with self.subTest(collection=collection, value=value):
                 payload = base_payload()
                 payload[collection][0]["importance_raw"] = value
-                with self.assertRaises(HotelPreferenceValidationError):
-                    self.validate(payload)
+                validated, trace = self.validate_with_trace(payload)
+                self.assertFalse(validated[collection])
+                self.assertIn(
+                    "invalid_importance_raw",
+                    trace[0]["reasons"],
+                )
 
-    def test_local_validation_rejects_invalid_facility_qualifiers(self):
+    def test_local_validation_drops_invalid_facility_qualifiers(self):
         invalid_qualifiers = (
             {"unknown_key": "free"},
             {"price": "gratis"},
@@ -219,10 +243,11 @@ class GeminiSchemaRegressionTests(unittest.TestCase):
             with self.subTest(qualifiers=qualifiers):
                 payload = base_payload()
                 payload["constraints"][0]["qualifiers"] = qualifiers
-                with self.assertRaises(HotelPreferenceValidationError):
-                    self.validate(payload)
+                validated, trace = self.validate_with_trace(payload)
+                self.assertEqual(validated["constraints"], [])
+                self.assertIn("invalid_qualifier", trace[0]["reasons"])
 
-    def test_local_validation_enforces_removed_size_and_text_rules(self):
+    def test_local_validation_enforces_global_size_rules(self):
         oversized = (
             (
                 "aspect_preferences",
@@ -252,20 +277,36 @@ class GeminiSchemaRegressionTests(unittest.TestCase):
                 with self.assertRaises(HotelPreferenceValidationError):
                     self.validate(payload)
 
-        empty_text_mutations = (
-            lambda row: row["aspect_preferences"][0].update(source_text=""),
-            lambda row: row["constraints"][0].update(constraint_id=""),
-            lambda row: row.update(
-                uninterpreted_items=[
-                    {"text": "", "reason": "ambiguous_request"}
-                ]
+    def test_local_validation_drops_individual_empty_text_entries(self):
+        mutations = (
+            (
+                "aspect_preferences",
+                lambda row: row["aspect_preferences"][0].update(
+                    source_text=""
+                ),
+            ),
+            (
+                "constraints",
+                lambda row: row["constraints"][0].update(
+                    constraint_id=""
+                ),
+            ),
+            (
+                "uninterpreted_items",
+                lambda row: row.update(
+                    uninterpreted_items=[
+                        {"text": "", "reason": "ambiguous_request"}
+                    ]
+                ),
             ),
         )
-        for mutate in empty_text_mutations:
-            payload = base_payload()
-            mutate(payload)
-            with self.assertRaises(HotelPreferenceValidationError):
-                self.validate(payload)
+        for collection, mutate in mutations:
+            with self.subTest(collection=collection):
+                payload = base_payload()
+                mutate(payload)
+                validated, trace = self.validate_with_trace(payload)
+                self.assertFalse(validated[collection])
+                self.assertEqual(trace[0]["action"], "drop_invalid_entry")
 
     def test_parking_free_is_accepted_and_public_format_is_preserved(self):
         validated = self.validate(copy.deepcopy(base_payload()))

@@ -37,6 +37,16 @@ def _required_string(value: object, path: str) -> str:
     return value.strip()
 
 
+def _required_preserved_string(value: object, path: str) -> str:
+    """Validate a string while preserving its exact returned text."""
+    if not isinstance(value, str) or not value.strip():
+        raise HotelPreferenceValidationError(
+            "expected a non-empty string",
+            path=path,
+        )
+    return value
+
+
 def _optional_string(value: object, path: str) -> str | None:
     if value is None:
         return None
@@ -232,7 +242,7 @@ def session_preferences_from_dict(
                 entry.get("importance_raw"),
                 f"{entry_path}.importance_raw",
             ),
-            _required_string(
+            _required_preserved_string(
                 entry.get("source_text"),
                 f"{entry_path}.source_text",
             ),
@@ -270,7 +280,7 @@ def session_preferences_from_dict(
         mode_counts[mode] += 1
         supplied_constraint_id = constraint.get("constraint_id")
         constraint_id = (
-            _required_string(
+            _required_preserved_string(
                 supplied_constraint_id,
                 f"{constraint_path}.constraint_id",
             )
@@ -346,7 +356,7 @@ def session_preferences_from_dict(
             "value",
             constraint.get("expected_value"),
         )
-        source_text = _required_string(
+        source_text = _required_preserved_string(
             constraint.get(
                 "source_text",
                 constraint.get("text"),

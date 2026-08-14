@@ -82,15 +82,17 @@ class AbsoluteFiveStabilizationTests(unittest.TestCase):
     def setUpClass(cls):
         cls.hotel = load_hotel_profiles(FIXTURE).hotels[0]
 
-    def test_negated_requirement_is_soft_optional_parking(self):
-        text = "Un parking serait utile, mais il n’est pas obligatoire."
+    def test_gemini_soft_optional_parking_is_preserved(self):
+        text = "Un parking serait un plus, mais il n’est pas obligatoire."
         preferences = _interpret(
             text,
             constraints=[
                 _constraint(
                     "parking",
                     target="parking",
-                    source_text=text,
+                    source_text="Un parking serait un plus",
+                    hard=False,
+                    importance=2,
                 )
             ],
         )
@@ -100,88 +102,43 @@ class AbsoluteFiveStabilizationTests(unittest.TestCase):
         self.assertEqual(parking.normalized_weight, 0.4)
         self.assertEqual(parking.weighting_method, "absolute_5")
 
-    def test_all_listed_negated_requirements_remain_soft(self):
-        negations = (
-            "pas obligatoire",
-            "non obligatoire",
-            "n’est pas obligatoire",
-            "pas indispensable",
-            "non indispensable",
-            "pas nécessaire",
-            "non nécessaire",
-            "not mandatory",
-            "is not mandatory",
-            "not required",
-            "is not required",
-            "not necessary",
-            "is not necessary",
-        )
-        for negation in negations:
-            with self.subTest(negation=negation):
-                text = f"Parking {negation}."
-                parking = _interpret(
-                    text,
-                    constraints=[
-                        _constraint(
-                            "parking",
-                            target="parking",
-                            source_text=text,
-                        )
-                    ],
-                ).constraints[0]
-                self.assertFalse(parking.hard)
-                self.assertEqual(parking.importance_raw, 2.0)
-                self.assertEqual(parking.normalized_weight, 0.4)
-
-    def test_positive_requirements_stay_hard_at_five(self):
-        cases = (
-            ("parking obligatoire", "parking"),
-            ("parking indispensable", "parking"),
-            ("Wi-Fi indispensable", "wifi"),
-            ("Wi-Fi nécessaire", "wifi"),
-            ("must have parking", "parking"),
-            ("parking is mandatory", "parking"),
-            ("parking is required", "parking"),
-        )
-        for text, target in cases:
-            with self.subTest(text=text):
-                requirement = _interpret(
-                    text,
-                    constraints=[
-                        _constraint(
-                            "requirement",
-                            target=target,
-                            source_text=text,
-                            hard=False,
-                            importance=2,
-                        )
-                    ],
-                ).constraints[0]
-                self.assertTrue(requirement.hard)
-                self.assertEqual(requirement.importance_raw, 5.0)
-                self.assertEqual(requirement.normalized_weight, 0.0)
-
-    def test_positive_and_negated_requirements_are_scoped_separately(self):
-        text = (
-            "Le Wi-Fi est indispensable, mais le parking n’est pas "
-            "obligatoire."
-        )
-        preferences = _interpret(
+    def test_python_does_not_soften_hard_true_from_negated_wording(self):
+        text = "Le parking n’est pas obligatoire."
+        parking = _interpret(
             text,
             constraints=[
-                _constraint("wifi", target="wifi", source_text=text),
-                _constraint("parking", target="parking", source_text=text),
+                _constraint(
+                    "parking",
+                    target="parking",
+                    source_text=text,
+                    hard=True,
+                    importance=5,
+                )
             ],
-        )
-        by_target = {item.target: item for item in preferences.constraints}
-        self.assertTrue(by_target["wifi"].hard)
-        self.assertEqual(by_target["wifi"].importance_raw, 5.0)
-        self.assertEqual(by_target["wifi"].normalized_weight, 0.0)
-        self.assertFalse(by_target["parking"].hard)
-        self.assertEqual(by_target["parking"].importance_raw, 2.0)
-        self.assertEqual(by_target["parking"].normalized_weight, 0.4)
+        ).constraints[0]
+        self.assertTrue(parking.hard)
+        self.assertEqual(parking.importance_raw, 5.0)
+        self.assertEqual(parking.normalized_weight, 0.0)
 
-    def test_multisentence_source_does_not_contaminate_aspect_importance(self):
+    def test_python_does_not_harden_hard_false_from_mandatory_wording(self):
+        text = "Le Wi-Fi est indispensable."
+        wifi = _interpret(
+            text,
+            constraints=[
+                _constraint(
+                    "wifi",
+                    target="wifi",
+                    source_text=text,
+                    hard=False,
+                    importance=2,
+                )
+            ],
+        ).constraints[0]
+        self.assertFalse(wifi.hard)
+        self.assertEqual(wifi.importance_raw, 2.0)
+        self.assertEqual(wifi.normalized_weight, 0.4)
+
+    def test_python_does_not_recalibrate_importance_from_source_text(self):
         text = "Je veux un hôtel calme. Un parking serait utile."
         preferences = _interpret(
             text,
@@ -197,24 +154,29 @@ class AbsoluteFiveStabilizationTests(unittest.TestCase):
                     "parking",
                     target="parking",
                     source_text=text,
+                    hard=False,
+                    importance=2,
                 )
             ],
         )
         quiet = preferences.get_aspect("bruit_calme")
         parking = preferences.constraints[0]
-        self.assertEqual(quiet.importance_raw, 3.0)
-        self.assertEqual(quiet.normalized_weight, 0.6)
+        self.assertEqual(quiet.importance_raw, 5.0)
+        self.assertEqual(quiet.normalized_weight, 1.0)
         self.assertEqual(parking.importance_raw, 2.0)
         self.assertEqual(parking.normalized_weight, 0.4)
 
-    def test_first_prompt_requires_one_minimal_exact_excerpt_per_intent(self):
+    def test_first_prompt_assigns_semantic_authority_to_gemini(self):
         prompt = build_gemini_preference_prompt(
             "Je veux un hôtel calme. Un parking serait utile.",
             load_default_facility_ontology(),
         )
-        self.assertIn("smallest exact contiguous source_text excerpt", prompt)
-        self.assertIn("Keep one intention per source_text", prompt)
-        self.assertIn("explicitly negated necessity", prompt)
+        self.assertIn("only semantic interpreter", prompt)
+        self.assertIn("will not reinterpret or correct", prompt)
+        self.assertIn("smallest exact contiguous excerpt", prompt)
+        self.assertIn("Explicitly negated necessities", prompt)
+        self.assertIn("0=irrelevant", prompt)
+        self.assertIn("Represent each semantic intention exactly once", prompt)
 
     def test_optional_score_formatting_handles_none_everywhere(self):
         self.assertEqual(format_optional_score(None), "non disponible")
@@ -222,6 +184,8 @@ class AbsoluteFiveStabilizationTests(unittest.TestCase):
         rendered = build_hotel_html({"linear_empirical_score": None})
         self.assertIn("non disponible", rendered)
 
+        if not NOTEBOOK.exists():
+            self.skipTest("hotel notebook is not versioned at this HEAD")
         notebook_text = NOTEBOOK.read_text(encoding="utf-8")
         self.assertNotIn("linear_empirical_score']:.4f", notebook_text)
         self.assertNotIn('linear_empirical_score\"]:.4f', notebook_text)
