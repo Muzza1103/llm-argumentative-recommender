@@ -128,7 +128,7 @@ class HotelEvaluatorTests(unittest.TestCase):
                 ]
             ),
         )
-        self.assertEqual(result.eligibility.status, "eligible")
+        self.assertEqual(result.eligibility.status, "unknown")
         self.assertEqual(
             result.eligibility.hard_constraints[0].status.value,
             "satisfied",
@@ -180,7 +180,7 @@ class HotelEvaluatorTests(unittest.TestCase):
             missing_value_result.eligibility.hard_constraints[0].status.value,
             "unknown",
         )
-        self.assertEqual(missing_value_result.eligibility.status, "eligible")
+        self.assertEqual(missing_value_result.eligibility.status, "unknown")
 
         expected_statuses = {
             "London": "satisfied",

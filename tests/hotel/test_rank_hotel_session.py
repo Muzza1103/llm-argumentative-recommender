@@ -333,7 +333,7 @@ class RankHotelSessionTests(unittest.TestCase):
         by_id = {row.hotel_id: row.payload for row in evaluations}
         self.assertEqual(by_id["h1"]["eligibility"]["status"], "eligible")
         self.assertEqual(by_id["h2"]["eligibility"]["status"], "ineligible")
-        self.assertEqual(by_id["h3"]["eligibility"]["status"], "eligible")
+        self.assertEqual(by_id["h3"]["eligibility"]["status"], "unknown")
         self.assertEqual(len(by_id["h3"]["unknown_constraints"]), 1)
         self.assertEqual(
             {payload["dfquad_score"] for payload in by_id.values()},

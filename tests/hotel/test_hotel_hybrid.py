@@ -234,7 +234,7 @@ class HotelHybridTests(unittest.TestCase):
             outcome.status.value for outcome in result.constraint_outcomes
         ]
         self.assertEqual(statuses, ["satisfied", "unknown"])
-        self.assertEqual(result.eligibility.status, "eligible")
+        self.assertEqual(result.eligibility.status, "unknown")
         self.assertEqual(result.arguments, ())
         self.assertEqual(list(result.graph["nodes"]), ["ROOT"])
         self.assertEqual(result.dfquad_score, 0.5)

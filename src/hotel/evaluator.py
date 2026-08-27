@@ -426,15 +426,24 @@ def evaluate_hotel_session(
         for outcome in constraint_outcomes
         if outcome.constraint.hard
     )
+
+    if any(
+        outcome.status is ConstraintStatus.VIOLATED
+        for outcome in hard_outcomes
+    ):
+        eligibility_status = "ineligible"
+
+    elif any(
+        outcome.status is ConstraintStatus.UNKNOWN
+        for outcome in hard_outcomes
+    ):
+        eligibility_status = "unknown"
+
+    else:
+        eligibility_status = "eligible"
+
     eligibility = EligibilityResult(
-        status=(
-            "ineligible"
-            if any(
-                outcome.status is ConstraintStatus.VIOLATED
-                for outcome in hard_outcomes
-            )
-            else "eligible"
-        ),
+        status=eligibility_status,
         hard_constraints=hard_outcomes,
     )
     unknown_constraints = tuple(

@@ -420,9 +420,12 @@ def build_ranking_rows(
         row["ranking_status"] = "ranked"
 
     not_ranked = [row for row in rows if row not in ranked]
+
     for row in not_ranked:
         if row["eligibility_status"] == "ineligible":
             row["ranking_status"] = "ineligible"
+        elif row["eligibility_status"] == "unknown":
+            row["ranking_status"] = "unknown"
 
     return ranked, not_ranked
 
@@ -511,6 +514,10 @@ def write_ranking_outputs(
             for row in not_ranked
         ),
         "n_failed": len(failures),
+        "n_unknown": sum(
+            row["eligibility_status"] == "unknown"
+            for row in not_ranked
+        ),
     }
     ranking_payload = {
         "schema_version": "1.0",

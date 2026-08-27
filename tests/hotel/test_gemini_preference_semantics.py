@@ -428,7 +428,7 @@ class GeminiPreferenceSemanticsTests(unittest.TestCase):
             if row.constraint.preference_ref == "c2"
         )
         self.assertEqual(outcome.status.value, "unknown")
-        self.assertEqual(result.eligibility.status, "eligible")
+        self.assertEqual(result.eligibility.status, "unknown")
         self.assertEqual(result.ineligibility_reasons, ())
         self.assertEqual(len(result.unknown_constraints), 1)
 
