@@ -349,9 +349,27 @@ class RankHotelSessionTests(unittest.TestCase):
             self.assertFalse(hard_unit["included_in_dfquad"])
 
         ranked, not_ranked = build_ranking_rows(evaluations)
-        self.assertEqual([row["hotel_id"] for row in ranked], ["h1", "h3"])
-        self.assertEqual(not_ranked[0]["hotel_id"], "h2")
-        self.assertIsNone(not_ranked[0]["rank"])
+
+        self.assertEqual(
+            [row["hotel_id"] for row in ranked],
+            ["h1"],
+        )
+
+        not_ranked_by_id = {
+            row["hotel_id"]: row
+            for row in not_ranked
+        }
+
+        self.assertEqual(
+            not_ranked_by_id["h2"]["ranking_status"],
+            "ineligible",
+        )
+        self.assertEqual(
+            not_ranked_by_id["h3"]["ranking_status"],
+            "unknown",
+        )
+        self.assertIsNone(not_ranked_by_id["h2"]["rank"])
+        self.assertIsNone(not_ranked_by_id["h3"]["rank"])
 
     def test_one_vertex_client_is_shared_by_both_gemini_components(self):
         client = object()
