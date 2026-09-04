@@ -72,7 +72,33 @@ def format_tooltip_html(node: dict) -> str:
 
     combined_score = metadata.get("combined_score")
     if combined_score is not None:
-        lines.append(f"<strong>Combined score:</strong> {html.escape(str(combined_score))}")
+        score_label = (
+            "Original combined score"
+            if metadata.get("contested")
+            else "Combined score"
+        )
+        lines.append(
+            f"<strong>{score_label}:</strong> "
+            f"{html.escape(str(combined_score))}"
+        )
+
+    if metadata.get("contested"):
+        strength_before = metadata.get(
+            "strength_before_contestation"
+        )
+        strength_after = metadata.get(
+            "strength_after_contestation"
+        )
+
+        lines.append("<strong>Contested:</strong> yes")
+        lines.append(
+            f"<strong>Strength before contestation:</strong> "
+            f"{html.escape(str(strength_before))}"
+        )
+        lines.append(
+            f"<strong>Strength after contestation:</strong> "
+            f"{html.escape(str(strength_after))}"
+        )
 
     return "<br>".join(lines)
 
@@ -246,11 +272,15 @@ def build_html(record: dict) -> str:
         else:
             css_class = "node support" if arg_type == "support" else "node attack"
             label = node_id
-            combined_score = metadata.get("combined_score", node.get("base_score"))
+            effective_strength = node.get("base_score")
+
+            if not isinstance(effective_strength, (int, float)):
+                effective_strength = metadata.get("combined_score")
+
             score_text = (
-                f"{combined_score:.3f}"
-                if isinstance(combined_score, (int, float))
-                else str(combined_score)
+                f"{effective_strength:.3f}"
+                if isinstance(effective_strength, (int, float))
+                else str(effective_strength)
             )
 
         tooltip_html = format_tooltip_html(node)
