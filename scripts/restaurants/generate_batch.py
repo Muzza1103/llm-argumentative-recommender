@@ -6,12 +6,6 @@ import time
 from collections import Counter, deque
 from pathlib import Path
 
-from src.llm.config import LLMConfig
-from src.llm.loader import load_model_and_tokenizer
-from src.llm.generator import LocalLLMGenerator
-from src.llm.gemini_generator import GeminiGenerator, ARGUMENT_RESPONSE_SCHEMA
-from src.llm.utils import extract_first_json_object
-from src.llm.validation import validate_generated_arguments
 from src.prompting.gemini_argument_prompt import build_gemini_prompt
 from src.prompting.argument_prompt import build_prompt
 from src.prompting.formatters import format_history, format_target_item
@@ -261,6 +255,10 @@ def main():
     )
     args = parser.parse_args()
 
+    from src.llm.config import LLMConfig
+    from src.llm.utils import extract_first_json_object
+    from src.llm.validation import validate_generated_arguments
+
     input_path = Path(args.input)
     output_path = Path(args.output)
 
@@ -279,6 +277,9 @@ def main():
     )
 
     if args.backend == "local":
+        from src.llm.generator import LocalLLMGenerator
+        from src.llm.loader import load_model_and_tokenizer
+
         config = LLMConfig(
             model_name=args.model,
             max_new_tokens=args.max_new_tokens,
@@ -295,6 +296,11 @@ def main():
         )
 
     else:
+        from src.llm.gemini_generator import (
+            ARGUMENT_RESPONSE_SCHEMA,
+            GeminiGenerator,
+        )
+
         generator = GeminiGenerator(
             model_name=args.gemini_model,
             project=args.gcp_project,

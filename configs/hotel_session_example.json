@@ -1,0 +1,24 @@
+{
+  "aspect_preferences": {
+    "proprete_hygiene": {
+      "importance_raw": 5,
+      "source_text": "Cleanliness is essential."
+    },
+    "bruit_calme": {
+      "importance_raw": 4,
+      "source_text": "I want to sleep in a quiet room."
+    },
+    "wifi_internet": {
+      "importance_raw": 2,
+      "source_text": "A good connection would be useful."
+    }
+  },
+  "constraints": [
+    {
+      "text": "Parking is essential.",
+      "importance_raw": 5,
+      "mode": "hard",
+      "field": "parking"
+    }
+  ]
+}

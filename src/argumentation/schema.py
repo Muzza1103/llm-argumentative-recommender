@@ -34,6 +34,12 @@ ALLOWED_ASPECT_EFFECTS = {
     "neutral_or_unclear",
 }
 
+ARGUMENT_FAMILIES = {
+    "empirical_aspect",
+    "structured_fact",
+    "semantic_extra",
+}
+
 def clean_used_aspects(value: Any) -> list[str]:
     if not isinstance(value, list):
         return []
@@ -87,7 +93,23 @@ class Argument:
     mf_score: float | None = None
     combined_score: float | None = None
 
-    # Optional metadata for later use
+    argument_family: str | None = None
+    aspect: str | None = None
+    intrinsic_strength: float | None = None
+    importance_raw: float | None = None
+    normalized_weight: float | None = None
+    evidence_score: float | None = None
+    n_support: int | None = None
+    n_attack: int | None = None
+    n_neutral: int | None = None
+    review_sources: list[dict[str, Any]] = field(default_factory=list)
+
+    # Optional hotel-hybrid provenance. Defaults preserve the Yelp payload.
+    source_refs: list[str] = field(default_factory=list)
+    preference_refs: list[str] = field(default_factory=list)
+    scoring_unit_id: str | None = None
+    explanatory_only: bool = False
+
     metadata: dict[str, Any] = field(default_factory=dict)
 
     def is_support(self) -> bool:
@@ -97,7 +119,7 @@ class Argument:
         return self.arg_type == "attack"
 
     def to_dict(self) -> dict[str, Any]:
-        return {
+        payload = {
             "id": self.id,
             "arg_type": self.arg_type,
             "text": self.text,
@@ -114,6 +136,39 @@ class Argument:
             "combined_score": self.combined_score,
             "metadata": self.metadata,
         }
+
+        if self.argument_family is not None:
+            payload.update(
+                {
+                    "argument_family": self.argument_family,
+                    "aspect": self.aspect,
+                    "intrinsic_strength": self.intrinsic_strength,
+                    "importance_raw": self.importance_raw,
+                    "normalized_weight": self.normalized_weight,
+                    "evidence_score": self.evidence_score,
+                    "n_support": self.n_support,
+                    "n_attack": self.n_attack,
+                    "n_neutral": self.n_neutral,
+                    "review_sources": self.review_sources,
+                }
+            )
+
+        if (
+            self.source_refs
+            or self.preference_refs
+            or self.scoring_unit_id is not None
+            or self.explanatory_only
+        ):
+            payload.update(
+                {
+                    "source_refs": self.source_refs,
+                    "preference_refs": self.preference_refs,
+                    "scoring_unit_id": self.scoring_unit_id,
+                    "explanatory_only": self.explanatory_only,
+                }
+            )
+
+        return payload
 
 
 def build_argument_from_json(
@@ -133,6 +188,16 @@ def build_argument_from_json(
         target_item_name=target_item.get("name"),
         target_item=target_item,
         history=example.get("history", []),
+        argument_family=argument_json.get("argument_family"),
+        aspect=argument_json.get("aspect"),
+        intrinsic_strength=argument_json.get("intrinsic_strength"),
+        importance_raw=argument_json.get("importance_raw"),
+        normalized_weight=argument_json.get("normalized_weight"),
+        evidence_score=argument_json.get("evidence_score"),
+        n_support=argument_json.get("n_support"),
+        n_attack=argument_json.get("n_attack"),
+        n_neutral=argument_json.get("n_neutral"),
+        review_sources=argument_json.get("review_sources", []),
     )
 
 
@@ -170,6 +235,20 @@ def build_arguments_from_scored_json(
             llm_scoring_raw_output=argument_json.get("llm_scoring_raw_output"),
             mf_score=argument_json.get("mf_score"),
             combined_score=argument_json.get("combined_score"),
+            argument_family=argument_json.get("argument_family"),
+            aspect=argument_json.get("aspect"),
+            intrinsic_strength=argument_json.get("intrinsic_strength"),
+            importance_raw=argument_json.get("importance_raw"),
+            normalized_weight=argument_json.get("normalized_weight"),
+            evidence_score=argument_json.get("evidence_score"),
+            n_support=argument_json.get("n_support"),
+            n_attack=argument_json.get("n_attack"),
+            n_neutral=argument_json.get("n_neutral"),
+            review_sources=argument_json.get("review_sources", []),
+            source_refs=argument_json.get("source_refs", []),
+            preference_refs=argument_json.get("preference_refs", []),
+            scoring_unit_id=argument_json.get("scoring_unit_id"),
+            explanatory_only=argument_json.get("explanatory_only", False),
             metadata=argument_json.get("metadata", {}),
         )
 

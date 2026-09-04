@@ -1,0 +1,4978 @@
+{
+  "schema_version": "1.0",
+  "scope": {
+    "dataset_name": "gemini_hotel_reviews_10k_profiles",
+    "n_hotels_declared": 200,
+    "n_hotels_inspected": 200,
+    "note": "Observed current-dataset facilities only; not an exhaustive provider catalogue."
+  },
+  "summary": {
+    "unique_id_name_pairs": 349,
+    "recognized_pairs": 66,
+    "unmapped_pairs": 283,
+    "ids_with_multiple_names": 0,
+    "names_with_multiple_ids": 33
+  },
+  "observed_facilities": [
+    {
+      "facility_id": 597,
+      "facility_name": "24-hour business center",
+      "hotel_frequency": 2,
+      "recognized": false
+    },
+    {
+      "facility_id": 723,
+      "facility_name": "24-hour fitness facilities",
+      "hotel_frequency": 2,
+      "recognized": true
+    },
+    {
+      "facility_id": 8,
+      "facility_name": "24-hour front desk",
+      "hotel_frequency": 96,
+      "recognized": true
+    },
+    {
+      "facility_id": 418,
+      "facility_name": "24-hour security",
+      "hotel_frequency": 3,
+      "recognized": false
+    },
+    {
+      "facility_id": 486,
+      "facility_name": "Access to health care professionals",
+      "hotel_frequency": 2,
+      "recognized": false
+    },
+    {
+      "facility_id": 630,
+      "facility_name": "Access to nearby indoor pool",
+      "hotel_frequency": 4,
+      "recognized": true
+    },
+    {
+      "facility_id": 1023,
+      "facility_name": "Accessible airport shuttle",
+      "hotel_frequency": 1,
+      "recognized": true
+    },
+    {
+      "facility_id": 184,
+      "facility_name": "Accessible parking",
+      "hotel_frequency": 1,
+      "recognized": true
+    },
+    {
+      "facility_id": 1021,
+      "facility_name": "Accessible shuttle",
+      "hotel_frequency": 17,
+      "recognized": false
+    },
+    {
+      "facility_id": 109,
+      "facility_name": "Air conditioning",
+      "hotel_frequency": 2,
+      "recognized": true
+    },
+    {
+      "facility_id": 691,
+      "facility_name": "Airport transportation - pickup (surcharge)",
+      "hotel_frequency": 4,
+      "recognized": true
+    },
+    {
+      "facility_id": 1000,
+      "facility_name": "All property's electricity comes from renewable sources",
+      "hotel_frequency": 1,
+      "recognized": false
+    },
+    {
+      "facility_id": 990,
+      "facility_name": "Annual carbon offsets",
+      "hotel_frequency": 2,
+      "recognized": false
+    },
+    {
+      "facility_id": 2266,
+      "facility_name": "Annual carbon offsets",
+      "hotel_frequency": 2,
+      "recognized": false
+    },
+    {
+      "facility_id": 522,
+      "facility_name": "Arcade/game room",
+      "hotel_frequency": 8,
+      "recognized": false
+    },
+    {
+      "facility_id": 2010,
+      "facility_name": "Arcade/game room",
+      "hotel_frequency": 8,
+      "recognized": false
+    },
+    {
+      "facility_id": 2190,
+      "facility_name": "Area rugs in public areas",
+      "hotel_frequency": 2,
+      "recognized": false
+    },
+    {
+      "facility_id": 595,
+      "facility_name": "Area shuttle (surcharge)",
+      "hotel_frequency": 2,
+      "recognized": false
+    },
+    {
+      "facility_id": 1869,
+      "facility_name": "Area shuttle (surcharge)",
+      "hotel_frequency": 2,
+      "recognized": false
+    },
+    {
+      "facility_id": 592,
+      "facility_name": "Assistive listening devices available",
+      "hotel_frequency": 20,
+      "recognized": false
+    },
+    {
+      "facility_id": 935,
+      "facility_name": "Assistive listening devices in meeting rooms",
+      "hotel_frequency": 1,
+      "recognized": false
+    },
+    {
+      "facility_id": 999,
+      "facility_name": "At least 80% of all lighting comes from LEDs",
+      "hotel_frequency": 9,
+      "recognized": false
+    },
+    {
+      "facility_id": 497,
+      "facility_name": "ATM/banking",
+      "hotel_frequency": 12,
+      "recognized": false
+    },
+    {
+      "facility_id": 21,
+      "facility_name": "Babysitting/child services",
+      "hotel_frequency": 1,
+      "recognized": false
+    },
+    {
+      "facility_id": 826,
+      "facility_name": "Ballroom",
+      "hotel_frequency": 11,
+      "recognized": false
+    },
+    {
+      "facility_id": 827,
+      "facility_name": "Banquet hall",
+      "hotel_frequency": 84,
+      "recognized": false
+    },
+    {
+      "facility_id": 7,
+      "facility_name": "Bar",
+      "hotel_frequency": 2,
+      "recognized": false
+    },
+    {
+      "facility_id": 72,
+      "facility_name": "BBQ facilities",
+      "hotel_frequency": 1,
+      "recognized": false
+    },
+    {
+      "facility_id": 302,
+      "facility_name": "Beach",
+      "hotel_frequency": 1,
+      "recognized": false
+    },
+    {
+      "facility_id": 960,
+      "facility_name": "Bicycle parking available",
+      "hotel_frequency": 5,
+      "recognized": false
+    },
+    {
+      "facility_id": 508,
+      "facility_name": "Bicycle rentals nearby",
+      "hotel_frequency": 21,
+      "recognized": false
+    },
+    {
+      "facility_id": 579,
+      "facility_name": "Billiards or pool table",
+      "hotel_frequency": 8,
+      "recognized": false
+    },
+    {
+      "facility_id": 414,
+      "facility_name": "Bingo",
+      "hotel_frequency": 1,
+      "recognized": false
+    },
+    {
+      "facility_id": 1008,
+      "facility_name": "Biodegradable/compostable stirrers",
+      "hotel_frequency": 10,
+      "recognized": false
+    },
+    {
+      "facility_id": 818,
+      "facility_name": "Birdwatching nearby",
+      "hotel_frequency": 21,
+      "recognized": false
+    },
+    {
+      "facility_id": 2330,
+      "facility_name": "Birdwatching nearby",
+      "hotel_frequency": 21,
+      "recognized": false
+    },
+    {
+      "facility_id": 170,
+      "facility_name": "Board games/puzzles",
+      "hotel_frequency": 3,
+      "recognized": false
+    },
+    {
+      "facility_id": 726,
+      "facility_name": "Boat tours nearby",
+      "hotel_frequency": 4,
+      "recognized": false
+    },
+    {
+      "facility_id": 1389,
+      "facility_name": "Boat tours nearby",
+      "hotel_frequency": 4,
+      "recognized": false
+    },
+    {
+      "facility_id": 593,
+      "facility_name": "Braille or raised signage",
+      "hotel_frequency": 5,
+      "recognized": false
+    },
+    {
+      "facility_id": 519,
+      "facility_name": "Breakfast available (surcharge)",
+      "hotel_frequency": 104,
+      "recognized": true
+    },
+    {
+      "facility_id": 43,
+      "facility_name": "Breakfast in the room",
+      "hotel_frequency": 1,
+      "recognized": true
+    },
+    {
+      "facility_id": 484,
+      "facility_name": "Breakfast takeaway containers",
+      "hotel_frequency": 1,
+      "recognized": false
+    },
+    {
+      "facility_id": 411,
+      "facility_name": "Broadcast Live sport events",
+      "hotel_frequency": 1,
+      "recognized": false
+    },
+    {
+      "facility_id": 1005,
+      "facility_name": "Bulk dispenser for toiletries",
+      "hotel_frequency": 8,
+      "recognized": false
+    },
+    {
+      "facility_id": 20,
+      "facility_name": "Business center",
+      "hotel_frequency": 1,
+      "recognized": false
+    },
+    {
+      "facility_id": 461,
+      "facility_name": "Cashless payment available",
+      "hotel_frequency": 5,
+      "recognized": false
+    },
+    {
+      "facility_id": 900,
+      "facility_name": "Casino nearby",
+      "hotel_frequency": 7,
+      "recognized": false
+    },
+    {
+      "facility_id": 752,
+      "facility_name": "Cave exploring/spelunking nearby",
+      "hotel_frequency": 2,
+      "recognized": false
+    },
+    {
+      "facility_id": 423,
+      "facility_name": "CCTV in common areas",
+      "hotel_frequency": 2,
+      "recognized": false
+    },
+    {
+      "facility_id": 424,
+      "facility_name": "CCTV outside property",
+      "hotel_frequency": 5,
+      "recognized": false
+    },
+    {
+      "facility_id": 970,
+      "facility_name": "Change of bed sheets (on request)",
+      "hotel_frequency": 9,
+      "recognized": false
+    },
+    {
+      "facility_id": 969,
+      "facility_name": "Change of towels (on request)",
+      "hotel_frequency": 14,
+      "recognized": false
+    },
+    {
+      "facility_id": 890,
+      "facility_name": "Children's games",
+      "hotel_frequency": 3,
+      "recognized": false
+    },
+    {
+      "facility_id": 449,
+      "facility_name": "Cleaning standards that are effective against Coronavirus",
+      "hotel_frequency": 5,
+      "recognized": false
+    },
+    {
+      "facility_id": 800,
+      "facility_name": "Clubhouse",
+      "hotel_frequency": 1,
+      "recognized": false
+    },
+    {
+      "facility_id": 2359,
+      "facility_name": "Clubhouse",
+      "hotel_frequency": 1,
+      "recognized": false
+    },
+    {
+      "facility_id": 1037,
+      "facility_name": "Cobblestone flooring in public areas",
+      "hotel_frequency": 1,
+      "recognized": false
+    },
+    {
+      "facility_id": 2736,
+      "facility_name": "Cobblestone flooring in public areas",
+      "hotel_frequency": 1,
+      "recognized": false
+    },
+    {
+      "facility_id": 219,
+      "facility_name": "Coffee Shop on site",
+      "hotel_frequency": 1,
+      "recognized": false
+    },
+    {
+      "facility_id": 920,
+      "facility_name": "Coin laundry on site",
+      "hotel_frequency": 4,
+      "recognized": false
+    },
+    {
+      "facility_id": 844,
+      "facility_name": "Composting",
+      "hotel_frequency": 2,
+      "recognized": false
+    },
+    {
+      "facility_id": 1001,
+      "facility_name": "Comprehensive food waste policy",
+      "hotel_frequency": 6,
+      "recognized": false
+    },
+    {
+      "facility_id": 1004,
+      "facility_name": "Comprehensive recycling policy",
+      "hotel_frequency": 10,
+      "recognized": false
+    },
+    {
+      "facility_id": 2050,
+      "facility_name": "Comprehensive recycling policy",
+      "hotel_frequency": 10,
+      "recognized": false
+    },
+    {
+      "facility_id": 678,
+      "facility_name": "Computer station",
+      "hotel_frequency": 14,
+      "recognized": false
+    },
+    {
+      "facility_id": 124,
+      "facility_name": "Concierge service",
+      "hotel_frequency": 39,
+      "recognized": false
+    },
+    {
+      "facility_id": 623,
+      "facility_name": "Conference center",
+      "hotel_frequency": 11,
+      "recognized": false
+    },
+    {
+      "facility_id": 502,
+      "facility_name": "Conference space",
+      "hotel_frequency": 43,
+      "recognized": false
+    },
+    {
+      "facility_id": 460,
+      "facility_name": "Contactless check-in/check-out",
+      "hotel_frequency": 2,
+      "recognized": false
+    },
+    {
+      "facility_id": 24,
+      "facility_name": "Continental breakfast",
+      "hotel_frequency": 5,
+      "recognized": true
+    },
+    {
+      "facility_id": 802,
+      "facility_name": "Couples/private dining",
+      "hotel_frequency": 6,
+      "recognized": false
+    },
+    {
+      "facility_id": 857,
+      "facility_name": "Covered parking",
+      "hotel_frequency": 3,
+      "recognized": true
+    },
+    {
+      "facility_id": 971,
+      "facility_name": "Coworking spaces",
+      "hotel_frequency": 5,
+      "recognized": false
+    },
+    {
+      "facility_id": 76,
+      "facility_name": "Cycling",
+      "hotel_frequency": 1,
+      "recognized": false
+    },
+    {
+      "facility_id": 158,
+      "facility_name": "Daily housekeeping",
+      "hotel_frequency": 2,
+      "recognized": false
+    },
+    {
+      "facility_id": 485,
+      "facility_name": "Delivered food - securely covered",
+      "hotel_frequency": 3,
+      "recognized": false
+    },
+    {
+      "facility_id": 110,
+      "facility_name": "Designated smoking area",
+      "hotel_frequency": 20,
+      "recognized": false
+    },
+    {
+      "facility_id": 840,
+      "facility_name": "Dock",
+      "hotel_frequency": 1,
+      "recognized": false
+    },
+    {
+      "facility_id": 956,
+      "facility_name": "Dog exercise area",
+      "hotel_frequency": 6,
+      "recognized": false
+    },
+    {
+      "facility_id": 996,
+      "facility_name": "Double-glazing on all windows",
+      "hotel_frequency": 10,
+      "recognized": false
+    },
+    {
+      "facility_id": 506,
+      "facility_name": "Downhill skiing nearby",
+      "hotel_frequency": 2,
+      "recognized": false
+    },
+    {
+      "facility_id": 845,
+      "facility_name": "Eco-friendly cleaning products provided",
+      "hotel_frequency": 7,
+      "recognized": false
+    },
+    {
+      "facility_id": 854,
+      "facility_name": "Eco-friendly cleaning products used",
+      "hotel_frequency": 7,
+      "recognized": false
+    },
+    {
+      "facility_id": 846,
+      "facility_name": "Eco-friendly toiletries",
+      "hotel_frequency": 15,
+      "recognized": false
+    },
+    {
+      "facility_id": 575,
+      "facility_name": "Ecotours nearby",
+      "hotel_frequency": 2,
+      "recognized": false
+    },
+    {
+      "facility_id": 967,
+      "facility_name": "Electric bicycle charging station",
+      "hotel_frequency": 1,
+      "recognized": false
+    },
+    {
+      "facility_id": 2413,
+      "facility_name": "Electric bicycle charging station",
+      "hotel_frequency": 1,
+      "recognized": false
+    },
+    {
+      "facility_id": 765,
+      "facility_name": "Electric car charging station",
+      "hotel_frequency": 24,
+      "recognized": false
+    },
+    {
+      "facility_id": 2014,
+      "facility_name": "Electric car charging station",
+      "hotel_frequency": 24,
+      "recognized": false
+    },
+    {
+      "facility_id": 491,
+      "facility_name": "Elevator",
+      "hotel_frequency": 52,
+      "recognized": false
+    },
+    {
+      "facility_id": 189,
+      "facility_name": "Emergency cord in bathroom",
+      "hotel_frequency": 2,
+      "recognized": false
+    },
+    {
+      "facility_id": 998,
+      "facility_name": "Energy-saving switches",
+      "hotel_frequency": 9,
+      "recognized": false
+    },
+    {
+      "facility_id": 568,
+      "facility_name": "Express check-in",
+      "hotel_frequency": 26,
+      "recognized": false
+    },
+    {
+      "facility_id": 49,
+      "facility_name": "Express check-in/check-out",
+      "hotel_frequency": 55,
+      "recognized": false
+    },
+    {
+      "facility_id": 543,
+      "facility_name": "Express check-out",
+      "hotel_frequency": 48,
+      "recognized": false
+    },
+    {
+      "facility_id": 1842,
+      "facility_name": "Express check-out",
+      "hotel_frequency": 48,
+      "recognized": false
+    },
+    {
+      "facility_id": 488,
+      "facility_name": "Face masks for guests available",
+      "hotel_frequency": 3,
+      "recognized": false
+    },
+    {
+      "facility_id": 25,
+      "facility_name": "Facilities for disabled guests",
+      "hotel_frequency": 3,
+      "recognized": true
+    },
+    {
+      "facility_id": 28,
+      "facility_name": "Family rooms",
+      "hotel_frequency": 7,
+      "recognized": true
+    },
+    {
+      "facility_id": 81,
+      "facility_name": "Fax/photocopying",
+      "hotel_frequency": 5,
+      "recognized": false
+    },
+    {
+      "facility_id": 425,
+      "facility_name": "Fire extinguishers",
+      "hotel_frequency": 5,
+      "recognized": false
+    },
+    {
+      "facility_id": 509,
+      "facility_name": "Fireplace in lobby",
+      "hotel_frequency": 21,
+      "recognized": false
+    },
+    {
+      "facility_id": 1979,
+      "facility_name": "Fireplace in lobby",
+      "hotel_frequency": 21,
+      "recognized": false
+    },
+    {
+      "facility_id": 459,
+      "facility_name": "First aid kit available",
+      "hotel_frequency": 4,
+      "recognized": false
+    },
+    {
+      "facility_id": 899,
+      "facility_name": "Fishing nearby",
+      "hotel_frequency": 22,
+      "recognized": false
+    },
+    {
+      "facility_id": 11,
+      "facility_name": "Fitness center",
+      "hotel_frequency": 1,
+      "recognized": true
+    },
+    {
+      "facility_id": 492,
+      "facility_name": "Fitness facilities",
+      "hotel_frequency": 31,
+      "recognized": true
+    },
+    {
+      "facility_id": 1725,
+      "facility_name": "Fitness facilities",
+      "hotel_frequency": 30,
+      "recognized": true
+    },
+    {
+      "facility_id": 757,
+      "facility_name": "Fitness facilities (surcharge)",
+      "hotel_frequency": 1,
+      "recognized": true
+    },
+    {
+      "facility_id": 6848,
+      "facility_name": "Fitness facilities (surcharge)",
+      "hotel_frequency": 1,
+      "recognized": true
+    },
+    {
+      "facility_id": 954,
+      "facility_name": "Food and water bowls",
+      "hotel_frequency": 42,
+      "recognized": false
+    },
+    {
+      "facility_id": 454,
+      "facility_name": "Food delivered to guest room",
+      "hotel_frequency": 3,
+      "recognized": false
+    },
+    {
+      "facility_id": 493,
+      "facility_name": "Free airport transportation",
+      "hotel_frequency": 2,
+      "recognized": true
+    },
+    {
+      "facility_id": 529,
+      "facility_name": "Free breakfast",
+      "hotel_frequency": 35,
+      "recognized": true
+    },
+    {
+      "facility_id": 1054,
+      "facility_name": "Free breakfast",
+      "hotel_frequency": 35,
+      "recognized": true
+    },
+    {
+      "facility_id": 756,
+      "facility_name": "Free breakfast to go",
+      "hotel_frequency": 1,
+      "recognized": true
+    },
+    {
+      "facility_id": 730,
+      "facility_name": "Free buffet breakfast",
+      "hotel_frequency": 1,
+      "recognized": true
+    },
+    {
+      "facility_id": 729,
+      "facility_name": "Free continental breakfast",
+      "hotel_frequency": 5,
+      "recognized": true
+    },
+    {
+      "facility_id": 731,
+      "facility_name": "Free cooked-to-order breakfast",
+      "hotel_frequency": 5,
+      "recognized": true
+    },
+    {
+      "facility_id": 732,
+      "facility_name": "Free English breakfast",
+      "hotel_frequency": 4,
+      "recognized": true
+    },
+    {
+      "facility_id": 733,
+      "facility_name": "Free full breakfast",
+      "hotel_frequency": 12,
+      "recognized": true
+    },
+    {
+      "facility_id": 715,
+      "facility_name": "Free long-term parking",
+      "hotel_frequency": 4,
+      "recognized": true
+    },
+    {
+      "facility_id": 536,
+      "facility_name": "Free newspapers in lobby",
+      "hotel_frequency": 38,
+      "recognized": false
+    },
+    {
+      "facility_id": 46,
+      "facility_name": "Free Parking",
+      "hotel_frequency": 2,
+      "recognized": true
+    },
+    {
+      "facility_id": 601,
+      "facility_name": "Free reception",
+      "hotel_frequency": 2,
+      "recognized": false
+    },
+    {
+      "facility_id": 717,
+      "facility_name": "Free RV, bus, truck parking",
+      "hotel_frequency": 6,
+      "recognized": true
+    },
+    {
+      "facility_id": 674,
+      "facility_name": "Free self parking",
+      "hotel_frequency": 109,
+      "recognized": true
+    },
+    {
+      "facility_id": 537,
+      "facility_name": "Free use of nearby fitness center",
+      "hotel_frequency": 1,
+      "recognized": true
+    },
+    {
+      "facility_id": 676,
+      "facility_name": "Free valet parking",
+      "hotel_frequency": 1,
+      "recognized": true
+    },
+    {
+      "facility_id": 107,
+      "facility_name": "Free WiFi",
+      "hotel_frequency": 185,
+      "recognized": true
+    },
+    {
+      "facility_id": 584,
+      "facility_name": "Free wired internet",
+      "hotel_frequency": 23,
+      "recognized": false
+    },
+    {
+      "facility_id": 540,
+      "facility_name": "Front desk (limited hours)",
+      "hotel_frequency": 39,
+      "recognized": false
+    },
+    {
+      "facility_id": 1803,
+      "facility_name": "Front entrance ramp",
+      "hotel_frequency": 3,
+      "recognized": false
+    },
+    {
+      "facility_id": 205,
+      "facility_name": "Fruits",
+      "hotel_frequency": 2,
+      "recognized": false
+    },
+    {
+      "facility_id": 557,
+      "facility_name": "Full-service spa",
+      "hotel_frequency": 19,
+      "recognized": true
+    },
+    {
+      "facility_id": 1102,
+      "facility_name": "Full-service spa",
+      "hotel_frequency": 19,
+      "recognized": true
+    },
+    {
+      "facility_id": 842,
+      "facility_name": "Fully fenced",
+      "hotel_frequency": 2,
+      "recognized": false
+    },
+    {
+      "facility_id": 768,
+      "facility_name": "Games",
+      "hotel_frequency": 1,
+      "recognized": false
+    },
+    {
+      "facility_id": 880,
+      "facility_name": "Garage",
+      "hotel_frequency": 1,
+      "recognized": true
+    },
+    {
+      "facility_id": 14,
+      "facility_name": "Garden",
+      "hotel_frequency": 93,
+      "recognized": false
+    },
+    {
+      "facility_id": 499,
+      "facility_name": "Gift shops or newsstand",
+      "hotel_frequency": 6,
+      "recognized": false
+    },
+    {
+      "facility_id": 882,
+      "facility_name": "Golf cart",
+      "hotel_frequency": 1,
+      "recognized": false
+    },
+    {
+      "facility_id": 883,
+      "facility_name": "Golf clubs (equipment)",
+      "hotel_frequency": 1,
+      "recognized": false
+    },
+    {
+      "facility_id": 639,
+      "facility_name": "Golf driving range on site",
+      "hotel_frequency": 3,
+      "recognized": false
+    },
+    {
+      "facility_id": 578,
+      "facility_name": "Golf lessons available nearby",
+      "hotel_frequency": 8,
+      "recognized": false
+    },
+    {
+      "facility_id": 641,
+      "facility_name": "Golf lessons on site",
+      "hotel_frequency": 1,
+      "recognized": false
+    },
+    {
+      "facility_id": 798,
+      "facility_name": "Golf lessons with a pro",
+      "hotel_frequency": 1,
+      "recognized": false
+    },
+    {
+      "facility_id": 503,
+      "facility_name": "Golfing nearby",
+      "hotel_frequency": 31,
+      "recognized": false
+    },
+    {
+      "facility_id": 642,
+      "facility_name": "Golfing on site",
+      "hotel_frequency": 7,
+      "recognized": false
+    },
+    {
+      "facility_id": 855,
+      "facility_name": "Grey water recycling system",
+      "hotel_frequency": 1,
+      "recognized": false
+    },
+    {
+      "facility_id": 580,
+      "facility_name": "Grocery/convenience store",
+      "hotel_frequency": 1,
+      "recognized": false
+    },
+    {
+      "facility_id": 995,
+      "facility_name": "Guest education on local ecosystems and culture",
+      "hotel_frequency": 6,
+      "recognized": false
+    },
+    {
+      "facility_id": 2261,
+      "facility_name": "Guest education on local ecosystems and culture",
+      "hotel_frequency": 6,
+      "recognized": false
+    },
+    {
+      "facility_id": 452,
+      "facility_name": "Guest room sealed after cleaning",
+      "hotel_frequency": 3,
+      "recognized": false
+    },
+    {
+      "facility_id": 451,
+      "facility_name": "Guest rooms disinfected between stays",
+      "hotel_frequency": 4,
+      "recognized": false
+    },
+    {
+      "facility_id": 468,
+      "facility_name": "Guests can opt-out any cleaning services during stay",
+      "hotel_frequency": 5,
+      "recognized": false
+    },
+    {
+      "facility_id": 457,
+      "facility_name": "Hand sanitizer in guest room and key areas",
+      "hotel_frequency": 3,
+      "recognized": false
+    },
+    {
+      "facility_id": 949,
+      "facility_name": "Handrails in stairways",
+      "hotel_frequency": 7,
+      "recognized": false
+    },
+    {
+      "facility_id": 1035,
+      "facility_name": "Hardwood flooring in public areas",
+      "hotel_frequency": 4,
+      "recognized": false
+    },
+    {
+      "facility_id": 2216,
+      "facility_name": "Hardwood flooring in public areas",
+      "hotel_frequency": 4,
+      "recognized": false
+    },
+    {
+      "facility_id": 530,
+      "facility_name": "Health club",
+      "hotel_frequency": 20,
+      "recognized": true
+    },
+    {
+      "facility_id": 2066,
+      "facility_name": "Health club",
+      "hotel_frequency": 20,
+      "recognized": true
+    },
+    {
+      "facility_id": 901,
+      "facility_name": "Health or beauty spa nearby",
+      "hotel_frequency": 12,
+      "recognized": true
+    },
+    {
+      "facility_id": 1814,
+      "facility_name": "Health or beauty spa nearby",
+      "hotel_frequency": 12,
+      "recognized": true
+    },
+    {
+      "facility_id": 195,
+      "facility_name": "Heated pool",
+      "hotel_frequency": 2,
+      "recognized": true
+    },
+    {
+      "facility_id": 80,
+      "facility_name": "Heating",
+      "hotel_frequency": 2,
+      "recognized": false
+    },
+    {
+      "facility_id": 513,
+      "facility_name": "Hiking/biking trails nearby",
+      "hotel_frequency": 45,
+      "recognized": false
+    },
+    {
+      "facility_id": 903,
+      "facility_name": "Horse riding nearby",
+      "hotel_frequency": 27,
+      "recognized": false
+    },
+    {
+      "facility_id": 784,
+      "facility_name": "Housekeeping on request",
+      "hotel_frequency": 22,
+      "recognized": false
+    },
+    {
+      "facility_id": 991,
+      "facility_name": "Humane animal treatment",
+      "hotel_frequency": 5,
+      "recognized": false
+    },
+    {
+      "facility_id": 904,
+      "facility_name": "Hunting nearby",
+      "hotel_frequency": 1,
+      "recognized": false
+    },
+    {
+      "facility_id": 905,
+      "facility_name": "Ice skating nearby",
+      "hotel_frequency": 2,
+      "recognized": false
+    },
+    {
+      "facility_id": 761,
+      "facility_name": "Internet access",
+      "hotel_frequency": 5,
+      "recognized": false
+    },
+    {
+      "facility_id": 558,
+      "facility_name": "Internet access in public areas - high speed",
+      "hotel_frequency": 10,
+      "recognized": false
+    },
+    {
+      "facility_id": 512,
+      "facility_name": "Internet access in public areas - surcharge",
+      "hotel_frequency": 1,
+      "recognized": false
+    },
+    {
+      "facility_id": 465,
+      "facility_name": "Invoice provided",
+      "hotel_frequency": 4,
+      "recognized": false
+    },
+    {
+      "facility_id": 44,
+      "facility_name": "Ironing service",
+      "hotel_frequency": 3,
+      "recognized": false
+    },
+    {
+      "facility_id": 856,
+      "facility_name": "Japanese garden",
+      "hotel_frequency": 4,
+      "recognized": false
+    },
+    {
+      "facility_id": 59,
+      "facility_name": "Karaoke",
+      "hotel_frequency": 4,
+      "recognized": false
+    },
+    {
+      "facility_id": 514,
+      "facility_name": "Kayaking nearby",
+      "hotel_frequency": 14,
+      "recognized": false
+    },
+    {
+      "facility_id": 419,
+      "facility_name": "Key access",
+      "hotel_frequency": 4,
+      "recognized": false
+    },
+    {
+      "facility_id": 420,
+      "facility_name": "Key card access",
+      "hotel_frequency": 4,
+      "recognized": false
+    },
+    {
+      "facility_id": 176,
+      "facility_name": "Kid meals",
+      "hotel_frequency": 2,
+      "recognized": false
+    },
+    {
+      "facility_id": 177,
+      "facility_name": "Kid-friendly buffet",
+      "hotel_frequency": 1,
+      "recognized": false
+    },
+    {
+      "facility_id": 22,
+      "facility_name": "Laundry",
+      "hotel_frequency": 1,
+      "recognized": false
+    },
+    {
+      "facility_id": 450,
+      "facility_name": "Laundry washed per local authority guidelines",
+      "hotel_frequency": 1,
+      "recognized": false
+    },
+    {
+      "facility_id": 847,
+      "facility_name": "LED light bulbs",
+      "hotel_frequency": 10,
+      "recognized": false
+    },
+    {
+      "facility_id": 526,
+      "facility_name": "Library",
+      "hotel_frequency": 11,
+      "recognized": false
+    },
+    {
+      "facility_id": 48,
+      "facility_name": "Lift / Elevator",
+      "hotel_frequency": 4,
+      "recognized": false
+    },
+    {
+      "facility_id": 545,
+      "facility_name": "Limo or town car service available",
+      "hotel_frequency": 5,
+      "recognized": false
+    },
+    {
+      "facility_id": 850,
+      "facility_name": "Living plant wall",
+      "hotel_frequency": 2,
+      "recognized": false
+    },
+    {
+      "facility_id": 992,
+      "facility_name": "Locally-owned & organized tours & activities",
+      "hotel_frequency": 7,
+      "recognized": false
+    },
+    {
+      "facility_id": 997,
+      "facility_name": "Locally-sourced food on site (80% or more)",
+      "hotel_frequency": 5,
+      "recognized": false
+    },
+    {
+      "facility_id": 716,
+      "facility_name": "Long-term parking (surcharge)",
+      "hotel_frequency": 2,
+      "recognized": true
+    },
+    {
+      "facility_id": 2493,
+      "facility_name": "Long-term parking (surcharge)",
+      "hotel_frequency": 2,
+      "recognized": false
+    },
+    {
+      "facility_id": 870,
+      "facility_name": "Lot hours - 24 hours",
+      "hotel_frequency": 4,
+      "recognized": false
+    },
+    {
+      "facility_id": 1984,
+      "facility_name": "Lot hours - 24 hours",
+      "hotel_frequency": 4,
+      "recognized": false
+    },
+    {
+      "facility_id": 91,
+      "facility_name": "Luggage storage",
+      "hotel_frequency": 123,
+      "recognized": false
+    },
+    {
+      "facility_id": 909,
+      "facility_name": "Marina nearby",
+      "hotel_frequency": 2,
+      "recognized": false
+    },
+    {
+      "facility_id": 559,
+      "facility_name": "Marina on site",
+      "hotel_frequency": 1,
+      "recognized": false
+    },
+    {
+      "facility_id": 561,
+      "facility_name": "Meeting rooms",
+      "hotel_frequency": 55,
+      "recognized": false
+    },
+    {
+      "facility_id": 1091,
+      "facility_name": "Meeting rooms",
+      "hotel_frequency": 55,
+      "recognized": false
+    },
+    {
+      "facility_id": 6,
+      "facility_name": "Meeting/banquet facilities",
+      "hotel_frequency": 2,
+      "recognized": false
+    },
+    {
+      "facility_id": 640,
+      "facility_name": "Miniature golf on site",
+      "hotel_frequency": 1,
+      "recognized": false
+    },
+    {
+      "facility_id": 463,
+      "facility_name": "Mobile app for room service",
+      "hotel_frequency": 3,
+      "recognized": false
+    },
+    {
+      "facility_id": 895,
+      "facility_name": "Motor boating nearby",
+      "hotel_frequency": 1,
+      "recognized": false
+    },
+    {
+      "facility_id": 551,
+      "facility_name": "Mountain biking nearby",
+      "hotel_frequency": 30,
+      "recognized": false
+    },
+    {
+      "facility_id": 649,
+      "facility_name": "Mountain biking on site",
+      "hotel_frequency": 1,
+      "recognized": false
+    },
+    {
+      "facility_id": 910,
+      "facility_name": "Mountain climbing nearby",
+      "hotel_frequency": 3,
+      "recognized": false
+    },
+    {
+      "facility_id": 535,
+      "facility_name": "Multilingual staff",
+      "hotel_frequency": 38,
+      "recognized": false
+    },
+    {
+      "facility_id": 814,
+      "facility_name": "Nature reserve",
+      "hotel_frequency": 2,
+      "recognized": false
+    },
+    {
+      "facility_id": 1797,
+      "facility_name": "Nature reserve",
+      "hotel_frequency": 2,
+      "recognized": false
+    },
+    {
+      "facility_id": 759,
+      "facility_name": "Newspapers in lobby (surcharge)",
+      "hotel_frequency": 12,
+      "recognized": false
+    },
+    {
+      "facility_id": 1847,
+      "facility_name": "Newspapers in lobby (surcharge)",
+      "hotel_frequency": 12,
+      "recognized": false
+    },
+    {
+      "facility_id": 126,
+      "facility_name": "Nightclub/DJ",
+      "hotel_frequency": 1,
+      "recognized": false
+    },
+    {
+      "facility_id": 1024,
+      "facility_name": "No accessible airport shuttle",
+      "hotel_frequency": 1,
+      "recognized": false
+    },
+    {
+      "facility_id": 1022,
+      "facility_name": "No accessible shuttle",
+      "hotel_frequency": 17,
+      "recognized": false
+    },
+    {
+      "facility_id": 972,
+      "facility_name": "No elevator (single level property)",
+      "hotel_frequency": 2,
+      "recognized": false
+    },
+    {
+      "facility_id": 1006,
+      "facility_name": "No single-use plastic soda bottles",
+      "hotel_frequency": 4,
+      "recognized": false
+    },
+    {
+      "facility_id": 2259,
+      "facility_name": "No single-use plastic soda bottles",
+      "hotel_frequency": 4,
+      "recognized": false
+    },
+    {
+      "facility_id": 1007,
+      "facility_name": "No single-use plastic stirrers",
+      "hotel_frequency": 10,
+      "recognized": false
+    },
+    {
+      "facility_id": 2247,
+      "facility_name": "No single-use plastic stirrers",
+      "hotel_frequency": 10,
+      "recognized": false
+    },
+    {
+      "facility_id": 1009,
+      "facility_name": "No single-use plastic straws",
+      "hotel_frequency": 8,
+      "recognized": false
+    },
+    {
+      "facility_id": 2020,
+      "facility_name": "No single-use plastic straws",
+      "hotel_frequency": 8,
+      "recognized": false
+    },
+    {
+      "facility_id": 1011,
+      "facility_name": "No single-use plastic water bottles",
+      "hotel_frequency": 5,
+      "recognized": false
+    },
+    {
+      "facility_id": 2253,
+      "facility_name": "No single-use plastic water bottles",
+      "hotel_frequency": 5,
+      "recognized": false
+    },
+    {
+      "facility_id": 16,
+      "facility_name": "Non-smoking rooms",
+      "hotel_frequency": 8,
+      "recognized": false
+    },
+    {
+      "facility_id": 108,
+      "facility_name": "Non-smoking throughout",
+      "hotel_frequency": 8,
+      "recognized": false
+    },
+    {
+      "facility_id": 720,
+      "facility_name": "Offsite parking discounted rates available",
+      "hotel_frequency": 5,
+      "recognized": true
+    },
+    {
+      "facility_id": 2083,
+      "facility_name": "Offsite parking discounted rates available",
+      "hotel_frequency": 5,
+      "recognized": false
+    },
+    {
+      "facility_id": 721,
+      "facility_name": "Offsite parking reservations required",
+      "hotel_frequency": 1,
+      "recognized": true
+    },
+    {
+      "facility_id": 988,
+      "facility_name": "Organic food",
+      "hotel_frequency": 2,
+      "recognized": false
+    },
+    {
+      "facility_id": 885,
+      "facility_name": "Outdoor entertainment area",
+      "hotel_frequency": 1,
+      "recognized": false
+    },
+    {
+      "facility_id": 222,
+      "facility_name": "Outdoor furniture",
+      "hotel_frequency": 13,
+      "recognized": false
+    },
+    {
+      "facility_id": 73,
+      "facility_name": "Packed lunches",
+      "hotel_frequency": 2,
+      "recognized": false
+    },
+    {
+      "facility_id": 549,
+      "facility_name": "Parasailing nearby",
+      "hotel_frequency": 5,
+      "recognized": false
+    },
+    {
+      "facility_id": 1862,
+      "facility_name": "Parasailing nearby",
+      "hotel_frequency": 5,
+      "recognized": false
+    },
+    {
+      "facility_id": 2,
+      "facility_name": "Parking",
+      "hotel_frequency": 9,
+      "recognized": true
+    },
+    {
+      "facility_id": 628,
+      "facility_name": "Parking (limited spaces)",
+      "hotel_frequency": 23,
+      "recognized": true
+    },
+    {
+      "facility_id": 217,
+      "facility_name": "Pet basket",
+      "hotel_frequency": 1,
+      "recognized": false
+    },
+    {
+      "facility_id": 218,
+      "facility_name": "Pet bowls",
+      "hotel_frequency": 1,
+      "recognized": false
+    },
+    {
+      "facility_id": 4,
+      "facility_name": "Pets allowed",
+      "hotel_frequency": 5,
+      "recognized": true
+    },
+    {
+      "facility_id": 453,
+      "facility_name": "Physical distancing in dining areas",
+      "hotel_frequency": 3,
+      "recognized": false
+    },
+    {
+      "facility_id": 462,
+      "facility_name": "Physical distancing rules followed",
+      "hotel_frequency": 4,
+      "recognized": false
+    },
+    {
+      "facility_id": 224,
+      "facility_name": "Picnic area",
+      "hotel_frequency": 31,
+      "recognized": false
+    },
+    {
+      "facility_id": 651,
+      "facility_name": "Pilates classes on site",
+      "hotel_frequency": 4,
+      "recognized": false
+    },
+    {
+      "facility_id": 652,
+      "facility_name": "Playground on site",
+      "hotel_frequency": 12,
+      "recognized": false
+    },
+    {
+      "facility_id": 714,
+      "facility_name": "Pool sun loungers",
+      "hotel_frequency": 8,
+      "recognized": false
+    },
+    {
+      "facility_id": 542,
+      "facility_name": "Porter/bellhop",
+      "hotel_frequency": 19,
+      "recognized": false
+    },
+    {
+      "facility_id": 127,
+      "facility_name": "Private check-in/check-out",
+      "hotel_frequency": 3,
+      "recognized": false
+    },
+    {
+      "facility_id": 161,
+      "facility_name": "Private parking",
+      "hotel_frequency": 2,
+      "recognized": true
+    },
+    {
+      "facility_id": 803,
+      "facility_name": "Private picnics",
+      "hotel_frequency": 4,
+      "recognized": false
+    },
+    {
+      "facility_id": 799,
+      "facility_name": "Pro shop",
+      "hotel_frequency": 1,
+      "recognized": false
+    },
+    {
+      "facility_id": 458,
+      "facility_name": "Process in place to check health of guests",
+      "hotel_frequency": 4,
+      "recognized": false
+    },
+    {
+      "facility_id": 466,
+      "facility_name": "Property cleaned by professional cleaning companies",
+      "hotel_frequency": 1,
+      "recognized": false
+    },
+    {
+      "facility_id": 822,
+      "facility_name": "Proposal/romance packages available",
+      "hotel_frequency": 6,
+      "recognized": false
+    },
+    {
+      "facility_id": 1833,
+      "facility_name": "Proposal/romance packages available",
+      "hotel_frequency": 6,
+      "recognized": false
+    },
+    {
+      "facility_id": 401,
+      "facility_name": "Pub crawls",
+      "hotel_frequency": 1,
+      "recognized": false
+    },
+    {
+      "facility_id": 167,
+      "facility_name": "Public Bath",
+      "hotel_frequency": 1,
+      "recognized": false
+    },
+    {
+      "facility_id": 653,
+      "facility_name": "Racquetball/squash on site",
+      "hotel_frequency": 2,
+      "recognized": false
+    },
+    {
+      "facility_id": 528,
+      "facility_name": "Rafting nearby",
+      "hotel_frequency": 7,
+      "recognized": false
+    },
+    {
+      "facility_id": 828,
+      "facility_name": "Reception hall",
+      "hotel_frequency": 16,
+      "recognized": false
+    },
+    {
+      "facility_id": 848,
+      "facility_name": "Recycling",
+      "hotel_frequency": 13,
+      "recognized": false
+    },
+    {
+      "facility_id": 3,
+      "facility_name": "Restaurant",
+      "hotel_frequency": 6,
+      "recognized": true
+    },
+    {
+      "facility_id": 849,
+      "facility_name": "Reusable coffee/tea filters",
+      "hotel_frequency": 5,
+      "recognized": false
+    },
+    {
+      "facility_id": 1012,
+      "facility_name": "Reusable cups only",
+      "hotel_frequency": 6,
+      "recognized": false
+    },
+    {
+      "facility_id": 1013,
+      "facility_name": "Reusable tableware only",
+      "hotel_frequency": 5,
+      "recognized": false
+    },
+    {
+      "facility_id": 750,
+      "facility_name": "Rock climbing nearby",
+      "hotel_frequency": 12,
+      "recognized": false
+    },
+    {
+      "facility_id": 679,
+      "facility_name": "Rooftop terrace",
+      "hotel_frequency": 2,
+      "recognized": false
+    },
+    {
+      "facility_id": 5,
+      "facility_name": "Room service",
+      "hotel_frequency": 3,
+      "recognized": false
+    },
+    {
+      "facility_id": 655,
+      "facility_name": "Rowing or canoeing on site",
+      "hotel_frequency": 1,
+      "recognized": false
+    },
+    {
+      "facility_id": 604,
+      "facility_name": "RV, bus, truck parking",
+      "hotel_frequency": 6,
+      "recognized": true
+    },
+    {
+      "facility_id": 718,
+      "facility_name": "RV, bus, truck parking (surcharge)",
+      "hotel_frequency": 1,
+      "recognized": true
+    },
+    {
+      "facility_id": 533,
+      "facility_name": "Safe-deposit box at front desk",
+      "hotel_frequency": 78,
+      "recognized": false
+    },
+    {
+      "facility_id": 51,
+      "facility_name": "Safety deposit box",
+      "hotel_frequency": 2,
+      "recognized": false
+    },
+    {
+      "facility_id": 515,
+      "facility_name": "Sailing nearby",
+      "hotel_frequency": 17,
+      "recognized": false
+    },
+    {
+      "facility_id": 467,
+      "facility_name": "Sanitized tableware & silverware",
+      "hotel_frequency": 5,
+      "recognized": false
+    },
+    {
+      "facility_id": 10,
+      "facility_name": "Sauna",
+      "hotel_frequency": 27,
+      "recognized": false
+    },
+    {
+      "facility_id": 525,
+      "facility_name": "Scooter/moped rentals nearby",
+      "hotel_frequency": 1,
+      "recognized": false
+    },
+    {
+      "facility_id": 464,
+      "facility_name": "Screens / Barriers between staff and guests for safety",
+      "hotel_frequency": 4,
+      "recognized": false
+    },
+    {
+      "facility_id": 516,
+      "facility_name": "Scuba diving nearby",
+      "hotel_frequency": 8,
+      "recognized": false
+    },
+    {
+      "facility_id": 959,
+      "facility_name": "Secured bicycle storage",
+      "hotel_frequency": 2,
+      "recognized": false
+    },
+    {
+      "facility_id": 859,
+      "facility_name": "Secured parking",
+      "hotel_frequency": 4,
+      "recognized": true
+    },
+    {
+      "facility_id": 421,
+      "facility_name": "Security alarm",
+      "hotel_frequency": 2,
+      "recognized": false
+    },
+    {
+      "facility_id": 685,
+      "facility_name": "Segway rental/tour nearby",
+      "hotel_frequency": 1,
+      "recognized": false
+    },
+    {
+      "facility_id": 675,
+      "facility_name": "Self parking (surcharge)",
+      "hotel_frequency": 33,
+      "recognized": true
+    },
+    {
+      "facility_id": 143,
+      "facility_name": "Shared lounge/TV area",
+      "hotel_frequency": 3,
+      "recognized": false
+    },
+    {
+      "facility_id": 778,
+      "facility_name": "Shared microwave",
+      "hotel_frequency": 1,
+      "recognized": false
+    },
+    {
+      "facility_id": 779,
+      "facility_name": "Shared refrigerator",
+      "hotel_frequency": 1,
+      "recognized": false
+    },
+    {
+      "facility_id": 456,
+      "facility_name": "Shared stationery like menus, pens are removed",
+      "hotel_frequency": 3,
+      "recognized": false
+    },
+    {
+      "facility_id": 500,
+      "facility_name": "Shopping on site",
+      "hotel_frequency": 4,
+      "recognized": false
+    },
+    {
+      "facility_id": 993,
+      "facility_name": "Showcase for local artists",
+      "hotel_frequency": 4,
+      "recognized": false
+    },
+    {
+      "facility_id": 962,
+      "facility_name": "Shuttle for bicycles available",
+      "hotel_frequency": 1,
+      "recognized": false
+    },
+    {
+      "facility_id": 99,
+      "facility_name": "Ski storage",
+      "hotel_frequency": 1,
+      "recognized": false
+    },
+    {
+      "facility_id": 517,
+      "facility_name": "Ski storage",
+      "hotel_frequency": 1,
+      "recognized": false
+    },
+    {
+      "facility_id": 553,
+      "facility_name": "Skydiving nearby",
+      "hotel_frequency": 2,
+      "recognized": false
+    },
+    {
+      "facility_id": 422,
+      "facility_name": "Smoke alarms",
+      "hotel_frequency": 6,
+      "recognized": false
+    },
+    {
+      "facility_id": 564,
+      "facility_name": "Smoke-free property",
+      "hotel_frequency": 166,
+      "recognized": false
+    },
+    {
+      "facility_id": 1032,
+      "facility_name": "Smooth flooring in public areas",
+      "hotel_frequency": 1,
+      "recognized": false
+    },
+    {
+      "facility_id": 117,
+      "facility_name": "Snack bar",
+      "hotel_frequency": 2,
+      "recognized": false
+    },
+    {
+      "facility_id": 626,
+      "facility_name": "Snack bar/deli",
+      "hotel_frequency": 41,
+      "recognized": false
+    },
+    {
+      "facility_id": 504,
+      "facility_name": "Snorkeling nearby",
+      "hotel_frequency": 1,
+      "recognized": false
+    },
+    {
+      "facility_id": 566,
+      "facility_name": "Snowboarding nearby",
+      "hotel_frequency": 1,
+      "recognized": false
+    },
+    {
+      "facility_id": 64,
+      "facility_name": "Soundproof rooms",
+      "hotel_frequency": 2,
+      "recognized": false
+    },
+    {
+      "facility_id": 133,
+      "facility_name": "Special diet menus - on request",
+      "hotel_frequency": 2,
+      "recognized": false
+    },
+    {
+      "facility_id": 455,
+      "facility_name": "Staff adhere to local safety protocols",
+      "hotel_frequency": 6,
+      "recognized": false
+    },
+    {
+      "facility_id": 975,
+      "facility_name": "Stair-free path to entrance",
+      "hotel_frequency": 14,
+      "recognized": false
+    },
+    {
+      "facility_id": 241,
+      "facility_name": "Steam room",
+      "hotel_frequency": 23,
+      "recognized": false
+    },
+    {
+      "facility_id": 180,
+      "facility_name": "Street parking",
+      "hotel_frequency": 5,
+      "recognized": true
+    },
+    {
+      "facility_id": 118,
+      "facility_name": "Sun terrace",
+      "hotel_frequency": 1,
+      "recognized": false
+    },
+    {
+      "facility_id": 221,
+      "facility_name": "Sun umbrellas",
+      "hotel_frequency": 1,
+      "recognized": false
+    },
+    {
+      "facility_id": 505,
+      "facility_name": "Surfing/bodyboarding nearby",
+      "hotel_frequency": 11,
+      "recognized": false
+    },
+    {
+      "facility_id": 916,
+      "facility_name": "Swimming nearby",
+      "hotel_frequency": 4,
+      "recognized": false
+    },
+    {
+      "facility_id": 301,
+      "facility_name": "Swimming pool",
+      "hotel_frequency": 3,
+      "recognized": true
+    },
+    {
+      "facility_id": 58,
+      "facility_name": "Table tennis",
+      "hotel_frequency": 2,
+      "recognized": false
+    },
+    {
+      "facility_id": 521,
+      "facility_name": "Television in common areas",
+      "hotel_frequency": 22,
+      "recognized": false
+    },
+    {
+      "facility_id": 400,
+      "facility_name": "Temporary art galleries",
+      "hotel_frequency": 1,
+      "recognized": false
+    },
+    {
+      "facility_id": 15,
+      "facility_name": "Terrace",
+      "hotel_frequency": 89,
+      "recognized": false
+    },
+    {
+      "facility_id": 406,
+      "facility_name": "Themed dinner nights",
+      "hotel_frequency": 1,
+      "recognized": false
+    },
+    {
+      "facility_id": 1033,
+      "facility_name": "Thin carpet in public areas",
+      "hotel_frequency": 2,
+      "recognized": false
+    },
+    {
+      "facility_id": 1034,
+      "facility_name": "Tile flooring in public areas",
+      "hotel_frequency": 3,
+      "recognized": false
+    },
+    {
+      "facility_id": 78,
+      "facility_name": "Tour desk",
+      "hotel_frequency": 1,
+      "recognized": false
+    },
+    {
+      "facility_id": 581,
+      "facility_name": "Tours/ticket assistance",
+      "hotel_frequency": 43,
+      "recognized": false
+    },
+    {
+      "facility_id": 973,
+      "facility_name": "Upper floors accessible by stairs only",
+      "hotel_frequency": 27,
+      "recognized": false
+    },
+    {
+      "facility_id": 569,
+      "facility_name": "Use of nearby fitness center (discount)",
+      "hotel_frequency": 1,
+      "recognized": true
+    },
+    {
+      "facility_id": 1002,
+      "facility_name": "Vegan menu options available",
+      "hotel_frequency": 7,
+      "recognized": false
+    },
+    {
+      "facility_id": 987,
+      "facility_name": "Vegetarian breakfast available",
+      "hotel_frequency": 10,
+      "recognized": true
+    },
+    {
+      "facility_id": 1003,
+      "facility_name": "Vegetarian menu options available",
+      "hotel_frequency": 11,
+      "recognized": false
+    },
+    {
+      "facility_id": 946,
+      "facility_name": "Visual alarms in hallways",
+      "hotel_frequency": 3,
+      "recognized": false
+    },
+    {
+      "facility_id": 889,
+      "facility_name": "Walkway to water",
+      "hotel_frequency": 2,
+      "recognized": false
+    },
+    {
+      "facility_id": 782,
+      "facility_name": "Water dispenser",
+      "hotel_frequency": 6,
+      "recognized": false
+    },
+    {
+      "facility_id": 518,
+      "facility_name": "Water skiing nearby",
+      "hotel_frequency": 8,
+      "recognized": false
+    },
+    {
+      "facility_id": 917,
+      "facility_name": "Water sports equipment",
+      "hotel_frequency": 2,
+      "recognized": false
+    },
+    {
+      "facility_id": 1014,
+      "facility_name": "Water-efficient showers only",
+      "hotel_frequency": 5,
+      "recognized": false
+    },
+    {
+      "facility_id": 567,
+      "facility_name": "Wedding services",
+      "hotel_frequency": 63,
+      "recognized": false
+    },
+    {
+      "facility_id": 974,
+      "facility_name": "Well-lit path to entrance",
+      "hotel_frequency": 19,
+      "recognized": false
+    },
+    {
+      "facility_id": 185,
+      "facility_name": "Wheelchair accessible",
+      "hotel_frequency": 83,
+      "recognized": true
+    },
+    {
+      "facility_id": 590,
+      "facility_name": "Wheelchair accessible parking",
+      "hotel_frequency": 41,
+      "recognized": true
+    },
+    {
+      "facility_id": 942,
+      "facility_name": "Wheelchair-accessible fitness center",
+      "hotel_frequency": 4,
+      "recognized": true
+    },
+    {
+      "facility_id": 944,
+      "facility_name": "Wheelchair-accessible on-site restaurant",
+      "hotel_frequency": 37,
+      "recognized": true
+    },
+    {
+      "facility_id": 941,
+      "facility_name": "Wheelchair-accessible pool",
+      "hotel_frequency": 21,
+      "recognized": true
+    },
+    {
+      "facility_id": 933,
+      "facility_name": "Wheelchair-accessible public washroom",
+      "hotel_frequency": 15,
+      "recognized": false
+    },
+    {
+      "facility_id": 940,
+      "facility_name": "Wheelchair-accessible spa",
+      "hotel_frequency": 22,
+      "recognized": true
+    },
+    {
+      "facility_id": 936,
+      "facility_name": "Wheelchair-accessible van parking",
+      "hotel_frequency": 41,
+      "recognized": true
+    },
+    {
+      "facility_id": 47,
+      "facility_name": "WiFi available",
+      "hotel_frequency": 2,
+      "recognized": true
+    },
+    {
+      "facility_id": 809,
+      "facility_name": "Wine release events",
+      "hotel_frequency": 1,
+      "recognized": false
+    },
+    {
+      "facility_id": 203,
+      "facility_name": "Wine/champagne",
+      "hotel_frequency": 2,
+      "recognized": false
+    },
+    {
+      "facility_id": 754,
+      "facility_name": "Ziplining nearby",
+      "hotel_frequency": 1,
+      "recognized": false
+    }
+  ],
+  "ids_with_multiple_names": [],
+  "names_with_multiple_ids": [
+    {
+      "facility_name": "Annual carbon offsets",
+      "facility_ids": [
+        990,
+        2266
+      ]
+    },
+    {
+      "facility_name": "Arcade/game room",
+      "facility_ids": [
+        522,
+        2010
+      ]
+    },
+    {
+      "facility_name": "Area shuttle (surcharge)",
+      "facility_ids": [
+        595,
+        1869
+      ]
+    },
+    {
+      "facility_name": "Birdwatching nearby",
+      "facility_ids": [
+        818,
+        2330
+      ]
+    },
+    {
+      "facility_name": "Boat tours nearby",
+      "facility_ids": [
+        726,
+        1389
+      ]
+    },
+    {
+      "facility_name": "Clubhouse",
+      "facility_ids": [
+        800,
+        2359
+      ]
+    },
+    {
+      "facility_name": "Cobblestone flooring in public areas",
+      "facility_ids": [
+        1037,
+        2736
+      ]
+    },
+    {
+      "facility_name": "Comprehensive recycling policy",
+      "facility_ids": [
+        1004,
+        2050
+      ]
+    },
+    {
+      "facility_name": "Electric bicycle charging station",
+      "facility_ids": [
+        967,
+        2413
+      ]
+    },
+    {
+      "facility_name": "Electric car charging station",
+      "facility_ids": [
+        765,
+        2014
+      ]
+    },
+    {
+      "facility_name": "Express check-out",
+      "facility_ids": [
+        543,
+        1842
+      ]
+    },
+    {
+      "facility_name": "Fireplace in lobby",
+      "facility_ids": [
+        509,
+        1979
+      ]
+    },
+    {
+      "facility_name": "Fitness facilities",
+      "facility_ids": [
+        492,
+        1725
+      ]
+    },
+    {
+      "facility_name": "Fitness facilities (surcharge)",
+      "facility_ids": [
+        757,
+        6848
+      ]
+    },
+    {
+      "facility_name": "Free breakfast",
+      "facility_ids": [
+        529,
+        1054
+      ]
+    },
+    {
+      "facility_name": "Full-service spa",
+      "facility_ids": [
+        557,
+        1102
+      ]
+    },
+    {
+      "facility_name": "Guest education on local ecosystems and culture",
+      "facility_ids": [
+        995,
+        2261
+      ]
+    },
+    {
+      "facility_name": "Hardwood flooring in public areas",
+      "facility_ids": [
+        1035,
+        2216
+      ]
+    },
+    {
+      "facility_name": "Health club",
+      "facility_ids": [
+        530,
+        2066
+      ]
+    },
+    {
+      "facility_name": "Health or beauty spa nearby",
+      "facility_ids": [
+        901,
+        1814
+      ]
+    },
+    {
+      "facility_name": "Long-term parking (surcharge)",
+      "facility_ids": [
+        716,
+        2493
+      ]
+    },
+    {
+      "facility_name": "Lot hours - 24 hours",
+      "facility_ids": [
+        870,
+        1984
+      ]
+    },
+    {
+      "facility_name": "Meeting rooms",
+      "facility_ids": [
+        561,
+        1091
+      ]
+    },
+    {
+      "facility_name": "Nature reserve",
+      "facility_ids": [
+        814,
+        1797
+      ]
+    },
+    {
+      "facility_name": "Newspapers in lobby (surcharge)",
+      "facility_ids": [
+        759,
+        1847
+      ]
+    },
+    {
+      "facility_name": "No single-use plastic soda bottles",
+      "facility_ids": [
+        1006,
+        2259
+      ]
+    },
+    {
+      "facility_name": "No single-use plastic stirrers",
+      "facility_ids": [
+        1007,
+        2247
+      ]
+    },
+    {
+      "facility_name": "No single-use plastic straws",
+      "facility_ids": [
+        1009,
+        2020
+      ]
+    },
+    {
+      "facility_name": "No single-use plastic water bottles",
+      "facility_ids": [
+        1011,
+        2253
+      ]
+    },
+    {
+      "facility_name": "Offsite parking discounted rates available",
+      "facility_ids": [
+        720,
+        2083
+      ]
+    },
+    {
+      "facility_name": "Parasailing nearby",
+      "facility_ids": [
+        549,
+        1862
+      ]
+    },
+    {
+      "facility_name": "Proposal/romance packages available",
+      "facility_ids": [
+        822,
+        1833
+      ]
+    },
+    {
+      "facility_name": "Ski storage",
+      "facility_ids": [
+        99,
+        517
+      ]
+    }
+  ],
+  "recognized_facilities": [
+    {
+      "facility_id": 723,
+      "facility_name": "24-hour fitness facilities",
+      "hotel_frequency": 2,
+      "recognized": true,
+      "capability": "gym",
+      "qualifiers": {
+        "hours": "24h"
+      }
+    },
+    {
+      "facility_id": 8,
+      "facility_name": "24-hour front desk",
+      "hotel_frequency": 96,
+      "recognized": true,
+      "capability": "front_desk_24h",
+      "qualifiers": {}
+    },
+    {
+      "facility_id": 630,
+      "facility_name": "Access to nearby indoor pool",
+      "hotel_frequency": 4,
+      "recognized": true,
+      "capability": "swimming_pool",
+      "qualifiers": {
+        "location": "nearby"
+      }
+    },
+    {
+      "facility_id": 1023,
+      "facility_name": "Accessible airport shuttle",
+      "hotel_frequency": 1,
+      "recognized": true,
+      "capability": "airport_shuttle",
+      "qualifiers": {
+        "accessible": true
+      }
+    },
+    {
+      "facility_id": 184,
+      "facility_name": "Accessible parking",
+      "hotel_frequency": 1,
+      "recognized": true,
+      "capability": "parking",
+      "qualifiers": {
+        "accessible": true
+      }
+    },
+    {
+      "facility_id": 109,
+      "facility_name": "Air conditioning",
+      "hotel_frequency": 2,
+      "recognized": true,
+      "capability": "air_conditioning",
+      "qualifiers": {}
+    },
+    {
+      "facility_id": 691,
+      "facility_name": "Airport transportation - pickup (surcharge)",
+      "hotel_frequency": 4,
+      "recognized": true,
+      "capability": "airport_shuttle",
+      "qualifiers": {
+        "price": "paid",
+        "direction": "pickup"
+      }
+    },
+    {
+      "facility_id": 519,
+      "facility_name": "Breakfast available (surcharge)",
+      "hotel_frequency": 104,
+      "recognized": true,
+      "capability": "breakfast",
+      "qualifiers": {
+        "price": "paid"
+      }
+    },
+    {
+      "facility_id": 43,
+      "facility_name": "Breakfast in the room",
+      "hotel_frequency": 1,
+      "recognized": true,
+      "capability": "breakfast",
+      "qualifiers": {
+        "style": "room_service"
+      }
+    },
+    {
+      "facility_id": 24,
+      "facility_name": "Continental breakfast",
+      "hotel_frequency": 5,
+      "recognized": true,
+      "capability": "breakfast",
+      "qualifiers": {
+        "style": "continental"
+      }
+    },
+    {
+      "facility_id": 857,
+      "facility_name": "Covered parking",
+      "hotel_frequency": 3,
+      "recognized": true,
+      "capability": "parking",
+      "qualifiers": {
+        "type": "covered"
+      }
+    },
+    {
+      "facility_id": 25,
+      "facility_name": "Facilities for disabled guests",
+      "hotel_frequency": 3,
+      "recognized": true,
+      "capability": "accessible_facilities",
+      "qualifiers": {}
+    },
+    {
+      "facility_id": 28,
+      "facility_name": "Family rooms",
+      "hotel_frequency": 7,
+      "recognized": true,
+      "capability": "family_room",
+      "qualifiers": {}
+    },
+    {
+      "facility_id": 11,
+      "facility_name": "Fitness center",
+      "hotel_frequency": 1,
+      "recognized": true,
+      "capability": "gym",
+      "qualifiers": {}
+    },
+    {
+      "facility_id": 492,
+      "facility_name": "Fitness facilities",
+      "hotel_frequency": 31,
+      "recognized": true,
+      "capability": "gym",
+      "qualifiers": {}
+    },
+    {
+      "facility_id": 1725,
+      "facility_name": "Fitness facilities",
+      "hotel_frequency": 30,
+      "recognized": true,
+      "capability": "gym",
+      "qualifiers": {}
+    },
+    {
+      "facility_id": 757,
+      "facility_name": "Fitness facilities (surcharge)",
+      "hotel_frequency": 1,
+      "recognized": true,
+      "capability": "gym",
+      "qualifiers": {
+        "price": "paid"
+      }
+    },
+    {
+      "facility_id": 6848,
+      "facility_name": "Fitness facilities (surcharge)",
+      "hotel_frequency": 1,
+      "recognized": true,
+      "capability": "gym",
+      "qualifiers": {
+        "price": "paid"
+      }
+    },
+    {
+      "facility_id": 493,
+      "facility_name": "Free airport transportation",
+      "hotel_frequency": 2,
+      "recognized": true,
+      "capability": "airport_shuttle",
+      "qualifiers": {
+        "price": "free"
+      }
+    },
+    {
+      "facility_id": 529,
+      "facility_name": "Free breakfast",
+      "hotel_frequency": 35,
+      "recognized": true,
+      "capability": "breakfast",
+      "qualifiers": {
+        "price": "free"
+      }
+    },
+    {
+      "facility_id": 1054,
+      "facility_name": "Free breakfast",
+      "hotel_frequency": 35,
+      "recognized": true,
+      "capability": "breakfast",
+      "qualifiers": {
+        "price": "free"
+      }
+    },
+    {
+      "facility_id": 756,
+      "facility_name": "Free breakfast to go",
+      "hotel_frequency": 1,
+      "recognized": true,
+      "capability": "breakfast",
+      "qualifiers": {
+        "price": "free",
+        "style": "takeaway"
+      }
+    },
+    {
+      "facility_id": 730,
+      "facility_name": "Free buffet breakfast",
+      "hotel_frequency": 1,
+      "recognized": true,
+      "capability": "breakfast",
+      "qualifiers": {
+        "price": "free",
+        "style": "buffet"
+      }
+    },
+    {
+      "facility_id": 729,
+      "facility_name": "Free continental breakfast",
+      "hotel_frequency": 5,
+      "recognized": true,
+      "capability": "breakfast",
+      "qualifiers": {
+        "price": "free",
+        "style": "continental"
+      }
+    },
+    {
+      "facility_id": 731,
+      "facility_name": "Free cooked-to-order breakfast",
+      "hotel_frequency": 5,
+      "recognized": true,
+      "capability": "breakfast",
+      "qualifiers": {
+        "price": "free",
+        "style": "cooked_to_order"
+      }
+    },
+    {
+      "facility_id": 732,
+      "facility_name": "Free English breakfast",
+      "hotel_frequency": 4,
+      "recognized": true,
+      "capability": "breakfast",
+      "qualifiers": {
+        "price": "free",
+        "style": "english"
+      }
+    },
+    {
+      "facility_id": 733,
+      "facility_name": "Free full breakfast",
+      "hotel_frequency": 12,
+      "recognized": true,
+      "capability": "breakfast",
+      "qualifiers": {
+        "price": "free",
+        "style": "full"
+      }
+    },
+    {
+      "facility_id": 715,
+      "facility_name": "Free long-term parking",
+      "hotel_frequency": 4,
+      "recognized": true,
+      "capability": "parking",
+      "qualifiers": {
+        "price": "free",
+        "type": "long_term"
+      }
+    },
+    {
+      "facility_id": 46,
+      "facility_name": "Free Parking",
+      "hotel_frequency": 2,
+      "recognized": true,
+      "capability": "parking",
+      "qualifiers": {
+        "price": "free"
+      }
+    },
+    {
+      "facility_id": 717,
+      "facility_name": "Free RV, bus, truck parking",
+      "hotel_frequency": 6,
+      "recognized": true,
+      "capability": "parking",
+      "qualifiers": {
+        "price": "free",
+        "type": "oversized"
+      }
+    },
+    {
+      "facility_id": 674,
+      "facility_name": "Free self parking",
+      "hotel_frequency": 109,
+      "recognized": true,
+      "capability": "parking",
+      "qualifiers": {
+        "price": "free",
+        "type": "self"
+      }
+    },
+    {
+      "facility_id": 537,
+      "facility_name": "Free use of nearby fitness center",
+      "hotel_frequency": 1,
+      "recognized": true,
+      "capability": "gym",
+      "qualifiers": {
+        "location": "nearby",
+        "price": "free"
+      }
+    },
+    {
+      "facility_id": 676,
+      "facility_name": "Free valet parking",
+      "hotel_frequency": 1,
+      "recognized": true,
+      "capability": "parking",
+      "qualifiers": {
+        "price": "free",
+        "type": "valet"
+      }
+    },
+    {
+      "facility_id": 107,
+      "facility_name": "Free WiFi",
+      "hotel_frequency": 185,
+      "recognized": true,
+      "capability": "wifi",
+      "qualifiers": {
+        "price": "free"
+      }
+    },
+    {
+      "facility_id": 557,
+      "facility_name": "Full-service spa",
+      "hotel_frequency": 19,
+      "recognized": true,
+      "capability": "spa",
+      "qualifiers": {}
+    },
+    {
+      "facility_id": 1102,
+      "facility_name": "Full-service spa",
+      "hotel_frequency": 19,
+      "recognized": true,
+      "capability": "spa",
+      "qualifiers": {}
+    },
+    {
+      "facility_id": 880,
+      "facility_name": "Garage",
+      "hotel_frequency": 1,
+      "recognized": true,
+      "capability": "parking",
+      "qualifiers": {
+        "type": "garage"
+      }
+    },
+    {
+      "facility_id": 530,
+      "facility_name": "Health club",
+      "hotel_frequency": 20,
+      "recognized": true,
+      "capability": "gym",
+      "qualifiers": {}
+    },
+    {
+      "facility_id": 2066,
+      "facility_name": "Health club",
+      "hotel_frequency": 20,
+      "recognized": true,
+      "capability": "gym",
+      "qualifiers": {}
+    },
+    {
+      "facility_id": 901,
+      "facility_name": "Health or beauty spa nearby",
+      "hotel_frequency": 12,
+      "recognized": true,
+      "capability": "spa",
+      "qualifiers": {
+        "location": "nearby"
+      }
+    },
+    {
+      "facility_id": 1814,
+      "facility_name": "Health or beauty spa nearby",
+      "hotel_frequency": 12,
+      "recognized": true,
+      "capability": "spa",
+      "qualifiers": {
+        "location": "nearby"
+      }
+    },
+    {
+      "facility_id": 195,
+      "facility_name": "Heated pool",
+      "hotel_frequency": 2,
+      "recognized": true,
+      "capability": "swimming_pool",
+      "qualifiers": {
+        "heated": true
+      }
+    },
+    {
+      "facility_id": 716,
+      "facility_name": "Long-term parking (surcharge)",
+      "hotel_frequency": 2,
+      "recognized": true,
+      "capability": "parking",
+      "qualifiers": {
+        "price": "paid",
+        "type": "long_term"
+      }
+    },
+    {
+      "facility_id": 720,
+      "facility_name": "Offsite parking discounted rates available",
+      "hotel_frequency": 5,
+      "recognized": true,
+      "capability": "parking",
+      "qualifiers": {
+        "price": "paid",
+        "location": "nearby"
+      }
+    },
+    {
+      "facility_id": 721,
+      "facility_name": "Offsite parking reservations required",
+      "hotel_frequency": 1,
+      "recognized": true,
+      "capability": "parking",
+      "qualifiers": {
+        "location": "nearby"
+      }
+    },
+    {
+      "facility_id": 2,
+      "facility_name": "Parking",
+      "hotel_frequency": 9,
+      "recognized": true,
+      "capability": "parking",
+      "qualifiers": {
+        "type": "standard"
+      }
+    },
+    {
+      "facility_id": 628,
+      "facility_name": "Parking (limited spaces)",
+      "hotel_frequency": 23,
+      "recognized": true,
+      "capability": "parking",
+      "qualifiers": {
+        "type": "standard"
+      }
+    },
+    {
+      "facility_id": 4,
+      "facility_name": "Pets allowed",
+      "hotel_frequency": 5,
+      "recognized": true,
+      "capability": "pets_allowed",
+      "qualifiers": {}
+    },
+    {
+      "facility_id": 161,
+      "facility_name": "Private parking",
+      "hotel_frequency": 2,
+      "recognized": true,
+      "capability": "parking",
+      "qualifiers": {
+        "access": "private"
+      }
+    },
+    {
+      "facility_id": 3,
+      "facility_name": "Restaurant",
+      "hotel_frequency": 6,
+      "recognized": true,
+      "capability": "restaurant",
+      "qualifiers": {}
+    },
+    {
+      "facility_id": 604,
+      "facility_name": "RV, bus, truck parking",
+      "hotel_frequency": 6,
+      "recognized": true,
+      "capability": "parking",
+      "qualifiers": {
+        "type": "oversized"
+      }
+    },
+    {
+      "facility_id": 718,
+      "facility_name": "RV, bus, truck parking (surcharge)",
+      "hotel_frequency": 1,
+      "recognized": true,
+      "capability": "parking",
+      "qualifiers": {
+        "price": "paid",
+        "type": "oversized"
+      }
+    },
+    {
+      "facility_id": 859,
+      "facility_name": "Secured parking",
+      "hotel_frequency": 4,
+      "recognized": true,
+      "capability": "parking",
+      "qualifiers": {
+        "type": "secured"
+      }
+    },
+    {
+      "facility_id": 675,
+      "facility_name": "Self parking (surcharge)",
+      "hotel_frequency": 33,
+      "recognized": true,
+      "capability": "parking",
+      "qualifiers": {
+        "price": "paid",
+        "type": "self"
+      }
+    },
+    {
+      "facility_id": 180,
+      "facility_name": "Street parking",
+      "hotel_frequency": 5,
+      "recognized": true,
+      "capability": "parking",
+      "qualifiers": {
+        "location": "nearby",
+        "access": "public",
+        "type": "street"
+      }
+    },
+    {
+      "facility_id": 301,
+      "facility_name": "Swimming pool",
+      "hotel_frequency": 3,
+      "recognized": true,
+      "capability": "swimming_pool",
+      "qualifiers": {}
+    },
+    {
+      "facility_id": 569,
+      "facility_name": "Use of nearby fitness center (discount)",
+      "hotel_frequency": 1,
+      "recognized": true,
+      "capability": "gym",
+      "qualifiers": {
+        "location": "nearby",
+        "price": "paid"
+      }
+    },
+    {
+      "facility_id": 987,
+      "facility_name": "Vegetarian breakfast available",
+      "hotel_frequency": 10,
+      "recognized": true,
+      "capability": "breakfast",
+      "qualifiers": {
+        "style": "vegetarian"
+      }
+    },
+    {
+      "facility_id": 185,
+      "facility_name": "Wheelchair accessible",
+      "hotel_frequency": 83,
+      "recognized": true,
+      "capability": "accessible_facilities",
+      "qualifiers": {}
+    },
+    {
+      "facility_id": 590,
+      "facility_name": "Wheelchair accessible parking",
+      "hotel_frequency": 41,
+      "recognized": true,
+      "capability": "parking",
+      "qualifiers": {
+        "accessible": true
+      }
+    },
+    {
+      "facility_id": 942,
+      "facility_name": "Wheelchair-accessible fitness center",
+      "hotel_frequency": 4,
+      "recognized": true,
+      "capability": "gym",
+      "qualifiers": {
+        "accessible": true
+      }
+    },
+    {
+      "facility_id": 944,
+      "facility_name": "Wheelchair-accessible on-site restaurant",
+      "hotel_frequency": 37,
+      "recognized": true,
+      "capability": "restaurant",
+      "qualifiers": {
+        "accessible": true
+      }
+    },
+    {
+      "facility_id": 941,
+      "facility_name": "Wheelchair-accessible pool",
+      "hotel_frequency": 21,
+      "recognized": true,
+      "capability": "swimming_pool",
+      "qualifiers": {
+        "accessible": true
+      }
+    },
+    {
+      "facility_id": 940,
+      "facility_name": "Wheelchair-accessible spa",
+      "hotel_frequency": 22,
+      "recognized": true,
+      "capability": "spa",
+      "qualifiers": {
+        "accessible": true
+      }
+    },
+    {
+      "facility_id": 936,
+      "facility_name": "Wheelchair-accessible van parking",
+      "hotel_frequency": 41,
+      "recognized": true,
+      "capability": "parking",
+      "qualifiers": {
+        "accessible": true
+      }
+    },
+    {
+      "facility_id": 47,
+      "facility_name": "WiFi available",
+      "hotel_frequency": 2,
+      "recognized": true,
+      "capability": "wifi",
+      "qualifiers": {}
+    }
+  ],
+  "unmapped_facilities": [
+    {
+      "facility_id": 597,
+      "facility_name": "24-hour business center",
+      "hotel_frequency": 2,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 418,
+      "facility_name": "24-hour security",
+      "hotel_frequency": 3,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 486,
+      "facility_name": "Access to health care professionals",
+      "hotel_frequency": 2,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 1021,
+      "facility_name": "Accessible shuttle",
+      "hotel_frequency": 17,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 1000,
+      "facility_name": "All property's electricity comes from renewable sources",
+      "hotel_frequency": 1,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 990,
+      "facility_name": "Annual carbon offsets",
+      "hotel_frequency": 2,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 2266,
+      "facility_name": "Annual carbon offsets",
+      "hotel_frequency": 2,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 522,
+      "facility_name": "Arcade/game room",
+      "hotel_frequency": 8,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 2010,
+      "facility_name": "Arcade/game room",
+      "hotel_frequency": 8,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 2190,
+      "facility_name": "Area rugs in public areas",
+      "hotel_frequency": 2,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 595,
+      "facility_name": "Area shuttle (surcharge)",
+      "hotel_frequency": 2,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 1869,
+      "facility_name": "Area shuttle (surcharge)",
+      "hotel_frequency": 2,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 592,
+      "facility_name": "Assistive listening devices available",
+      "hotel_frequency": 20,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 935,
+      "facility_name": "Assistive listening devices in meeting rooms",
+      "hotel_frequency": 1,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 999,
+      "facility_name": "At least 80% of all lighting comes from LEDs",
+      "hotel_frequency": 9,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 497,
+      "facility_name": "ATM/banking",
+      "hotel_frequency": 12,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 21,
+      "facility_name": "Babysitting/child services",
+      "hotel_frequency": 1,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 826,
+      "facility_name": "Ballroom",
+      "hotel_frequency": 11,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 827,
+      "facility_name": "Banquet hall",
+      "hotel_frequency": 84,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 7,
+      "facility_name": "Bar",
+      "hotel_frequency": 2,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 72,
+      "facility_name": "BBQ facilities",
+      "hotel_frequency": 1,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 302,
+      "facility_name": "Beach",
+      "hotel_frequency": 1,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 960,
+      "facility_name": "Bicycle parking available",
+      "hotel_frequency": 5,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 508,
+      "facility_name": "Bicycle rentals nearby",
+      "hotel_frequency": 21,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 579,
+      "facility_name": "Billiards or pool table",
+      "hotel_frequency": 8,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 414,
+      "facility_name": "Bingo",
+      "hotel_frequency": 1,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 1008,
+      "facility_name": "Biodegradable/compostable stirrers",
+      "hotel_frequency": 10,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 818,
+      "facility_name": "Birdwatching nearby",
+      "hotel_frequency": 21,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 2330,
+      "facility_name": "Birdwatching nearby",
+      "hotel_frequency": 21,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 170,
+      "facility_name": "Board games/puzzles",
+      "hotel_frequency": 3,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 726,
+      "facility_name": "Boat tours nearby",
+      "hotel_frequency": 4,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 1389,
+      "facility_name": "Boat tours nearby",
+      "hotel_frequency": 4,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 593,
+      "facility_name": "Braille or raised signage",
+      "hotel_frequency": 5,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 484,
+      "facility_name": "Breakfast takeaway containers",
+      "hotel_frequency": 1,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 411,
+      "facility_name": "Broadcast Live sport events",
+      "hotel_frequency": 1,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 1005,
+      "facility_name": "Bulk dispenser for toiletries",
+      "hotel_frequency": 8,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 20,
+      "facility_name": "Business center",
+      "hotel_frequency": 1,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 461,
+      "facility_name": "Cashless payment available",
+      "hotel_frequency": 5,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 900,
+      "facility_name": "Casino nearby",
+      "hotel_frequency": 7,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 752,
+      "facility_name": "Cave exploring/spelunking nearby",
+      "hotel_frequency": 2,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 423,
+      "facility_name": "CCTV in common areas",
+      "hotel_frequency": 2,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 424,
+      "facility_name": "CCTV outside property",
+      "hotel_frequency": 5,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 970,
+      "facility_name": "Change of bed sheets (on request)",
+      "hotel_frequency": 9,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 969,
+      "facility_name": "Change of towels (on request)",
+      "hotel_frequency": 14,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 890,
+      "facility_name": "Children's games",
+      "hotel_frequency": 3,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 449,
+      "facility_name": "Cleaning standards that are effective against Coronavirus",
+      "hotel_frequency": 5,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 800,
+      "facility_name": "Clubhouse",
+      "hotel_frequency": 1,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 2359,
+      "facility_name": "Clubhouse",
+      "hotel_frequency": 1,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 1037,
+      "facility_name": "Cobblestone flooring in public areas",
+      "hotel_frequency": 1,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 2736,
+      "facility_name": "Cobblestone flooring in public areas",
+      "hotel_frequency": 1,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 219,
+      "facility_name": "Coffee Shop on site",
+      "hotel_frequency": 1,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 920,
+      "facility_name": "Coin laundry on site",
+      "hotel_frequency": 4,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 844,
+      "facility_name": "Composting",
+      "hotel_frequency": 2,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 1001,
+      "facility_name": "Comprehensive food waste policy",
+      "hotel_frequency": 6,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 1004,
+      "facility_name": "Comprehensive recycling policy",
+      "hotel_frequency": 10,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 2050,
+      "facility_name": "Comprehensive recycling policy",
+      "hotel_frequency": 10,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 678,
+      "facility_name": "Computer station",
+      "hotel_frequency": 14,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 124,
+      "facility_name": "Concierge service",
+      "hotel_frequency": 39,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 623,
+      "facility_name": "Conference center",
+      "hotel_frequency": 11,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 502,
+      "facility_name": "Conference space",
+      "hotel_frequency": 43,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 460,
+      "facility_name": "Contactless check-in/check-out",
+      "hotel_frequency": 2,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 802,
+      "facility_name": "Couples/private dining",
+      "hotel_frequency": 6,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 971,
+      "facility_name": "Coworking spaces",
+      "hotel_frequency": 5,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 76,
+      "facility_name": "Cycling",
+      "hotel_frequency": 1,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 158,
+      "facility_name": "Daily housekeeping",
+      "hotel_frequency": 2,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 485,
+      "facility_name": "Delivered food - securely covered",
+      "hotel_frequency": 3,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 110,
+      "facility_name": "Designated smoking area",
+      "hotel_frequency": 20,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 840,
+      "facility_name": "Dock",
+      "hotel_frequency": 1,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 956,
+      "facility_name": "Dog exercise area",
+      "hotel_frequency": 6,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 996,
+      "facility_name": "Double-glazing on all windows",
+      "hotel_frequency": 10,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 506,
+      "facility_name": "Downhill skiing nearby",
+      "hotel_frequency": 2,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 845,
+      "facility_name": "Eco-friendly cleaning products provided",
+      "hotel_frequency": 7,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 854,
+      "facility_name": "Eco-friendly cleaning products used",
+      "hotel_frequency": 7,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 846,
+      "facility_name": "Eco-friendly toiletries",
+      "hotel_frequency": 15,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 575,
+      "facility_name": "Ecotours nearby",
+      "hotel_frequency": 2,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 967,
+      "facility_name": "Electric bicycle charging station",
+      "hotel_frequency": 1,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 2413,
+      "facility_name": "Electric bicycle charging station",
+      "hotel_frequency": 1,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 765,
+      "facility_name": "Electric car charging station",
+      "hotel_frequency": 24,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 2014,
+      "facility_name": "Electric car charging station",
+      "hotel_frequency": 24,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 491,
+      "facility_name": "Elevator",
+      "hotel_frequency": 52,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 189,
+      "facility_name": "Emergency cord in bathroom",
+      "hotel_frequency": 2,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 998,
+      "facility_name": "Energy-saving switches",
+      "hotel_frequency": 9,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 568,
+      "facility_name": "Express check-in",
+      "hotel_frequency": 26,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 49,
+      "facility_name": "Express check-in/check-out",
+      "hotel_frequency": 55,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 543,
+      "facility_name": "Express check-out",
+      "hotel_frequency": 48,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 1842,
+      "facility_name": "Express check-out",
+      "hotel_frequency": 48,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 488,
+      "facility_name": "Face masks for guests available",
+      "hotel_frequency": 3,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 81,
+      "facility_name": "Fax/photocopying",
+      "hotel_frequency": 5,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 425,
+      "facility_name": "Fire extinguishers",
+      "hotel_frequency": 5,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 509,
+      "facility_name": "Fireplace in lobby",
+      "hotel_frequency": 21,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 1979,
+      "facility_name": "Fireplace in lobby",
+      "hotel_frequency": 21,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 459,
+      "facility_name": "First aid kit available",
+      "hotel_frequency": 4,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 899,
+      "facility_name": "Fishing nearby",
+      "hotel_frequency": 22,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 954,
+      "facility_name": "Food and water bowls",
+      "hotel_frequency": 42,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 454,
+      "facility_name": "Food delivered to guest room",
+      "hotel_frequency": 3,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 536,
+      "facility_name": "Free newspapers in lobby",
+      "hotel_frequency": 38,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 601,
+      "facility_name": "Free reception",
+      "hotel_frequency": 2,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 584,
+      "facility_name": "Free wired internet",
+      "hotel_frequency": 23,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 540,
+      "facility_name": "Front desk (limited hours)",
+      "hotel_frequency": 39,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 1803,
+      "facility_name": "Front entrance ramp",
+      "hotel_frequency": 3,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 205,
+      "facility_name": "Fruits",
+      "hotel_frequency": 2,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 842,
+      "facility_name": "Fully fenced",
+      "hotel_frequency": 2,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 768,
+      "facility_name": "Games",
+      "hotel_frequency": 1,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 14,
+      "facility_name": "Garden",
+      "hotel_frequency": 93,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 499,
+      "facility_name": "Gift shops or newsstand",
+      "hotel_frequency": 6,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 882,
+      "facility_name": "Golf cart",
+      "hotel_frequency": 1,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 883,
+      "facility_name": "Golf clubs (equipment)",
+      "hotel_frequency": 1,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 639,
+      "facility_name": "Golf driving range on site",
+      "hotel_frequency": 3,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 578,
+      "facility_name": "Golf lessons available nearby",
+      "hotel_frequency": 8,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 641,
+      "facility_name": "Golf lessons on site",
+      "hotel_frequency": 1,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 798,
+      "facility_name": "Golf lessons with a pro",
+      "hotel_frequency": 1,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 503,
+      "facility_name": "Golfing nearby",
+      "hotel_frequency": 31,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 642,
+      "facility_name": "Golfing on site",
+      "hotel_frequency": 7,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 855,
+      "facility_name": "Grey water recycling system",
+      "hotel_frequency": 1,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 580,
+      "facility_name": "Grocery/convenience store",
+      "hotel_frequency": 1,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 995,
+      "facility_name": "Guest education on local ecosystems and culture",
+      "hotel_frequency": 6,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 2261,
+      "facility_name": "Guest education on local ecosystems and culture",
+      "hotel_frequency": 6,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 452,
+      "facility_name": "Guest room sealed after cleaning",
+      "hotel_frequency": 3,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 451,
+      "facility_name": "Guest rooms disinfected between stays",
+      "hotel_frequency": 4,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 468,
+      "facility_name": "Guests can opt-out any cleaning services during stay",
+      "hotel_frequency": 5,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 457,
+      "facility_name": "Hand sanitizer in guest room and key areas",
+      "hotel_frequency": 3,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 949,
+      "facility_name": "Handrails in stairways",
+      "hotel_frequency": 7,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 1035,
+      "facility_name": "Hardwood flooring in public areas",
+      "hotel_frequency": 4,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 2216,
+      "facility_name": "Hardwood flooring in public areas",
+      "hotel_frequency": 4,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 80,
+      "facility_name": "Heating",
+      "hotel_frequency": 2,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 513,
+      "facility_name": "Hiking/biking trails nearby",
+      "hotel_frequency": 45,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 903,
+      "facility_name": "Horse riding nearby",
+      "hotel_frequency": 27,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 784,
+      "facility_name": "Housekeeping on request",
+      "hotel_frequency": 22,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 991,
+      "facility_name": "Humane animal treatment",
+      "hotel_frequency": 5,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 904,
+      "facility_name": "Hunting nearby",
+      "hotel_frequency": 1,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 905,
+      "facility_name": "Ice skating nearby",
+      "hotel_frequency": 2,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 761,
+      "facility_name": "Internet access",
+      "hotel_frequency": 5,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 558,
+      "facility_name": "Internet access in public areas - high speed",
+      "hotel_frequency": 10,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 512,
+      "facility_name": "Internet access in public areas - surcharge",
+      "hotel_frequency": 1,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 465,
+      "facility_name": "Invoice provided",
+      "hotel_frequency": 4,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 44,
+      "facility_name": "Ironing service",
+      "hotel_frequency": 3,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 856,
+      "facility_name": "Japanese garden",
+      "hotel_frequency": 4,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 59,
+      "facility_name": "Karaoke",
+      "hotel_frequency": 4,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 514,
+      "facility_name": "Kayaking nearby",
+      "hotel_frequency": 14,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 419,
+      "facility_name": "Key access",
+      "hotel_frequency": 4,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 420,
+      "facility_name": "Key card access",
+      "hotel_frequency": 4,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 176,
+      "facility_name": "Kid meals",
+      "hotel_frequency": 2,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 177,
+      "facility_name": "Kid-friendly buffet",
+      "hotel_frequency": 1,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 22,
+      "facility_name": "Laundry",
+      "hotel_frequency": 1,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 450,
+      "facility_name": "Laundry washed per local authority guidelines",
+      "hotel_frequency": 1,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 847,
+      "facility_name": "LED light bulbs",
+      "hotel_frequency": 10,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 526,
+      "facility_name": "Library",
+      "hotel_frequency": 11,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 48,
+      "facility_name": "Lift / Elevator",
+      "hotel_frequency": 4,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 545,
+      "facility_name": "Limo or town car service available",
+      "hotel_frequency": 5,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 850,
+      "facility_name": "Living plant wall",
+      "hotel_frequency": 2,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 992,
+      "facility_name": "Locally-owned & organized tours & activities",
+      "hotel_frequency": 7,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 997,
+      "facility_name": "Locally-sourced food on site (80% or more)",
+      "hotel_frequency": 5,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 2493,
+      "facility_name": "Long-term parking (surcharge)",
+      "hotel_frequency": 2,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 870,
+      "facility_name": "Lot hours - 24 hours",
+      "hotel_frequency": 4,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 1984,
+      "facility_name": "Lot hours - 24 hours",
+      "hotel_frequency": 4,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 91,
+      "facility_name": "Luggage storage",
+      "hotel_frequency": 123,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 909,
+      "facility_name": "Marina nearby",
+      "hotel_frequency": 2,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 559,
+      "facility_name": "Marina on site",
+      "hotel_frequency": 1,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 561,
+      "facility_name": "Meeting rooms",
+      "hotel_frequency": 55,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 1091,
+      "facility_name": "Meeting rooms",
+      "hotel_frequency": 55,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 6,
+      "facility_name": "Meeting/banquet facilities",
+      "hotel_frequency": 2,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 640,
+      "facility_name": "Miniature golf on site",
+      "hotel_frequency": 1,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 463,
+      "facility_name": "Mobile app for room service",
+      "hotel_frequency": 3,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 895,
+      "facility_name": "Motor boating nearby",
+      "hotel_frequency": 1,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 551,
+      "facility_name": "Mountain biking nearby",
+      "hotel_frequency": 30,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 649,
+      "facility_name": "Mountain biking on site",
+      "hotel_frequency": 1,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 910,
+      "facility_name": "Mountain climbing nearby",
+      "hotel_frequency": 3,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 535,
+      "facility_name": "Multilingual staff",
+      "hotel_frequency": 38,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 814,
+      "facility_name": "Nature reserve",
+      "hotel_frequency": 2,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 1797,
+      "facility_name": "Nature reserve",
+      "hotel_frequency": 2,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 759,
+      "facility_name": "Newspapers in lobby (surcharge)",
+      "hotel_frequency": 12,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 1847,
+      "facility_name": "Newspapers in lobby (surcharge)",
+      "hotel_frequency": 12,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 126,
+      "facility_name": "Nightclub/DJ",
+      "hotel_frequency": 1,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 1024,
+      "facility_name": "No accessible airport shuttle",
+      "hotel_frequency": 1,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 1022,
+      "facility_name": "No accessible shuttle",
+      "hotel_frequency": 17,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 972,
+      "facility_name": "No elevator (single level property)",
+      "hotel_frequency": 2,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 1006,
+      "facility_name": "No single-use plastic soda bottles",
+      "hotel_frequency": 4,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 2259,
+      "facility_name": "No single-use plastic soda bottles",
+      "hotel_frequency": 4,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 1007,
+      "facility_name": "No single-use plastic stirrers",
+      "hotel_frequency": 10,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 2247,
+      "facility_name": "No single-use plastic stirrers",
+      "hotel_frequency": 10,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 1009,
+      "facility_name": "No single-use plastic straws",
+      "hotel_frequency": 8,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 2020,
+      "facility_name": "No single-use plastic straws",
+      "hotel_frequency": 8,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 1011,
+      "facility_name": "No single-use plastic water bottles",
+      "hotel_frequency": 5,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 2253,
+      "facility_name": "No single-use plastic water bottles",
+      "hotel_frequency": 5,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 16,
+      "facility_name": "Non-smoking rooms",
+      "hotel_frequency": 8,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 108,
+      "facility_name": "Non-smoking throughout",
+      "hotel_frequency": 8,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 2083,
+      "facility_name": "Offsite parking discounted rates available",
+      "hotel_frequency": 5,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 988,
+      "facility_name": "Organic food",
+      "hotel_frequency": 2,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 885,
+      "facility_name": "Outdoor entertainment area",
+      "hotel_frequency": 1,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 222,
+      "facility_name": "Outdoor furniture",
+      "hotel_frequency": 13,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 73,
+      "facility_name": "Packed lunches",
+      "hotel_frequency": 2,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 549,
+      "facility_name": "Parasailing nearby",
+      "hotel_frequency": 5,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 1862,
+      "facility_name": "Parasailing nearby",
+      "hotel_frequency": 5,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 217,
+      "facility_name": "Pet basket",
+      "hotel_frequency": 1,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 218,
+      "facility_name": "Pet bowls",
+      "hotel_frequency": 1,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 453,
+      "facility_name": "Physical distancing in dining areas",
+      "hotel_frequency": 3,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 462,
+      "facility_name": "Physical distancing rules followed",
+      "hotel_frequency": 4,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 224,
+      "facility_name": "Picnic area",
+      "hotel_frequency": 31,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 651,
+      "facility_name": "Pilates classes on site",
+      "hotel_frequency": 4,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 652,
+      "facility_name": "Playground on site",
+      "hotel_frequency": 12,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 714,
+      "facility_name": "Pool sun loungers",
+      "hotel_frequency": 8,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 542,
+      "facility_name": "Porter/bellhop",
+      "hotel_frequency": 19,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 127,
+      "facility_name": "Private check-in/check-out",
+      "hotel_frequency": 3,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 803,
+      "facility_name": "Private picnics",
+      "hotel_frequency": 4,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 799,
+      "facility_name": "Pro shop",
+      "hotel_frequency": 1,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 458,
+      "facility_name": "Process in place to check health of guests",
+      "hotel_frequency": 4,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 466,
+      "facility_name": "Property cleaned by professional cleaning companies",
+      "hotel_frequency": 1,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 822,
+      "facility_name": "Proposal/romance packages available",
+      "hotel_frequency": 6,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 1833,
+      "facility_name": "Proposal/romance packages available",
+      "hotel_frequency": 6,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 401,
+      "facility_name": "Pub crawls",
+      "hotel_frequency": 1,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 167,
+      "facility_name": "Public Bath",
+      "hotel_frequency": 1,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 653,
+      "facility_name": "Racquetball/squash on site",
+      "hotel_frequency": 2,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 528,
+      "facility_name": "Rafting nearby",
+      "hotel_frequency": 7,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 828,
+      "facility_name": "Reception hall",
+      "hotel_frequency": 16,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 848,
+      "facility_name": "Recycling",
+      "hotel_frequency": 13,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 849,
+      "facility_name": "Reusable coffee/tea filters",
+      "hotel_frequency": 5,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 1012,
+      "facility_name": "Reusable cups only",
+      "hotel_frequency": 6,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 1013,
+      "facility_name": "Reusable tableware only",
+      "hotel_frequency": 5,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 750,
+      "facility_name": "Rock climbing nearby",
+      "hotel_frequency": 12,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 679,
+      "facility_name": "Rooftop terrace",
+      "hotel_frequency": 2,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 5,
+      "facility_name": "Room service",
+      "hotel_frequency": 3,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 655,
+      "facility_name": "Rowing or canoeing on site",
+      "hotel_frequency": 1,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 533,
+      "facility_name": "Safe-deposit box at front desk",
+      "hotel_frequency": 78,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 51,
+      "facility_name": "Safety deposit box",
+      "hotel_frequency": 2,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 515,
+      "facility_name": "Sailing nearby",
+      "hotel_frequency": 17,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 467,
+      "facility_name": "Sanitized tableware & silverware",
+      "hotel_frequency": 5,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 10,
+      "facility_name": "Sauna",
+      "hotel_frequency": 27,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 525,
+      "facility_name": "Scooter/moped rentals nearby",
+      "hotel_frequency": 1,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 464,
+      "facility_name": "Screens / Barriers between staff and guests for safety",
+      "hotel_frequency": 4,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 516,
+      "facility_name": "Scuba diving nearby",
+      "hotel_frequency": 8,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 959,
+      "facility_name": "Secured bicycle storage",
+      "hotel_frequency": 2,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 421,
+      "facility_name": "Security alarm",
+      "hotel_frequency": 2,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 685,
+      "facility_name": "Segway rental/tour nearby",
+      "hotel_frequency": 1,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 143,
+      "facility_name": "Shared lounge/TV area",
+      "hotel_frequency": 3,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 778,
+      "facility_name": "Shared microwave",
+      "hotel_frequency": 1,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 779,
+      "facility_name": "Shared refrigerator",
+      "hotel_frequency": 1,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 456,
+      "facility_name": "Shared stationery like menus, pens are removed",
+      "hotel_frequency": 3,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 500,
+      "facility_name": "Shopping on site",
+      "hotel_frequency": 4,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 993,
+      "facility_name": "Showcase for local artists",
+      "hotel_frequency": 4,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 962,
+      "facility_name": "Shuttle for bicycles available",
+      "hotel_frequency": 1,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 99,
+      "facility_name": "Ski storage",
+      "hotel_frequency": 1,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 517,
+      "facility_name": "Ski storage",
+      "hotel_frequency": 1,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 553,
+      "facility_name": "Skydiving nearby",
+      "hotel_frequency": 2,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 422,
+      "facility_name": "Smoke alarms",
+      "hotel_frequency": 6,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 564,
+      "facility_name": "Smoke-free property",
+      "hotel_frequency": 166,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 1032,
+      "facility_name": "Smooth flooring in public areas",
+      "hotel_frequency": 1,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 117,
+      "facility_name": "Snack bar",
+      "hotel_frequency": 2,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 626,
+      "facility_name": "Snack bar/deli",
+      "hotel_frequency": 41,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 504,
+      "facility_name": "Snorkeling nearby",
+      "hotel_frequency": 1,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 566,
+      "facility_name": "Snowboarding nearby",
+      "hotel_frequency": 1,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 64,
+      "facility_name": "Soundproof rooms",
+      "hotel_frequency": 2,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 133,
+      "facility_name": "Special diet menus - on request",
+      "hotel_frequency": 2,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 455,
+      "facility_name": "Staff adhere to local safety protocols",
+      "hotel_frequency": 6,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 975,
+      "facility_name": "Stair-free path to entrance",
+      "hotel_frequency": 14,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 241,
+      "facility_name": "Steam room",
+      "hotel_frequency": 23,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 118,
+      "facility_name": "Sun terrace",
+      "hotel_frequency": 1,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 221,
+      "facility_name": "Sun umbrellas",
+      "hotel_frequency": 1,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 505,
+      "facility_name": "Surfing/bodyboarding nearby",
+      "hotel_frequency": 11,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 916,
+      "facility_name": "Swimming nearby",
+      "hotel_frequency": 4,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 58,
+      "facility_name": "Table tennis",
+      "hotel_frequency": 2,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 521,
+      "facility_name": "Television in common areas",
+      "hotel_frequency": 22,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 400,
+      "facility_name": "Temporary art galleries",
+      "hotel_frequency": 1,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 15,
+      "facility_name": "Terrace",
+      "hotel_frequency": 89,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 406,
+      "facility_name": "Themed dinner nights",
+      "hotel_frequency": 1,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 1033,
+      "facility_name": "Thin carpet in public areas",
+      "hotel_frequency": 2,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 1034,
+      "facility_name": "Tile flooring in public areas",
+      "hotel_frequency": 3,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 78,
+      "facility_name": "Tour desk",
+      "hotel_frequency": 1,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 581,
+      "facility_name": "Tours/ticket assistance",
+      "hotel_frequency": 43,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 973,
+      "facility_name": "Upper floors accessible by stairs only",
+      "hotel_frequency": 27,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 1002,
+      "facility_name": "Vegan menu options available",
+      "hotel_frequency": 7,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 1003,
+      "facility_name": "Vegetarian menu options available",
+      "hotel_frequency": 11,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 946,
+      "facility_name": "Visual alarms in hallways",
+      "hotel_frequency": 3,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 889,
+      "facility_name": "Walkway to water",
+      "hotel_frequency": 2,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 782,
+      "facility_name": "Water dispenser",
+      "hotel_frequency": 6,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 518,
+      "facility_name": "Water skiing nearby",
+      "hotel_frequency": 8,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 917,
+      "facility_name": "Water sports equipment",
+      "hotel_frequency": 2,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 1014,
+      "facility_name": "Water-efficient showers only",
+      "hotel_frequency": 5,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 567,
+      "facility_name": "Wedding services",
+      "hotel_frequency": 63,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 974,
+      "facility_name": "Well-lit path to entrance",
+      "hotel_frequency": 19,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 933,
+      "facility_name": "Wheelchair-accessible public washroom",
+      "hotel_frequency": 15,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 809,
+      "facility_name": "Wine release events",
+      "hotel_frequency": 1,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 203,
+      "facility_name": "Wine/champagne",
+      "hotel_frequency": 2,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    },
+    {
+      "facility_id": 754,
+      "facility_name": "Ziplining nearby",
+      "hotel_frequency": 1,
+      "recognized": false,
+      "reason": "unmapped_facility_id"
+    }
+  ]
+}

@@ -1,0 +1,197 @@
+{
+  "schema_version": "1.1",
+  "dataset_name": "minimal_hotel_fixture",
+  "model_id": "fixture-model",
+  "annotation_method": "fixture",
+  "n_hotels": 1,
+  "n_reviews": 3,
+  "aspect_catalog": {
+    "localisation_transport": "Location and transport.",
+    "personnel_accueil_service": "Staff and service.",
+    "proprete_hygiene": "Cleanliness and hygiene.",
+    "chambre_taille_confort": "Room size and comfort.",
+    "salle_de_bain": "Bathroom.",
+    "petit_dejeuner_restauration": "Breakfast and food.",
+    "bruit_calme": "Noise and quietness.",
+    "prix_valeur": "Price and value.",
+    "climatisation_chauffage_temperature": "Room temperature.",
+    "wifi_internet": "Wi-Fi and internet.",
+    "parking_voiture": "Parking and car access.",
+    "equipements_chambre": "Room equipment.",
+    "piscine_spa_bien_etre": "Pool and wellness.",
+    "accessibilite_batiment": "Building accessibility.",
+    "vue_environnement": "View and surroundings."
+  },
+  "hotels": [
+    {
+      "hotel_id": "hotel-1",
+      "hotel_stats": {
+        "n_reviews_total": 3,
+        "n_reviews_annotated": 2,
+        "n_reviews_missing_or_error": 1,
+        "average_rating": 8.0,
+        "median_rating": 8.0,
+        "min_rating": 6.0,
+        "max_rating": 10.0,
+        "rating_std": 2.0,
+        "n_aspects_mentioned": 2,
+        "total_mentions": 2,
+        "total_support": 1,
+        "total_attack": 1,
+        "total_neutral": 0,
+        "weighted_aspect_score": 0.5
+      },
+      "top_positive_aspects": [
+        "localisation_transport"
+      ],
+      "top_negative_aspects": [
+        "bruit_calme"
+      ],
+      "aspects": [
+        {
+          "aspect": "localisation_transport",
+          "label": "positive",
+          "score": 0.604,
+          "confidence": 0.207,
+          "wilson_lower": 0.207,
+          "wilson_upper": 1.0,
+          "wilson_width": 0.793,
+          "n_mentions": 1,
+          "support_count": 1,
+          "attack_count": 0,
+          "neutral_count": 0,
+          "n_raw_signals_total": 1,
+          "evidence_examples": [
+            "Close to the station"
+          ]
+        },
+        {
+          "aspect": "bruit_calme",
+          "label": "negative",
+          "score": 0.396,
+          "confidence": 0.207,
+          "wilson_lower": 0.0,
+          "wilson_upper": 0.793,
+          "wilson_width": 0.793,
+          "n_mentions": 1,
+          "support_count": 0,
+          "attack_count": 1,
+          "neutral_count": 0,
+          "n_raw_signals_total": 1,
+          "evidence_examples": [
+            "Noisy at night"
+          ]
+        }
+      ],
+      "reviews": [
+        {
+          "dataset_index": 0,
+          "review_id": "hotel-1:review-1",
+          "hotel_id": "hotel-1",
+          "liteapi_id": "hotel-1",
+          "hotel_country_code": "GB",
+          "author_country_code": null,
+          "review_language": "en",
+          "rating": 8.0,
+          "headline": "Convenient but noisy",
+          "pros": "Close to the station, but noisy at night.",
+          "cons": null,
+          "review_text": "Convenient but noisy. Close to the station, but noisy at night.",
+          "review_date": "2026-01-03T00:00:00",
+          "annotation_status": "annotated",
+          "signals": [
+            {
+              "aspect": "localisation_transport",
+              "stance": "support",
+              "evidence": "Close to the station"
+            },
+            {
+              "aspect": "bruit_calme",
+              "stance": "attack",
+              "evidence": "noisy at night"
+            }
+          ]
+        },
+        {
+          "dataset_index": 1,
+          "review_id": "hotel-1:review-2",
+          "hotel_id": "hotel-1",
+          "liteapi_id": "hotel-1",
+          "hotel_country_code": "GB",
+          "author_country_code": "FR",
+          "review_language": "en-US",
+          "rating": 6.0,
+          "headline": null,
+          "pros": "The stay was fine.",
+          "cons": null,
+          "review_text": "The stay was fine.",
+          "review_date": "2026-01-02T00:00:00",
+          "annotation_status": "annotated_no_aspect",
+          "signals": []
+        },
+        {
+          "dataset_index": 2,
+          "review_id": "hotel-1:review-3",
+          "hotel_id": "hotel-1",
+          "liteapi_id": "hotel-1",
+          "hotel_country_code": "GB",
+          "author_country_code": null,
+          "review_language": "en-US",
+          "rating": 10.0,
+          "headline": "Excellent",
+          "pros": "Excellent stay.",
+          "cons": null,
+          "review_text": "Excellent. Excellent stay.",
+          "review_date": "2026-01-01T00:00:00",
+          "annotation_status": "missing_or_error",
+          "signals": []
+        }
+      ],
+      "hotel_metadata": {
+        "liteapi_id": "hotel-1",
+        "name": "Fixture Hotel",
+        "description": "A small local fixture used by automated tests.",
+        "city": null,
+        "policies": [],
+        "facility_ids": [
+          107,
+          492,
+          8
+        ],
+        "facilities": [
+          {
+            "facility_id": 107,
+            "name": "Free WiFi"
+          },
+          {
+            "facility_id": 492,
+            "name": " free   wifi "
+          },
+          {
+            "facility_id": 8,
+            "name": "24-hour front desk"
+          }
+        ],
+        "data_completeness": {
+          "status": "partial_source_data",
+          "public_hotel_row_found": true,
+          "filled_fields": [
+            "name",
+            "description",
+            "facility_ids"
+          ],
+          "missing_fields": [
+            "city",
+            "policies"
+          ],
+          "n_facility_ids": 3,
+          "n_facility_ids_resolved": 3,
+          "all_facility_ids_resolved": true
+        }
+      }
+    }
+  ],
+  "metadata_enrichment": {
+    "missing_value_semantics": "Missing source values do not prove absence."
+  }
+}

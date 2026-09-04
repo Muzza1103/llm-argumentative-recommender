@@ -6,7 +6,7 @@ DATASET="data/processed/yelp_subset_500_with_review_aspects_nli.jsonl"
 RANKING_DATASET="data/processed/yelp_ranking_candidates_100_neg9.jsonl"
 
 # LLM-only rating prediction
-python -m scripts.llm_direct_score \
+python -m scripts.restaurants.llm_direct_score \
   --input "$DATASET" \
   --output data/processed/llm_direct_scores_gemini_flash_500.jsonl \
   --gemini-model gemini-2.5-flash \
@@ -16,14 +16,14 @@ python -m scripts.llm_direct_score \
   --max-new-tokens 500 \
   --num-examples 500
 
-python -m scripts.evaluate_llm_direct_scores \
+python -m scripts.restaurants.evaluate_llm_direct_scores \
   --input data/processed/llm_direct_scores_gemini_flash_500.jsonl \
   --dataset "$DATASET" \
   --output-csv data/processed/evaluation_llm_direct_500.csv \
   --output-summary data/processed/evaluation_llm_direct_500_summary.json
 
 # LLM-only ranking
-python -m scripts.llm_direct_score \
+python -m scripts.restaurants.llm_direct_score \
   --input "$RANKING_DATASET" \
   --output data/processed/llm_direct_scores_gemini_flash_ranking_100_neg9.jsonl \
   --gemini-model gemini-2.5-flash \
@@ -33,7 +33,7 @@ python -m scripts.llm_direct_score \
   --max-new-tokens 500 \
   --num-examples 1000
 
-python -m scripts.evaluate_ranking \
+python -m scripts.restaurants.evaluate_ranking \
   --input data/processed/llm_direct_scores_gemini_flash_ranking_100_neg9.jsonl \
   --dataset "$RANKING_DATASET" \
   --output-summary data/processed/evaluation_llm_direct_ranking_100_neg9_summary.json \
