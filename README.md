@@ -1,280 +1,111 @@
 # LLM Argumentative Recommender
 
-This project explores **explainable** and **contestable recommendation systems** using **Large Language Models (LLMs)**, **collaborative filtering** and **argumentation-based reasoning**.
+Research prototype combining large language models (LLMs), recommender systems and quantitative argumentation to produce recommendations supported by explicit arguments.
 
-The main objective is to build a recommendation pipeline in which a language model generates structured arguments from user history and target item information, and these arguments are then used to support **explicit reasoning, scoring, and explanations**.
+The repository contains two complementary pipelines:
 
+| Pipeline | Personalization context | Main data | Evaluation |
+|---|---|---|---|
+| **CoRAL — Yelp** | User history is available | Ratings and textual reviews | Quantitative: rating prediction and ranking |
+| **Hotel recommendation** | Cold start: no individual history | Session request, reviews and hotel facts | Functional and qualitative scenarios |
 
-## Current pipeline
+Both pipelines generate supporting and attacking arguments, validate them, assign them a strength and aggregate them with DF-QuAD. The LLM is used for language interpretation and argument formulation, while validation, strength computation and argumentative aggregation remain explicit.
 
-The current system includes:
-- Yelp subset construction
-- aspect extraction from reviews
-- aspect-based MF dataset construction
-- aspect-based MF training
-- LLM-based argument generation
-- balanced (same number of support and attack arguments) and unbalanced argument generation settings
-- argument validation
-- hybrid semantic + collaborative scoring
-- argument graph construction
-- DF-QuAD and contrastive aggregation variants
-- rating prediction evaluation
-- ranking evaluation
-- MF-only and LLM-only baselines
+## CoRAL: recommendation from Yelp histories
 
-## Recommendation pipeline
+CoRAL estimates a user's interest in a target restaurant from past ratings and reviews.
 
-```text
-User history + target item
-        ↓
-LLM-based argument generation
-        ↓
-Validation and filtering
-        ↓
-Argument scoring
-   - semantic score (LLM)
-   - empirical score (collaborative filtering / aspect-MF)
-        ↓
-Argument graph construction
-        ↓
-Argument aggregation
-   - DF-QuAD
-   - contrastive variants
-        ↓
-Explainable and contestable recommendation
-```
+Its main stages are:
 
-## Project structure
+1. extract aspects from the user's reviews;
+2. learn user–aspect preferences with Aspect-MF;
+3. generate support and attack arguments with an LLM;
+4. validate the generated arguments and their references;
+5. combine semantic and collaborative signals to compute argument strengths;
+6. aggregate the arguments with DF-QuAD;
+7. produce a recommendation score and an inspectable explanation.
+
+The experimental code also includes two non-argumentative baselines:
+
+- **MF-only**, based only on the user–restaurant matrix-factorization prediction;
+- **LLM-only**, in which the LLM directly predicts a score without constructing an argument graph.
+
+Several ways of combining the collaborative prediction with the arguments are available, including a neutral DF-QuAD root, an MF-initialized root and an argumentative correction of the MF score.
+
+A first structured contestation mechanism is also provided. It allows the strength of an existing Yelp argument to be changed and the aggregations and final score to be recomputed without generating new arguments.
+
+## Hotel recommendation in a cold-start setting
+
+The hotel pipeline handles sessions for which no individual user history is available. A natural-language request is first converted into a structured session profile containing soft preferences, soft constraints and mandatory constraints.
+
+The pipeline then:
+
+1. compares the session profile with a prepared hotel profile;
+2. checks mandatory constraints to determine eligibility;
+3. constructs a closed registry of allowed evidence from reviews and hotel facts;
+4. generates and validates support and attack arguments;
+5. computes opinion-based strengths using preference importance and the Wilson lower bound;
+6. computes factual argument strengths from verified hotel information;
+7. aggregates the arguments with DF-QuAD;
+8. ranks only hotels whose mandatory constraints are confirmed.
+
+Eligibility and argumentative score are deliberately separated. A hotel may obtain a high DF-QuAD score because it matches several soft preferences while remaining unranked if a mandatory constraint is violated or cannot be verified.
+
+The hotel pipeline also supports structured contestation. A preference can be modified and the weights, argument strengths, aggregations and score are then recomputed without a new LLM generation step.
+
+## High-level project structure
 
 ```text
 .
-├── src/
-│   ├── llm/             # LLM loading, generation and scoring
-│   ├── prompting/       # Prompt construction and formatting
-│   └── argumentation/   # Argument schema, scoring, graph construction and DF-QuAD aggregation
-├── scripts/             # Runnable scripts for data, generation, scoring and inspection
+├── src/                 # Shared LLM, prompting and argumentation components
+├── scripts/             # Yelp data, generation, evaluation and inspection scripts
+│   └── hotel/           # Hotel evaluation, ranking, rendering and contestation
 ├── configs/             # Configuration files
-├── data/
-│   ├── raw/             # Original datasets (not versioned)
-│   ├── processed/       # Generated datasets and intermediate outputs (not versioned)
-│   └── sample/          # Small versioned examples
+├── data/                # Local or sample data; full datasets are not versioned
+└── tests/               # Validation tests for the implemented components
 ```
+
+Detailed command-line usage and the role of individual scripts are documented separately in `scripts/README.md`.
 
 ## Data
 
-This repository does **not** include the full Yelp dataset.
+### Yelp
 
-- Raw data should be placed in `data/raw/`
-- Processed subsets are generated locally in `data/processed/`
-- Small synthetic examples are available in `data/sample/`
+The full [Yelp Open Dataset](https://business.yelp.com/data/resources/open-dataset/) is not included in this repository. Raw data must be stored locally and the processed subsets are generated by the corresponding scripts. See `data/README.md` for the expected organization.
 
-See `data/README.md` for more details on how to generate the dataset.
+### Hotels
 
-The dataset is built from the Yelp Open Dataset.
+The hotel data was provided by Jinko and is not included in the repository. The public code contains the recommendation pipeline operating on already prepared hotel profiles.
 
-Each example contains:
+Data extraction, cleaning, exploration, automatic annotation and hotel-profile construction were performed separately in notebooks delivered to the company. Those notebooks and the underlying confidential data are not part of this repository.
 
-- `history`: user past interactions
-- `target_item`: item to evaluate
+## Model configuration
 
-Data is stored in JSONL format.
+The final experiments use **Gemini 2.5 Flash**, accessed through Google Cloud resources made available for the project by Jinko. Earlier exploratory work used **Qwen2.5-3B-Instruct** locally.
 
----
-## Aspect Extraction and Collaborative Signals
+Model credentials, cloud configuration and private data are not included. The required environment must therefore be configured before running the LLM-dependent scripts.
 
-Restaurant ratings alone often provide only coarse preference information.
-Two users may assign the same global rating to a restaurant for very different reasons:
-one may value food quality while another may care more about service, atmosphere or price.
+## Installation
 
-To obtain finer-grained collaborative signals, the project extracts review aspects from user reviews.
+```bash
+git clone https://github.com/Muzza1103/llm-argumentative-recommender.git
+cd llm-argumentative-recommender
+pip install -r requirements.txt
+```
 
-### NLI-based aspect extraction
-
-Aspect extraction is performed using Natural Language Inference (NLI) models.
-
-Each review is compared against a predefined aspect vocabulary containing dimensions such as:
-- food
-- service
-- price
-- ambiance
-- cleanliness
-- location
-
-For each review-aspect pair, the NLI model estimates whether the review semantically entails the presence of the aspect.
-
-The extracted aspects are then used to build structured user-aspect interaction signals.
-
-### Aspect-based collaborative filtering
-
-The extracted aspects are transformed into collaborative learning signals.
-
-Instead of learning only:
-- user-item interactions
-
-the system also learns:
-- user-aspect affinities
-
-using Matrix Factorization (MF).
-
-This allows the system to estimate:
-- which aspects are important for a given user
-- how strongly a target item matches these aspects
-
-These aspect-level collaborative signals are then reused during argumentative scoring as empirical evidence complementary to semantic LLM reasoning.
-
----
-
-## Argument Scoring and Reasoning
-
-The project includes a hybrid argumentative scoring pipeline combining:
-- semantic LLM-based reasoning
-- collaborative recommendation signals
-- formal argumentative aggregation
-
-### Semantic scoring
-
-Each generated argument receives a semantic score from a local or API-based LLM scorer.
-
-This score is intended to reflect:
-- coherence with the user history
-- compatibility with the target item
-- quality and usefulness of the argument
-- consistency of the provided evidence
-- grounding in the provided context
-
-### Empirical scoring
-
-The project also includes an empirical scoring component.
-
-This empirical signal can be obtained from:
-- user-item collaborative filtering
-- aspect-based Matrix Factorization
-- fallback heuristics
-
-The empirical score is combined with the semantic score in order to integrate collaborative recommendation signals into the argumentative framework.
-
-### Argument graph construction
-
-Generated arguments are structured into a graph in which:
-- support arguments strengthen the recommendation claim
-- attack arguments weaken the recommendation claim
-
-This graph-based structure enables explicit reasoning over conflicting recommendation evidence.
-
-### DF-QuAD aggregation
-
-DF-QuAD is a gradual argumentation semantics used to propagate support and attack relations through the argument graph.
-
-The objective is to compute a final recommendation score while explicitly accounting for:
-- supporting evidence
-- attacking evidence
-- interaction between arguments
-
-This allows the recommendation process to remain interpretable and contestable.
-
-### Contrastive aggregation variants
-
-The project also explores contrastive aggregation variants.
-
-These variants aim to amplify the separation between support and attack signals during aggregation in order to produce sharper recommendation decisions.
-
-The contrastive parameter $\gamma$ controls how strongly support and attack differences are amplified.
-
-### Balanced vs unbalanced generation
-
-The project explores both balanced and unbalanced argument generation settings.
-
-Balanced generation enforces equal numbers of support and attack arguments.
-
-Unbalanced generation allows the LLM to generate arguments more freely depending on the recommendation context.
-
-This setting is studied in order to analyze how attack/support distributions affect recommendation quality and argumentative behavior.
-
----
+The exact commands, input formats and configuration options depend on the selected pipeline and are described in the script documentation.
 
 ## Evaluation
 
-The project currently evaluates two recommendation tasks:
-- rating prediction
-- ranking recommendation
+The Yelp pipeline is evaluated quantitatively:
 
-### Rating prediction
+- rating prediction with MAE and RMSE;
+- ranking with Hit Rate, MRR and NDCG.
 
-Rating prediction evaluates how accurately the system predicts the target user preference score.
+The hotel pipeline is evaluated through controlled functional and qualitative scenarios covering individual evaluation, multi-hotel ranking and preference contestation. The available corpus contains no observed user choice for a given request, so it does not provide a personalized ground truth for standard ranking metrics.
 
-Predictions are normalized to the range:
-- [0, 1]
+## Project status
 
-The following metrics are used:
-- MAE (Mean Absolute Error)
-- RMSE (Root Mean Squared Error)
+This repository contains research prototypes developed during an internship at LIASD, Université Paris 8, with a hotel use case conducted in collaboration with Jinko. A first part of the work, focused on CoRAL, was presented at the *NeuroSym4MLLM & EXPLAIN'AI* workshop.
 
-### Ranking recommendation
-
-The ranking task evaluates whether the system can correctly identify the positive target item among several negative candidates.
-
-The current ranking setup uses:
-- 1 positive target item
-- multiple negative candidate items
-
-The following ranking metrics are used:
-- HitRate@K
-- NDCG@K
-- MRR
-
-### Experimental observations
-
-Current experiments indicate that:
-- MF-only baselines achieve the strongest predictive performance
-- argumentative variants outperform direct LLM-only scoring in several rating prediction settings
-- unbalanced argument generation improves DF-QuAD performance over balanced generation
-- preserving collaborative recommendation signals during argumentative aggregation remains a key challenge
-
-These results highlight the presence of a trade-off between:
-- predictive performance
-- explainability
-- contestability
-
----
-
-## Baselines
-
-The project currently includes several baseline systems used for comparison.
-
-### MF-only baseline
-
-A standard collaborative filtering baseline based on Matrix Factorization (SVD) is used for:
-- rating prediction
-- ranking recommendation
-
-This baseline directly predicts user-item compatibility scores without argumentative reasoning.
-
-### LLM-only baseline
-
-A direct LLM-based scoring baseline is also evaluated.
-
-In this setting, the LLM directly predicts a recommendation score from:
-- the user history
-- the target item
-
-without generating argumentative structures.
-
-### Argumentative variants
-
-The main proposed system evaluates multiple argumentative variants, including:
-- DF-QuAD aggregation
-- contrastive aggregation variants
-- balanced argument generation
-- unbalanced argument generation
-
-## Notes
-
-- The system is designed to work with local or API-based LLMs
-- Quantization is supported for lightweight inference
-- Future work includes:
-  - improving argument generation
-  - grounding arguments more explicitly in attributes and categories
-  - refining empirical scoring beyond a single item-level score
-  - exploring richer argumentative graph structures
-  - potential LoRA fine-tuning
-
+The code is intended for experimentation and reproducibility. Results may depend on the selected model, API latency, random generation and the coverage of the available data.
